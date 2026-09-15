@@ -1,0 +1,12 @@
+.main-content {
+  padding: 2rem;
+  background-color: #F8F9FA;
+  min-height: calc(100vh - 64px); /* Altura da tela menos a altura do header */
+  overflow-y: auto;
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    padding: 1rem;
+  }
+}
