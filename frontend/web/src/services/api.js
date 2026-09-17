@@ -40,6 +40,9 @@ const apiService = {
   rejectUsuario: (id) =>
     apiService.request.delete(`/usuarios/${id}`),
 
+  updateUsuarioRole: (id, role) =>
+    apiService.request.put(`/usuarios/${id}/role`, { role }),
+
   // Produtos
   getProducts: (params = {}) =>
     apiService.request.get('/produtos', params),
