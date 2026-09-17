@@ -44,6 +44,8 @@ export const apiService = {
     body: JSON.stringify(credentials),
   }),
 
+  getProfile: () => apiFetch('/auth/profile'),
+
   logout: () => apiFetch('/auth/logout', {
     method: 'POST',
   }),
@@ -72,6 +74,40 @@ export const apiService = {
     method: 'DELETE',
   }),
 
+  archiveProduct: (id) => apiFetch(`/produtos/${id}/archive`, { method: 'PUT' }),
+
+  restoreProduct: (id) => apiFetch(`/produtos/${id}/restore`, { method: 'PUT' }),
+
+  // Marcas e Linhas
+  getMarcas: () => apiFetch('/marcas'),
+
+  getLinhas: (marcaId) => apiFetch(`/linhas${marcaId ? `?marcaId=${marcaId}` : ''}`),
+
+  // Clientes
+  getClientes: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiFetch(`/clientes${query ? `?${query}` : ''}`);
+  },
+
+  createCliente: (data) => apiFetch('/clientes', { method: 'POST', body: JSON.stringify(data) }),
+
+  // Pedidos
+  getPedidos: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiFetch(`/pedidos${query ? `?${query}` : ''}`);
+  },
+
+  getPedidoById: (id) => apiFetch(`/pedidos/${id}`),
+
+  createPedido: (data) => apiFetch('/pedidos', { method: 'POST', body: JSON.stringify(data) }),
+
+  confirmPedido: (id) => apiFetch(`/pedidos/${id}/confirmar`, { method: 'PUT' }),
+
+  cancelPedido: (id) => apiFetch(`/pedidos/${id}/cancelar`, { method: 'PUT' }),
+
+  updatePedidoStatus: (id, status) =>
+    apiFetch(`/pedidos/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }),
+
   // Inventory
   createStockEntry: (stockData) => {
     const query = new URLSearchParams(stockData).toString();
@@ -90,6 +126,15 @@ export const apiService = {
 
   getProductAvailability: (productId) =>
     apiFetch(`/estoque/disponibilidade/${productId}`),
+
+  getMovimentacoesHistorico: (params = {}) => {
+    const query = new URLSearchParams(
+      Object.fromEntries(Object.entries(params).filter(([, v]) => v !== undefined && v !== null && v !== ''))
+    ).toString();
+    return apiFetch(`/estoque/movimentacoes/historico${query ? `?${query}` : ''}`);
+  },
+
+  getUsuarios: () => apiFetch('/usuarios'),
 
   getProductLotes: (productId) =>
     apiFetch(`/estoque/lotes/${productId}`),

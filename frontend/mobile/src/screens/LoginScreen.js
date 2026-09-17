@@ -80,8 +80,6 @@ const LoginScreen = () => {
         >
           <Text style={styles.buttonText}>Entrar</Text>
         </TouchableOpacity>
-
-        <Text style={styles.hint}>Usuário: admin / senha: admin123</Text>
       </View>
     </View>
   );
@@ -135,7 +133,6 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: { opacity: 0.5 },
   buttonText: { fontFamily: fonts.sansMedium, fontSize: 15, color: colors.primaryLight },
-  hint: { fontFamily: fonts.sans, textAlign: 'center', marginTop: 16, color: colors.textMuted, fontSize: 13 },
 });
 
 export default LoginScreen;

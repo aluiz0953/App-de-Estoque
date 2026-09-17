@@ -5,6 +5,7 @@ import com.perfumaria.estoque.model.Lote;
 import com.perfumaria.estoque.model.Lote.StatusLote;
 import com.perfumaria.estoque.model.MovimentacaoEstoque;
 import com.perfumaria.estoque.model.MovimentacaoEstoque.TipoMovimentacao;
+import com.perfumaria.estoque.model.MovimentacaoEstoque.MotivoMovimentacao;
 import com.perfumaria.estoque.model.Produto;
 import com.perfumaria.estoque.repository.FornecedorRepository;
 import com.perfumaria.estoque.repository.LoteRepository;
@@ -55,6 +56,7 @@ public class InventoryService {
     public Lote adicionarEstoque(Long produtoId, String numeroLote, int quantidade,
                                 LocalDate dataValidade, double precoCusto,
                                 Long fornecedorId, String localizacaoArquivo,
+                                MotivoMovimentacao motivo,
                                 com.perfumaria.estoque.model.Usuario usuario) {
         Produto produto = produtoRepository.findById(produtoId)
                 .orElseThrow(() -> new IllegalArgumentException("Produto não encontrado: " + produtoId));
@@ -77,7 +79,7 @@ public class InventoryService {
 
         Lote salvo = loteRepository.save(novoLote);
         movimentacaoEstoqueRepository.save(
-                new MovimentacaoEstoque(produto, TipoMovimentacao.ENTRADA, quantidade, null, usuario));
+                new MovimentacaoEstoque(produto, TipoMovimentacao.ENTRADA, quantidade, null, motivo, usuario));
         return salvo;
     }
 
@@ -91,11 +93,11 @@ public class InventoryService {
      * @return True if sufficient stock was available and removed
      */
     @Transactional
-    public boolean retirarEstoqueFIFO(Long produtoId, int quantidade,
+    public boolean retirarEstoqueFIFO(Long produtoId, int quantidade, MotivoMovimentacao motivo,
                                      com.perfumaria.estoque.model.Usuario usuario) {
         // True FIFO: oldest receipt date (criadoEm) first
         List<Lote> lotesAtivos = loteRepository.findActiveLotesByProdutoOrderByReceiptAsc(produtoId);
-        return registrarSaida(produtoId, quantidade, "FIFO", usuario, consumirLotes(lotesAtivos, quantidade));
+        return registrarSaida(produtoId, quantidade, "FIFO", motivo, usuario, consumirLotes(lotesAtivos, quantidade));
     }
 
     /**
@@ -108,10 +110,10 @@ public class InventoryService {
      * @return True if sufficient stock was available and removed
      */
     @Transactional
-    public boolean retirarEstoqueLIFO(Long produtoId, int quantidade,
+    public boolean retirarEstoqueLIFO(Long produtoId, int quantidade, MotivoMovimentacao motivo,
                                      com.perfumaria.estoque.model.Usuario usuario) {
         List<Lote> lotesAtivos = loteRepository.findActiveLotesByProdutoOrderByReceiptDesc(produtoId);
-        return registrarSaida(produtoId, quantidade, "LIFO", usuario, consumirLotes(lotesAtivos, quantidade));
+        return registrarSaida(produtoId, quantidade, "LIFO", motivo, usuario, consumirLotes(lotesAtivos, quantidade));
     }
 
     /**
@@ -124,23 +126,23 @@ public class InventoryService {
      * @return True if sufficient stock was available and removed
      */
     @Transactional
-    public boolean retirarEstoqueFEFO(Long produtoId, int quantidade,
+    public boolean retirarEstoqueFEFO(Long produtoId, int quantidade, MotivoMovimentacao motivo,
                                      com.perfumaria.estoque.model.Usuario usuario) {
         List<Lote> lotesAtivos = loteRepository.findActiveLotesByProdutoOrderByExpiration(produtoId);
-        return registrarSaida(produtoId, quantidade, "FEFO", usuario, consumirLotes(lotesAtivos, quantidade));
+        return registrarSaida(produtoId, quantidade, "FEFO", motivo, usuario, consumirLotes(lotesAtivos, quantidade));
     }
 
     /**
      * Logs a SAIDA movement only when the withdrawal actually succeeded — a failed
      * withdrawal (insufficient stock) must not appear in the movement history/chart.
      */
-    private boolean registrarSaida(Long produtoId, int quantidade, String estrategia,
+    private boolean registrarSaida(Long produtoId, int quantidade, String estrategia, MotivoMovimentacao motivo,
                                     com.perfumaria.estoque.model.Usuario usuario, boolean sucesso) {
         if (sucesso) {
             Produto produto = produtoRepository.findById(produtoId)
                     .orElseThrow(() -> new IllegalArgumentException("Produto não encontrado: " + produtoId));
             movimentacaoEstoqueRepository.save(
-                    new MovimentacaoEstoque(produto, TipoMovimentacao.SAIDA, quantidade, estrategia, usuario));
+                    new MovimentacaoEstoque(produto, TipoMovimentacao.SAIDA, quantidade, estrategia, motivo, usuario));
         }
         return sucesso;
     }

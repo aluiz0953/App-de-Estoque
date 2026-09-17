@@ -12,6 +12,7 @@ import {
 import storage from 'redux-persist/lib/storage'; // usa localStorage para web
 import authReducer from './slices/authSlice';
 import inventoryReducer from './slices/inventorySlice';
+import pedidosReducer from './slices/pedidosSlice';
 
 const persistConfig = {
   key: 'root',
@@ -23,6 +24,7 @@ const persistConfig = {
 const rootReducer = combineReducers({
   auth: authReducer,
   inventory: inventoryReducer,
+  pedidos: pedidosReducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

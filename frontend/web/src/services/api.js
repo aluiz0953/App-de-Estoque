@@ -81,6 +81,38 @@ const apiService = {
   createLinha: (linhaData) =>
     apiService.request.post('/linhas', linhaData),
 
+  // Clientes
+  getClientes: (params = {}) =>
+    apiService.request.get('/clientes', params),
+
+  getClienteById: (id) =>
+    apiService.request.get(`/clientes/${id}`),
+
+  createCliente: (data) =>
+    apiService.request.post('/clientes', data),
+
+  updateCliente: (id, data) =>
+    apiService.request.put(`/clientes/${id}`, data),
+
+  // Pedidos
+  getPedidos: (params = {}) =>
+    apiService.request.get('/pedidos', params),
+
+  getPedidoById: (id) =>
+    apiService.request.get(`/pedidos/${id}`),
+
+  createPedido: (data) =>
+    apiService.request.post('/pedidos', data),
+
+  confirmPedido: (id) =>
+    apiService.request.put(`/pedidos/${id}/confirmar`),
+
+  cancelPedido: (id) =>
+    apiService.request.put(`/pedidos/${id}/cancelar`),
+
+  updatePedidoStatus: (id, status) =>
+    apiService.request.put(`/pedidos/${id}/status`, { status }),
+
   // Estoque
   createStockEntry: (stockData) =>
     apiService.request.post('/estoque/entrada', stockData),
@@ -105,6 +137,9 @@ const apiService = {
 
   getMovimentacoes: (params = {}) =>
     apiService.request.get('/estoque/movimentacoes', params),
+
+  getMovimentacoesHistorico: (params = {}) =>
+    apiService.request.get('/estoque/movimentacoes/historico', params),
 
   // Notificações
   getNotifications: (params = {}) =>
