@@ -25,8 +25,20 @@ const apiService = {
   getProfile: () =>
     apiService.request.get('/auth/profile'),
 
+  register: (data) =>
+    apiService.request.post('/auth/register', data),
+
   getUsuarios: () =>
     apiService.request.get('/usuarios'),
+
+  activateUsuario: (id) =>
+    apiService.request.put(`/usuarios/${id}/activate`),
+
+  deactivateUsuario: (id) =>
+    apiService.request.put(`/usuarios/${id}/deactivate`),
+
+  rejectUsuario: (id) =>
+    apiService.request.delete(`/usuarios/${id}`),
 
   // Produtos
   getProducts: (params = {}) =>

@@ -23,11 +23,17 @@ const UsersPage = () => {
     apiService.getProfile().then(setProfile).catch(setProfileError);
   }, []);
 
-  useEffect(() => {
+  const loadUsers = () => {
     if (sessionUser?.role === 'ADMIN') {
       apiService.getUsuarios().then(setUsers).catch(setUsersError);
     }
-  }, [sessionUser?.role]);
+  };
+
+  useEffect(loadUsers, [sessionUser?.role]);
+
+  const handleActivate = (id) => apiService.activateUsuario(id).then(loadUsers);
+  const handleDeactivate = (id) => apiService.deactivateUsuario(id).then(loadUsers);
+  const handleReject = (id) => apiService.rejectUsuario(id).then(loadUsers);
 
   return (
     <main className="p-5 md:p-9">
@@ -106,11 +112,36 @@ const UsersPage = () => {
                     </span>
                     <span
                       className={`rounded-full px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.08em] ${
-                        u.active ? 'bg-[#dce6d8] text-[#5f7658]' : 'bg-[#ded7d4] text-[#716562]'
+                        u.active ? 'bg-[#dce6d8] text-[#5f7658]' : 'bg-[#f0d6c5] text-[#94634d]'
                       }`}
                     >
-                      {u.active ? 'Ativo' : 'Inativo'}
+                      {u.active ? 'Ativo' : 'Pendente'}
                     </span>
+                    {u.active ? (
+                      u.username !== sessionUser?.user && (
+                        <button
+                          onClick={() => handleDeactivate(u.id)}
+                          className="text-[11px] font-medium text-muted hover:text-danger"
+                        >
+                          Desativar
+                        </button>
+                      )
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => handleActivate(u.id)}
+                          className="text-[11px] font-medium text-secondary-dark hover:text-primary"
+                        >
+                          Aprovar
+                        </button>
+                        <button
+                          onClick={() => handleReject(u.id)}
+                          className="text-[11px] font-medium text-muted hover:text-danger"
+                        >
+                          Recusar
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               ))}

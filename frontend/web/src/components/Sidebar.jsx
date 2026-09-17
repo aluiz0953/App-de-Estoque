@@ -38,7 +38,6 @@ const Sidebar = () => {
     { name: 'Dashboard', icon: 'home', to: '/', auth: true },
     { name: 'Estoque', icon: 'package-variant', to: '/estoque', auth: true },
     { name: 'Produtos', icon: 'package', to: '/produtos', auth: ['ADMIN', 'MANAGER'] },
-    { name: 'Fornecedores', icon: 'delivery-truck', to: '/fornecedores', auth: ['ADMIN', 'MANAGER'] },
     { name: 'Notificações', icon: 'bell', to: '/notificacoes', auth: ['ADMIN', 'MANAGER', 'AUDITOR'] },
     { name: 'Relatórios', icon: 'chart-bar', to: '/relatorios', auth: ['ADMIN', 'MANAGER'] },
     { name: 'Usuários', icon: 'account-multiple', to: '/usuarios', auth: ['ADMIN'] },

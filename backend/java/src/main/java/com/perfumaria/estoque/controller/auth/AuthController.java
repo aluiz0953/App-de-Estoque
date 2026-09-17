@@ -107,24 +107,29 @@ public class AuthController {
     }
 
     /**
-     * Register a new user (admin function).
-     * In a real application, this would be more restricted.
+     * Public self-registration. The account is created inactive - an ADMIN must
+     * approve it (see UsuarioController#activate) before it can log in. Role and
+     * active are never taken from the request body: an anonymous caller must not
+     * be able to hand themselves ADMIN or a pre-approved account.
      *
      * @param usuario User data to register
-     * @return Registered user
+     * @return Success message (no account details - the caller isn't authenticated yet)
      */
     @PostMapping("/register")
-    public ResponseEntity<Usuario> register(@RequestBody Usuario usuario) {
-        // Check if user already exists
+    public ResponseEntity<Map<String, String>> register(@RequestBody Usuario usuario) {
         if (usuarioRepository.findByUsername(usuario.getUsername()).isPresent()) {
-            return ResponseEntity.badRequest().body(null);
+            return ResponseEntity.badRequest().body(Map.of("message", "Usuário já existe"));
+        }
+        if (usuarioRepository.findByEmail(usuario.getEmail()).isPresent()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "E-mail já cadastrado"));
         }
 
-        // Encode password
         usuario.setPasswordHash(passwordEncoder.encode(usuario.getPasswordHash()));
-        usuario.setRole(usuario.getRole() != null ? usuario.getRole() : Usuario.Role.OPERATOR);
+        usuario.setRole(Usuario.Role.OPERATOR);
+        usuario.setActive(false);
 
-        Usuario savedUser = usuarioRepository.save(usuario);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
+        usuarioRepository.save(usuario);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(Map.of("message", "Conta criada. Aguarde um administrador liberar seu acesso."));
     }
 }
