@@ -4,8 +4,11 @@ import { Button, Title, Caption } from 'react-native-paper';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useRoute } from '@react-navigation/native';
 import apiService from '../services/api';
+import { submitStockEntry } from '../services/stockMutations';
 import { useNavigate } from '../hooks/useNavigate';
 import { colors, tabularNums } from '../theme/colors';
+import ReasonMenu from '../components/ReasonMenu';
+import { MOTIVOS_ENTRADA, MOTIVO_LABEL } from '../utils/motivos';
 
 /**
  * "Entrada de Romaneio (Sem Câmera)" — the mobile app's headline stock-entry flow:
@@ -25,6 +28,7 @@ const EntradaRomaneioScreen = () => {
   const [quantidade, setQuantidade] = useState('');
   const [dataValidade, setDataValidade] = useState('');
   const [precoCusto, setPrecoCusto] = useState('');
+  const [motivo, setMotivo] = useState(null);
   const [itensLidos, setItensLidos] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
@@ -75,6 +79,7 @@ const EntradaRomaneioScreen = () => {
     setQuantidade('');
     setDataValidade('');
     setPrecoCusto('');
+    setMotivo(null);
   };
 
   const adicionarItem = async () => {
@@ -102,16 +107,24 @@ const EntradaRomaneioScreen = () => {
       setErrorMsg('Digite um preço de custo válido.');
       return;
     }
+    if (!motivo) {
+      setErrorMsg('Selecione o motivo da entrada.');
+      return;
+    }
 
     setSubmitting(true);
     try {
-      await apiService.createStockEntry({
-        produtoId: produtoSelecionado.id,
-        numeroLote: numeroLote.trim(),
-        quantidade: quantidadeNum,
-        dataValidade,
-        precoCusto: precoCustoNum,
-      });
+      const outcome = await submitStockEntry(
+        {
+          produtoId: produtoSelecionado.id,
+          numeroLote: numeroLote.trim(),
+          quantidade: quantidadeNum,
+          dataValidade,
+          precoCusto: precoCustoNum,
+          motivo,
+        },
+        produtoSelecionado
+      );
 
       setItensLidos((prev) => [
         ...prev,
@@ -120,6 +133,7 @@ const EntradaRomaneioScreen = () => {
           produtoNome: produtoSelecionado.nome,
           sku: produtoSelecionado.sku,
           quantidade: quantidadeNum,
+          queued: outcome.queued,
         },
       ]);
       limparItemAtual();
@@ -131,7 +145,7 @@ const EntradaRomaneioScreen = () => {
   };
 
   const finalizar = () => {
-    navigate('Home', { screen: 'Inventário' });
+    navigate('Home', { screen: 'Estoque' });
   };
 
   return (
@@ -236,6 +250,18 @@ const EntradaRomaneioScreen = () => {
                   style={[styles.input, tabularNums]}
                 />
 
+                <Text style={[styles.label, { marginTop: 16 }]}>Motivo</Text>
+                <ReasonMenu options={MOTIVOS_ENTRADA} onSelect={setMotivo}>
+                  {({ open }) => (
+                    <TouchableOpacity onPress={open} style={[styles.input, styles.motivoInput]}>
+                      <Text style={motivo ? styles.motivoText : styles.motivoPlaceholder}>
+                        {motivo ? MOTIVO_LABEL[motivo] : 'Selecionar motivo'}
+                      </Text>
+                      <MaterialCommunityIcons name="chevron-down" size={18} color={colors.textMuted} />
+                    </TouchableOpacity>
+                  )}
+                </ReasonMenu>
+
                 {errorMsg && <Text style={styles.error}>{errorMsg}</Text>}
 
                 <Button
@@ -259,7 +285,10 @@ const EntradaRomaneioScreen = () => {
                 <Title>Itens desta caixa</Title>
                 {itensLidos.map((item) => (
                   <View key={item.key} style={styles.itemRow}>
-                    <Text style={{ flex: 1 }}>{item.produtoNome}</Text>
+                    <Text style={{ flex: 1 }}>
+                      {item.produtoNome}
+                      {item.queued ? <Text style={styles.queuedTag}>  · pendente de sincronização</Text> : null}
+                    </Text>
                     <Text style={tabularNums}>{item.quantidade}</Text>
                   </View>
                 ))}
@@ -318,6 +347,17 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'center',
   },
+  motivoInput: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  motivoText: {
+    color: colors.text,
+  },
+  motivoPlaceholder: {
+    color: colors.textMutedLight,
+  },
   resultRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -338,6 +378,10 @@ const styles = StyleSheet.create({
   error: {
     color: colors.error,
     marginTop: 12,
+  },
+  queuedTag: {
+    fontSize: 11,
+    color: colors.warning,
   },
   itemRow: {
     flexDirection: 'row',

@@ -70,7 +70,7 @@ class InventoryServiceTest {
         // Act
         Lote resultado = inventoryService.adicionarEstoque(
                 1L, numeroLote, quantidade, dataValidade, precoCusto,
-                null, "Prateleira A1", usuario);
+                null, "Prateleira A1", MovimentacaoEstoque.MotivoMovimentacao.COMPRA_RECEBIDA, usuario);
 
         // Assert - Since we mocked the repository, we verify the method was called
         // In a real test with actual repository, we'd assert on the returned lot
@@ -103,7 +103,7 @@ class InventoryServiceTest {
                 .thenReturn(Arrays.asList(lote1, lote2));
 
         // Act
-        boolean resultado = inventoryService.retirarEstoqueFIFO(1L, 12, usuario);
+        boolean resultado = inventoryService.retirarEstoqueFIFO(1L, 12, MovimentacaoEstoque.MotivoMovimentacao.VENDA, usuario);
 
         // Assert
         assertTrue(resultado); // Should succeed
@@ -128,7 +128,7 @@ class InventoryServiceTest {
                 .thenReturn(Arrays.asList(lote1));
 
         // Act
-        boolean resultado = inventoryService.retirarEstoqueFIFO(1L, 10, usuario);
+        boolean resultado = inventoryService.retirarEstoqueFIFO(1L, 10, MovimentacaoEstoque.MotivoMovimentacao.VENDA, usuario);
 
         // Assert
         assertFalse(resultado); // Should fail due to insufficient stock
@@ -151,7 +151,7 @@ class InventoryServiceTest {
                 .thenReturn(Arrays.asList(lote1));
 
         // Act
-        boolean resultado = inventoryService.retirarEstoqueFIFO(1L, 5, usuario);
+        boolean resultado = inventoryService.retirarEstoqueFIFO(1L, 5, MovimentacaoEstoque.MotivoMovimentacao.VENDA, usuario);
 
         // Assert
         assertTrue(resultado); // Should succeed with exact amount

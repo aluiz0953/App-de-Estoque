@@ -34,6 +34,13 @@ public class MovimentacaoEstoque {
     @Column(length = 20)
     private String estrategia; // FIFO, FEFO, LIFO, MANUAL - null for ENTRADA
 
+    // Nullable at the DB level so existing rows (recorded before this field existed)
+    // don't break ddl-auto=update; required at the API level for any new movement
+    // going forward (see InventoryController).
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private MotivoMovimentacao motivo;
+
     @Column(name = "data_movimentacao", nullable = false)
     private LocalDateTime dataMovimentacao = LocalDateTime.now();
 
@@ -43,11 +50,13 @@ public class MovimentacaoEstoque {
 
     public MovimentacaoEstoque() {}
 
-    public MovimentacaoEstoque(Produto produto, TipoMovimentacao tipo, int quantidade, String estrategia, Usuario usuario) {
+    public MovimentacaoEstoque(Produto produto, TipoMovimentacao tipo, int quantidade, String estrategia,
+                                MotivoMovimentacao motivo, Usuario usuario) {
         this.produto = produto;
         this.tipo = tipo;
         this.quantidade = quantidade;
         this.estrategia = estrategia;
+        this.motivo = motivo;
         this.usuario = usuario;
     }
 
@@ -66,6 +75,9 @@ public class MovimentacaoEstoque {
     public String getEstrategia() { return estrategia; }
     public void setEstrategia(String estrategia) { this.estrategia = estrategia; }
 
+    public MotivoMovimentacao getMotivo() { return motivo; }
+    public void setMotivo(MotivoMovimentacao motivo) { this.motivo = motivo; }
+
     public LocalDateTime getDataMovimentacao() { return dataMovimentacao; }
     public void setDataMovimentacao(LocalDateTime dataMovimentacao) { this.dataMovimentacao = dataMovimentacao; }
 
@@ -74,5 +86,19 @@ public class MovimentacaoEstoque {
 
     public enum TipoMovimentacao {
         ENTRADA, SAIDA
+    }
+
+    // ENTRADA typically uses COMPRA_RECEBIDA or ESTOQUE_INICIAL; SAIDA offers the
+    // full list (see spec Fluxo C) so the operator always records why stock left.
+    public enum MotivoMovimentacao {
+        COMPRA_RECEBIDA,
+        ESTOQUE_INICIAL,
+        VENDA,
+        DEVOLUCAO,
+        DANIFICADO,
+        VENCIDO,
+        PERDA,
+        CORRECAO_CONTAGEM,
+        OUTRO
     }
 }

@@ -118,6 +118,38 @@ public class ProdutoController {
     }
 
     /**
+     * Archives a product (soft delete): keeps the row and its lote/movimentacao
+     * history intact, just marks it inactive so it drops out of active-inventory
+     * views. Use this instead of DELETE for the normal "remove from catalog" flow.
+     * @param id Product ID
+     * @return Updated product
+     */
+    @PutMapping("/{id}/archive")
+    public ResponseEntity<Produto> archiveProduto(@PathVariable Long id) {
+        return produtoRepository.findById(id)
+                .map(produto -> {
+                    produto.setActive(false);
+                    return ResponseEntity.ok(produtoRepository.save(produto));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Restores a previously archived product back to active inventory.
+     * @param id Product ID
+     * @return Updated product
+     */
+    @PutMapping("/{id}/restore")
+    public ResponseEntity<Produto> restoreProduto(@PathVariable Long id) {
+        return produtoRepository.findById(id)
+                .map(produto -> {
+                    produto.setActive(true);
+                    return ResponseEntity.ok(produtoRepository.save(produto));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
      * Get profit margin for a product.
      * @param id Product ID
      * @return Profit margin percentage

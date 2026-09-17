@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, ActivityIndicator, FlatList } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, ActivityIndicator, FlatList, TouchableOpacity, Alert, StyleSheet } from 'react-native';
 import { Button, Card, Title, Paragraph } from 'react-native-paper';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import useFetchProductById from '../hooks/useFetchProductById';
@@ -7,6 +7,10 @@ import useFetchProductLotes from '../hooks/useFetchProductLotes';
 import { useNavigate } from '../hooks/useNavigate';
 import { useRoute } from '@react-navigation/native';
 import { colors, fonts, tabularNums } from '../theme/colors';
+import RemoveStockModal from '../components/RemoveStockModal';
+import { useToast } from '../components/Toast';
+import apiService from '../services/api';
+import { submitStockWithdrawal } from '../services/stockMutations';
 
 const STATUS_COLORS = {
   ATIVO: colors.success,
@@ -18,10 +22,59 @@ const STATUS_COLORS = {
 const ProductDetailScreen = () => {
   const route = useRoute();
   const navigate = useNavigate();
+  const showToast = useToast();
   const { productId } = route.params;
+  const [removing, setRemoving] = useState(false);
+  const [showRemoveModal, setShowRemoveModal] = useState(false);
 
-  const { data: produto, isLoading: isLoadingProduto, error: errorProduto } = useFetchProductById(productId);
+  const { data: produto, isLoading: isLoadingProduto, error: errorProduto, refetch } = useFetchProductById(productId);
   const { data: lotes, isLoading: isLoadingLotes, error: errorLotes } = useFetchProductLotes(productId);
+
+  const handleConfirmRemove = async (quantidade, motivo) => {
+    if (!produto) return;
+    setRemoving(true);
+    try {
+      const outcome = await submitStockWithdrawal({ produtoId: produto.id, quantidade, motivo }, produto);
+      if (outcome.queued) {
+        showToast(`Sem conexão — ${produto.nome} será sincronizado ao reconectar`);
+        setShowRemoveModal(false);
+      } else if (outcome.result.sucesso) {
+        showToast(`${produto.nome} · -${quantidade} unidade${quantidade === 1 ? '' : 's'}`);
+        setShowRemoveModal(false);
+        refetch();
+      } else {
+        showToast(outcome.result.mensagem || 'Estoque insuficiente');
+      }
+    } catch (e) {
+      showToast(e.message || 'Erro ao remover estoque');
+    } finally {
+      setRemoving(false);
+    }
+  };
+
+  const handleArchive = () => {
+    if (!produto) return;
+    Alert.alert(
+      'Arquivar produto',
+      `${produto.nome} sairá do inventário ativo, mas o histórico é preservado. Deseja continuar?`,
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Arquivar',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await apiService.archiveProduct(produto.id);
+              showToast('Produto arquivado');
+              navigate('Home', { screen: 'Estoque' });
+            } catch (e) {
+              showToast(e.message || 'Erro ao arquivar produto');
+            }
+          },
+        },
+      ]
+    );
+  };
 
   const margemLucro = produto
     ? ((produto.precoVenda - produto.precoCusto) / produto.precoVenda * 100).toFixed(1)
@@ -167,25 +220,101 @@ const ProductDetailScreen = () => {
         }
       />
 
-      <View style={{ position: 'absolute', bottom: 16, left: 16, right: 16, flexDirection: 'row', justifyContent: 'space-between' }}>
-        <Button
-          mode="outlined"
-          onPress={() => navigate('Home', { screen: 'Inventário' })}
-          style={{ flex: 1, marginRight: 8 }}
-        >
-          Voltar ao Estoque
-        </Button>
-        <Button
-          mode="contained"
-          onPress={() => navigate('MovimentacaoDetail', { produtoId: produto.id })}
-          buttonColor={colors.primary}
-          style={{ flex: 1, marginLeft: 8 }}
-        >
-          Ver Movimentações
-        </Button>
+      <View style={styles.actionBar}>
+        <View style={styles.actionRow}>
+          <TouchableOpacity
+            onPress={() => navigate('EntradaRomaneio', { produtoId: produto.id })}
+            style={styles.actionBtn}
+          >
+            <MaterialCommunityIcons name="package-down" size={16} color={colors.text} />
+            <Text style={styles.actionBtnText}>Receber</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => setShowRemoveModal(true)}
+            disabled={(produto.quantidadeTotal ?? 0) <= 0}
+            style={[styles.actionBtn, (produto.quantidadeTotal ?? 0) <= 0 && { opacity: 0.5 }]}
+          >
+            <MaterialCommunityIcons name="package-up" size={16} color={colors.text} />
+            <Text style={styles.actionBtnText}>Remover</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            onPress={() => navigate('AddEditProduct', { produtoId: produto.id })}
+            style={styles.actionBtn}
+          >
+            <MaterialCommunityIcons name="pencil-outline" size={16} color={colors.text} />
+            <Text style={styles.actionBtnText}>Editar</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity onPress={handleArchive} style={styles.actionBtn}>
+            <MaterialCommunityIcons name="archive-outline" size={16} color={colors.error} />
+            <Text style={[styles.actionBtnText, { color: colors.error }]}>Arquivar</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={{ flexDirection: 'row', marginTop: 10 }}>
+          <Button
+            mode="outlined"
+            onPress={() => navigate('Home', { screen: 'Estoque' })}
+            style={{ flex: 1, marginRight: 8 }}
+          >
+            Voltar ao Estoque
+          </Button>
+          <Button
+            mode="contained"
+            onPress={() => navigate('MovimentacaoDetail', { produtoId: produto.id })}
+            buttonColor={colors.primary}
+            style={{ flex: 1, marginLeft: 8 }}
+          >
+            Ver Movimentações
+          </Button>
+        </View>
       </View>
+
+      <RemoveStockModal
+        visible={showRemoveModal}
+        product={produto}
+        onClose={() => setShowRemoveModal(false)}
+        onConfirm={handleConfirmRemove}
+        busy={removing}
+      />
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  actionBar: {
+    position: 'absolute',
+    bottom: 16,
+    left: 16,
+    right: 16,
+    backgroundColor: colors.surface,
+    borderRadius: 14,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    shadowColor: '#000',
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 5,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  actionBtn: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 4,
+    paddingVertical: 6,
+  },
+  actionBtnText: {
+    fontFamily: fonts.sansMedium,
+    fontSize: 10,
+    color: colors.text,
+  },
+});
 
 export default ProductDetailScreen;

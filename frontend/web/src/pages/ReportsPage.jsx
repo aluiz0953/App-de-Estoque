@@ -1,6 +1,19 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useFetchEstoqueResumo } from '../hooks/useFetchEstoqueResumo';
+import apiService from '../services/api';
+
+const MOTIVO_LABEL = {
+  COMPRA_RECEBIDA: 'Compra recebida',
+  ESTOQUE_INICIAL: 'Estoque inicial',
+  VENDA: 'Venda',
+  DEVOLUCAO: 'Devolução',
+  DANIFICADO: 'Danificado',
+  VENCIDO: 'Vencido',
+  PERDA: 'Perda',
+  CORRECAO_CONTAGEM: 'Correção de contagem',
+  OUTRO: 'Outro',
+};
 
 const money = (value) => `R$ ${(value ?? 0).toFixed(2).replace('.', ',')}`;
 
@@ -18,7 +31,6 @@ const ReportsPage = () => {
 
   const { data: resumo, isLoading: isLoadingResumo, error: errorResumo } = useFetchEstoqueResumo();
 
-  const movimentacaoData = [];
   const vencimentosData = [];
   const lucroData = [];
 
@@ -74,7 +86,7 @@ const ReportsPage = () => {
         {reportType === 'resumo' ? (
           <ResumoReport isLoading={isLoadingResumo} error={errorResumo} data={resumo} />
         ) : reportType === 'movimentacao' ? (
-          <MovimentacaoReport data={movimentacaoData} />
+          <MovimentacaoReport />
         ) : reportType === 'vencimentos' ? (
           <VencimentosReport data={vencimentosData} />
         ) : (
@@ -132,17 +144,193 @@ const Metric = ({ label, value }) => (
   </div>
 );
 
-const MovimentacaoReport = ({ data }) => (
-  <div>
-    <h3 className="font-display text-[22px]">Relatório de movimentação</h3>
-    <p className="mt-2 text-[13px] text-muted">
-      Em uma implementação completa, este relatório mostraria todas as entradas e saídas de estoque no período selecionado.
-    </p>
-    <p className="mt-4 text-[13px] text-muted-light">
-      {data.length > 0 ? `${data.length} movimentações encontradas` : 'Nenhuma movimentação encontrada para o período selecionado'}
-    </p>
-  </div>
-);
+const PERIODOS = [
+  { value: '', label: 'Tudo' },
+  { value: '7', label: '7 dias' },
+  { value: '30', label: '30 dias' },
+  { value: '90', label: '90 dias' },
+];
+
+const toIsoDate = (date) => date.toISOString().slice(0, 10);
+
+const MovimentacaoReport = () => {
+  const [tipo, setTipo] = useState('');
+  const [periodoDias, setPeriodoDias] = useState('');
+  const [produtoSearch, setProdutoSearch] = useState('');
+  const [produtoResults, setProdutoResults] = useState([]);
+  const [selectedProduto, setSelectedProduto] = useState(null);
+  const [usuarios, setUsuarios] = useState([]);
+  const [usuarioId, setUsuarioId] = useState('');
+  const [page, setPage] = useState(0);
+  const [result, setResult] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const debounceRef = useRef(null);
+
+  useEffect(() => {
+    apiService.getUsuarios().then(setUsuarios).catch(() => setUsuarios([]));
+  }, []);
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (produtoSearch.trim().length < 2) {
+      setProdutoResults([]);
+      return;
+    }
+    debounceRef.current = setTimeout(() => {
+      apiService.getProducts({ search: produtoSearch.trim() }).then((r) => setProdutoResults((r || []).slice(0, 8)));
+    }, 300);
+    return () => clearTimeout(debounceRef.current);
+  }, [produtoSearch]);
+
+  useEffect(() => setPage(0), [tipo, periodoDias, selectedProduto, usuarioId]);
+
+  useEffect(() => {
+    const params = { page, size: 20 };
+    if (tipo) params.tipo = tipo;
+    if (selectedProduto) params.produtoId = selectedProduto.id;
+    if (usuarioId) params.usuarioId = usuarioId;
+    if (periodoDias) {
+      params.dataInicio = toIsoDate(new Date(Date.now() - Number(periodoDias) * 86400000));
+      params.dataFim = toIsoDate(new Date());
+    }
+    setIsLoading(true);
+    apiService
+      .getMovimentacoesHistorico(params)
+      .then((r) => {
+        setResult(r);
+        setError(null);
+      })
+      .catch(setError)
+      .finally(() => setIsLoading(false));
+  }, [tipo, periodoDias, selectedProduto, usuarioId, page]);
+
+  return (
+    <div>
+      <h3 className="font-display text-[22px]">Relatório de movimentação</h3>
+
+      <div className="mt-4 flex flex-wrap items-end gap-3">
+        <div className="flex gap-1 rounded-lg border border-border bg-brand-bg p-1">
+          {[{ value: '', label: 'Todas' }, { value: 'ENTRADA', label: 'Entradas' }, { value: 'SAIDA', label: 'Saídas' }].map((t) => (
+            <button
+              key={t.label}
+              onClick={() => setTipo(t.value)}
+              className={`rounded-md px-3 py-1.5 text-[11px] ${tipo === t.value ? 'bg-primary text-primary-50' : 'text-muted'}`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="flex gap-1 rounded-lg border border-border bg-brand-bg p-1">
+          {PERIODOS.map((p) => (
+            <button
+              key={p.label}
+              onClick={() => setPeriodoDias(p.value)}
+              className={`rounded-md px-3 py-1.5 text-[11px] ${periodoDias === p.value ? 'bg-primary text-primary-50' : 'text-muted'}`}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="relative">
+          {selectedProduto ? (
+            <button
+              onClick={() => { setSelectedProduto(null); setProdutoSearch(''); }}
+              className="flex h-9 items-center gap-2 rounded-lg border border-secondary-dark bg-brand-bg px-3 text-[11px]"
+            >
+              {selectedProduto.nome} <span className="mdi mdi-close-circle text-muted" />
+            </button>
+          ) : (
+            <>
+              <input
+                value={produtoSearch}
+                onChange={(e) => setProdutoSearch(e.target.value)}
+                placeholder="Filtrar por produto..."
+                className="h-9 w-52 rounded-lg border border-border bg-brand-bg px-3 text-[11px] outline-none focus:border-secondary-dark"
+              />
+              {produtoResults.length > 0 && (
+                <div className="absolute z-10 mt-1 w-64 rounded-lg border border-border bg-surface shadow-lg">
+                  {produtoResults.map((p) => (
+                    <button
+                      key={p.id}
+                      onClick={() => { setSelectedProduto(p); setProdutoResults([]); }}
+                      className="block w-full truncate border-b border-border px-3 py-2 text-left text-[11px] last:border-0 hover:bg-brand-bg"
+                    >
+                      {p.nome} · {p.sku}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+
+        {usuarios.length > 0 && (
+          <select
+            value={usuarioId}
+            onChange={(e) => setUsuarioId(e.target.value)}
+            className="h-9 rounded-lg border border-border bg-brand-bg px-3 text-[11px] outline-none focus:border-secondary-dark"
+          >
+            <option value="">Todos operadores</option>
+            {usuarios.map((u) => (
+              <option key={u.id} value={u.id}>{u.username}</option>
+            ))}
+          </select>
+        )}
+      </div>
+
+      {isLoading ? (
+        <div className="flex justify-center py-12">
+          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-secondary-dark" />
+        </div>
+      ) : error ? (
+        <p className="py-8 text-danger">{error.message}</p>
+      ) : !result?.content?.length ? (
+        <p className="mt-6 text-[13px] text-muted-light">Nenhuma movimentação encontrada para os filtros selecionados.</p>
+      ) : (
+        <>
+          <div className="mt-5 overflow-hidden rounded-lg border border-border">
+            <div className="hidden grid-cols-[1.4fr_0.6fr_0.6fr_0.8fr_0.9fr_0.8fr] gap-3 border-b border-border bg-brand-bg px-4 py-2 font-mono text-[9px] uppercase tracking-[0.1em] text-muted-light md:grid">
+              <span>Produto</span><span>Tipo</span><span>Qtd</span><span>Motivo</span><span>Data</span><span>Operador</span>
+            </div>
+            {result.content.map((m) => (
+              <div key={m.id} className="grid grid-cols-2 gap-3 border-b border-border px-4 py-3 text-[12px] last:border-0 md:grid-cols-[1.4fr_0.6fr_0.6fr_0.9fr_0.9fr_0.8fr]">
+                <span className="truncate">{m.produto?.nome}</span>
+                <span className={m.tipo === 'ENTRADA' ? 'text-success' : 'text-danger'}>{m.tipo === 'ENTRADA' ? 'Entrada' : 'Saída'}</span>
+                <span className="tabular-nums">{m.quantidade}</span>
+                <span className="text-muted">{MOTIVO_LABEL[m.motivo] || m.motivo || '—'}</span>
+                <span className="text-muted">{m.dataMovimentacao ? new Date(m.dataMovimentacao).toLocaleString('pt-BR') : ''}</span>
+                <span className="text-muted">{m.usuario?.username || '—'}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-4 flex items-center justify-between text-[11px] text-muted-light">
+            <span>Página {result.number + 1} de {result.totalPages} · {result.totalElements} movimentações</span>
+            <div className="flex gap-2">
+              <button
+                disabled={page <= 0}
+                onClick={() => setPage((p) => p - 1)}
+                className="rounded-full border border-border px-3 py-1.5 disabled:opacity-40"
+              >
+                Anterior
+              </button>
+              <button
+                disabled={page + 1 >= result.totalPages}
+                onClick={() => setPage((p) => p + 1)}
+                className="rounded-full border border-border px-3 py-1.5 disabled:opacity-40"
+              >
+                Próxima
+              </button>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
 
 const VencimentosReport = ({ data }) => (
   <div>
