@@ -15,6 +15,11 @@
     <properties>
         <java.version>17</java.version>
         <spring-boot.version>3.2.0</spring-boot.version>
+        <!-- Without this, javac falls back to the platform default charset (e.g. windows-1252
+             on Windows), which breaks on the accented Portuguese text in source files depending
+             on which JDK/locale runs the build - a real portability trap across dev machines,
+             CI and Docker. -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
     <dependencyManagement>
