@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useDispatch, useSelector } from 'react-redux';
+import { logout, logoutUser } from '../store/slices/authSlice';
 
 const ICONS = {
   home: 'view-dashboard-outline',
@@ -14,15 +15,24 @@ const ICONS = {
   'account-multiple': 'account-multiple-outline',
 };
 
-const handleLogout = () => {
-  window.location.href = '/login';
-};
-
 const Sidebar = () => {
   const { user } = useSelector((state) => state.auth);
   const isAuthenticated = !!user;
   const location = useLocation();
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const handleLogout = async () => {
+    try {
+      await dispatch(logout()).unwrap();
+    } catch (e) {
+      // backend session may already be gone (expired/invalid) - clear local state
+      // ourselves so a stale `user` doesn't keep RequireAuth thinking we're signed in.
+      dispatch(logoutUser());
+    }
+    navigate('/login', { replace: true });
+  };
 
   const menuItems = [
     { name: 'Dashboard', icon: 'home', to: '/', auth: true },
@@ -79,10 +89,14 @@ const Sidebar = () => {
             <p className="truncate text-[12px] font-medium text-primary-50">{user.user || user.username || user.nome}</p>
             <p className="truncate text-[10px] text-muted-light">{user.role}</p>
           </div>
-          <button onClick={handleLogout} aria-label="Sair" className="ml-auto text-muted-light hover:text-primary-50">
-            <span className="mdi mdi-logout text-[14px]" />
-          </button>
         </div>
+        <button
+          onClick={handleLogout}
+          className="pressable mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-white/10 py-2.5 text-[12px] text-[#bcaea2] transition hover:bg-white/5 hover:text-primary-50"
+        >
+          <span className="mdi mdi-logout text-[14px]" />
+          Sair da conta
+        </button>
       </div>
     </>
   );
