@@ -1,6 +1,6 @@
 ﻿import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { Provider } from 'react-redux';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Provider, useSelector } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { store, persistor } from './src/store';
 import { ThemeProvider } from './src/contexts/ThemeContext';
@@ -19,6 +19,14 @@ import NotificationsPage from './src/pages/NotificationsPage';
 import ReportsPage from './src/pages/ReportsPage.jsx';
 import UsersPage from './src/pages/UsersPage';
 
+// Unauthenticated visitors must land on /login, not a dashboard shell that just
+// fails every request with 401 - the routes below never even check auth state.
+const RequireAuth = ({ children }) => {
+  const isAuthenticated = useSelector((state) => !!state.auth.user);
+  if (!isAuthenticated) return <Navigate to="/login" replace />;
+  return children;
+};
+
 function App() {
   return (
     <Provider store={store}>
@@ -30,6 +38,7 @@ function App() {
               <Route
                 path="*"
                 element={
+                  <RequireAuth>
                   <div className="App min-h-screen bg-brand-bg font-sans text-ink">
                     <Sidebar />
                     <MainContent>
@@ -47,6 +56,7 @@ function App() {
                       </Routes>
                     </MainContent>
                   </div>
+                  </RequireAuth>
                 }
               />
             </Routes>
