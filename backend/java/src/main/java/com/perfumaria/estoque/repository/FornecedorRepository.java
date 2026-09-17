@@ -8,7 +8,7 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
  * Repository for Fornecedor entity.
  * Provides CRUD operations and custom queries for supplier management.
  */
-@RepositoryRestResource
+@RepositoryRestResource(exported = false) // no controller fronts this — don't auto-expose it unauthenticated at root
 public interface FornecedorRepository extends JpaRepository<Fornecedor, Long> {
 
     Fornecedor findByCnpj(String cnpj);

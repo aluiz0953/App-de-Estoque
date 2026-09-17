@@ -1,4 +1,4 @@
-import { configureStore } from '@reduxjs/toolkit';
+import { configureStore, combineReducers } from '@reduxjs/toolkit';
 import {
   persistStore,
   persistReducer,
@@ -8,7 +8,7 @@ import {
   PERSIST,
   PURGE,
   REGISTER,
-} from 'redux-persit';
+} from 'redux-persist';
 import storage from 'redux-persist/lib/storage'; // usa localStorage para web
 import authReducer from './slices/authSlice';
 import inventoryReducer from './slices/inventorySlice';
@@ -20,12 +20,10 @@ const persistConfig = {
   whitelist: ['auth'], // apenas auth será persistido
 };
 
-const rootReducer = (state, action) => {
-  return {
-    auth: authReducer(state.auth, action),
-    inventory: inventoryReducer(state.inventory, action),
-  };
-};
+const rootReducer = combineReducers({
+  auth: authReducer,
+  inventory: inventoryReducer,
+});
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 

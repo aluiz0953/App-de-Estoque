@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { View, Text, ActivityIndicator } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
-import { Button, TextInput, Card, Title, Paragraph } from 'react-native-paper';
+import { Button, TextInput, Card, Title, Paragraph, Caption } from 'react-native-paper';
 import { login } from '../store/slices/authSlice';
 import { useNavigate } from '../hooks/useNavigate';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import { colors } from '../theme/colors';
 
 const LoginScreen = () => {
   const [username, setUsername] = useState('');
@@ -12,9 +13,7 @@ const LoginScreen = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const { isAuthenticating, user, error: authError } = useSelector(
-    (state) => state.auth
-  );
+  const { isAuthenticating } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -23,10 +22,9 @@ const LoginScreen = () => {
     setError(null);
     try {
       await dispatch(login({ username, password })).unwrap();
-      // Login bem-sucedido, navega para a tela inicial
       navigate('Home');
     } catch (err) {
-      setError(err.message || 'Falha no login');
+      setError(err.message || err || 'Falha no login');
     } finally {
       setLoading(false);
     }
@@ -35,34 +33,18 @@ const LoginScreen = () => {
   if (loading || isAuthenticating) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#5B2C6F" />
-      </View>
-    );
-  }
-
-  if (error || authError) {
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
-        <Card elevation={3}>
-          <View style={{ padding: 24 }}>
-            <Title>Erro de Login</Title>
-            <Paragraph>{error || authError}</Paragraph>
-            <Button mode="outlined" onPress={() => setError(null)} style={{ marginTop: 12 }}>
-              OK
-            </Button>
-          </View>
-        </Card>
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
   return (
-    <View style={{ flex: 1, padding: 24, backgroundColor: '#F8F9FA' }}>
+    <View style={{ flex: 1, padding: 24, backgroundColor: colors.background, justifyContent: 'center' }}>
       <View style={{ alignItems: 'center', marginBottom: 32 }}>
         <MaterialCommunityIcons
           name="store"
           size={64}
-          color="#5B2C6F"
+          color={colors.primary}
           style={{ marginBottom: 16 }}
         />
         <Title>Perfumaria Estoque</Title>
@@ -90,18 +72,24 @@ const LoginScreen = () => {
             placeholder="Digite sua senha"
             mode="outlined"
             secureTextEntry
-            style={{ marginBottom: 24 }}
+            style={{ marginBottom: 8 }}
           />
+
+          {error && (
+            <Paragraph style={{ color: colors.error, marginBottom: 16 }}>{error}</Paragraph>
+          )}
 
           <Button
             mode="contained"
             onPress={handleLogin}
-            style={{ backgroundColor: '#5B2C6F' }}
+            disabled={!username || !password}
+            buttonColor={colors.primary}
+            style={{ marginTop: 8 }}
           >
             Entrar
           </Button>
 
-          <Text style={{ textAlign: 'center', marginTop: 16, color: '#7F8C8D', fontSize: 14 }}>
+          <Text style={{ textAlign: 'center', marginTop: 16, color: colors.textMuted, fontSize: 14 }}>
             Usuário: admin / senha: admin123
           </Text>
         </View>

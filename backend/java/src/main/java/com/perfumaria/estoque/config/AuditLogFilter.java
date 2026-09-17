@@ -2,9 +2,12 @@ package com.perfumaria.estoque.config;
 
 import com.perfumaria.estoque.model.AuditLog;
 import com.perfumaria.estoque.repository.AuditLogRepository;
+import com.perfumaria.estoque.repository.UsuarioRepository;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -22,12 +25,16 @@ public class AuditLogFilter implements Filter {
     @Autowired
     private AuditLogRepository auditLogRepository;
 
-    // Paths that require audit logging
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    // Paths that require audit logging. ".*" (not "/.*") so the pattern also
+    // matches the bare prefix itself (e.g. "/api/produtos" with no trailing slash).
     private static final String[] AUDITED_PATHS = {
         "/api/auth/login",
-        "/api/estoque/**",  // All stock operations (entrada/saída manual)
-        "/api/produtos/**", // Product modifications
-        "/api/usuarios/**"  // User management
+        "/api/estoque.*",  // All stock operations (entrada/saída manual)
+        "/api/produtos.*", // Product modifications
+        "/api/usuarios.*"  // User management
     };
 
     @Override
@@ -60,10 +67,23 @@ public class AuditLogFilter implements Filter {
             auditLog.setIpAddress(ipAddress);
             auditLog.setUserAgent(userAgent);
             auditLog.setAccessTime(LocalDateTime.now());
-            // In a real implementation, we would extract the authenticated user from the security context
-            // auditLog.setUsuario(authenticatedUser);
+            auditLog.setUsuario(getAuthenticatedUsuario());
             auditLogRepository.save(auditLog);
         }
+    }
+
+    /**
+     * Resolves the currently authenticated Usuario from the security context, if any.
+     * A failed /login attempt or an anonymous request has no authenticated principal,
+     * so this returns null rather than failing the request.
+     */
+    private com.perfumaria.estoque.model.Usuario getAuthenticatedUsuario() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()
+                || "anonymousUser".equals(authentication.getPrincipal())) {
+            return null;
+        }
+        return usuarioRepository.findByUsername(authentication.getName()).orElse(null);
     }
 
     /**

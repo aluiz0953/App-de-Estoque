@@ -88,7 +88,7 @@ class InventoryServiceTest {
         lote1.setNumeroLote("LOTE-001");
         lote1.setQuantidade(5);
         lote1.setDataValidade(LocalDate.now().plusDays(10));
-        lote1.setStatusLote(Lote.StatusLote.ATIVO);
+        lote1.setStatus(Lote.StatusLote.ATIVO);
 
         Lote lote2 = new Lote();
         lote2.setId(2L);
@@ -96,7 +96,7 @@ class InventoryServiceTest {
         lote2.setNumeroLote("LOTE-002");
         lote2.setQuantidade(10);
         lote2.setDataValidade(LocalDate.now().plusDays(20));
-        lote2.setStatusLote(Lote.StatusLote.ATIVO);
+        lote2.setStatus(Lote.StatusLote.ATIVO);
 
         // Mock the repository to return lots ordered by expiration date (FEFO)
         when(loteRepository.findActiveLotesByProdutoOrderByExpiration(1L))
@@ -121,7 +121,7 @@ class InventoryServiceTest {
         lote1.setNumeroLote("LOTE-001");
         lote1.setQuantidade(3);
         lote1.setDataValidade(LocalDate.now().plusDays(10));
-        lote1.setStatusLote(Lote.StatusLote.ATIVO);
+        lote1.setStatus(Lote.StatusLote.ATIVO);
 
         // Mock the repository to return lots with insufficient quantity
         when(loteRepository.findActiveLotesByProdutoOrderByExpiration(1L))
@@ -144,7 +144,7 @@ class InventoryServiceTest {
         lote1.setNumeroLote("LOTE-001");
         lote1.setQuantidade(5);
         lote1.setDataValidade(LocalDate.now().plusDays(10));
-        lote1.setStatusLote(Lote.StatusLote.ATIVO);
+        lote1.setStatus(Lote.StatusLote.ATIVO);
 
         // Mock the repository to return lots with exactly enough quantity
         when(loteRepository.findActiveLotesByProdutoOrderByExpiration(1L))

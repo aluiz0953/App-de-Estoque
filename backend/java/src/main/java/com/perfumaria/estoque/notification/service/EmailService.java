@@ -112,7 +112,7 @@ public class EmailService {
         helper.setSubject(EMAIL_SUBJECT);
 
         // Create HTML content
-        String htmlContent = gerarConteudoHTML(notificacoes, destinatario.getNome());
+        String htmlContent = gerarConteudoHTML(notificacoes, destinatario.getFullName());
         helper.setText(htmlContent, true); // true = isHTML
 
         mailSender.send(mensagem);
@@ -196,7 +196,8 @@ public class EmailService {
         // Summary
         html.append("<div class=\"summary\">");
         html.append("<h3>Resumo</h3>");
-        html.append("<p><strong>Total de notificações:</strong> ").append(notificacoes.size()).append("</p>");
+        int totalNotificacoes = notificacoesPorTipo.values().stream().mapToInt(List::size).sum();
+        html.append("<p><strong>Total de notificações:</strong> ").append(totalNotificacoes).append("</p>");
         html.append("<p><strong>Data do relatório:</strong> ").append(LocalDate.now()).append("</p>");
         html.append("</div>");
 

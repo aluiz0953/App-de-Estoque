@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import apiService from '../services/api';
 
 const useFetchProducts = (params = {}) => {
@@ -6,25 +6,25 @@ const useFetchProducts = (params = {}) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const fetchProducts = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const result = await apiService.getProducts(params);
+      setData(result);
+      setError(null);
+    } catch (err) {
+      setError(err);
+      setData(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [JSON.stringify(params)]);
+
   useEffect(() => {
-    const fetchProducts = async () => {
-      setIsLoading(true);
-      try {
-        const result = await apiService.getProducts(params);
-        setData(result);
-        setError(null);
-      } catch (err) {
-        setError(err);
-        setData(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchProducts();
-  }, [params]);
+  }, [fetchProducts]);
 
-  return { data, isLoading, error };
+  return { data, isLoading, error, refetch: fetchProducts };
 };
 
 export default useFetchProducts;

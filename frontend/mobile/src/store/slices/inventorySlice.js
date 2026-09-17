@@ -99,6 +99,8 @@ const inventorySlice = createSlice({
     productDetail: null,
     availability: null,
     lotes: [],
+    lastStockEntry: null,
+    lastWithdrawal: null,
     isLoading: false,
     error: null,
   },
@@ -151,10 +153,11 @@ const inventorySlice = createSlice({
       // Create Stock Entry
       .addCase(createStockEntry.pending, (state) => {
         state.isLoading = true;
+        state.error = null;
       })
       .addCase(createStockEntry.fulfilled, (state, action) => {
         state.isLoading = false;
-        // Em uma implementação real, você atualizaria a lista de produtos
+        state.lastStockEntry = action.payload;
       })
       .addCase(createStockEntry.rejected, (state, action) => {
         state.isLoading = false;
@@ -163,10 +166,11 @@ const inventorySlice = createSlice({
       // Withdraw Stock FIFO
       .addCase(withdrawStockFIFO.pending, (state) => {
         state.isLoading = true;
+        state.error = null;
       })
       .addCase(withdrawStockFIFO.fulfilled, (state, action) => {
         state.isLoading = false;
-        // Atualizar lista de produtos após saque
+        state.lastWithdrawal = action.payload;
       })
       .addCase(withdrawStockFIFO.rejected, (state, action) => {
         state.isLoading = false;
@@ -175,10 +179,11 @@ const inventorySlice = createSlice({
       // Withdraw Stock FEFO
       .addCase(withdrawStockFEFO.pending, (state) => {
         state.isLoading = true;
+        state.error = null;
       })
       .addCase(withdrawStockFEFO.fulfilled, (state, action) => {
         state.isLoading = false;
-        // Atualizar lista de produtos após saque
+        state.lastWithdrawal = action.payload;
       })
       .addCase(withdrawStockFEFO.rejected, (state, action) => {
         state.isLoading = false;

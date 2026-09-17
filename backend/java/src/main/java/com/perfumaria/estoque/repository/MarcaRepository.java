@@ -8,7 +8,7 @@ import org.springframework.data.rest.core.annotation.RepositoryRestResource;
  * Repository for Marca entity.
  * Provides CRUD operations and custom queries for brand management.
  */
-@RepositoryRestResource
+@RepositoryRestResource(exported = false) // no controller fronts this — don't auto-expose it unauthenticated at root
 public interface MarcaRepository extends JpaRepository<Marca, Long> {
 
     Marca findByNome(String nome);

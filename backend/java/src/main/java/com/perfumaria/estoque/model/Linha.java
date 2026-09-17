@@ -1,5 +1,6 @@
 package com.perfumaria.estoque.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -28,7 +29,7 @@ public class Linha {
     @Column(length = 500)
     private String descricao;
 
-    @Column(nullable = false)
+    @Column(name = "is_active", nullable = false)
     private boolean active = true;
 
     @Column(name = "created_at")
@@ -38,6 +39,7 @@ public class Linha {
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     // One-to-many relationship with Produto
+    @JsonIgnore // avoids Linha -> produtos -> Linha infinite recursion on serialization
     @OneToMany(mappedBy = "linha", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Produto> produtos = new HashSet<>();
 

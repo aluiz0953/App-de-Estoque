@@ -1,51 +1,45 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-color: #f4efe8;
+}
+
 .App {
-  text-align: center;
-  background-color: #F8F9FA;
   min-height: 100vh;
 }
 
-.container {
-  display: flex;
-  min-height: 100vh;
+.font-display {
+  font-family: 'Playfair Display', Georgia, serif;
 }
 
-.header {
-  background: linear-gradient(135deg, #5B2C6F, #D4AF37);
-  color: white;
-  padding: 1rem;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+.eyebrow {
+  font-family: 'DM Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.66rem;
+  color: #998b82;
 }
 
-.header h1 {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 600;
+.pressable {
+  transition: transform 160ms cubic-bezier(0.23, 1, 0.32, 1), background-color 160ms ease, color 160ms ease;
+}
+.pressable:active {
+  transform: scale(0.97);
 }
 
-.sidebar {
-  width: 250px;
-  background-color: white;
-  border-right: 1px solid #EEEEEE;
-  box-shadow: 2px 0 4px rgba(0,0,0,0.05);
-  overflow-y: auto;
+@keyframes rise-in {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-rise {
+  animation: rise-in 700ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-rise { animation-duration: 1ms; }
 }
 
-.main-content {
-  flex: 1;
-  padding: 2rem;
-  overflow-y: auto;
-}
-
-@media (max-width: 768px) {
-  .sidebar {
-    width: 60px;
-  }
-
-  .sidebar-text {
-    display: none;
-  }
-
-  .sidebar-icons-only {
-    display: flex;
-  }
-}
+::-webkit-scrollbar { width: 10px; }
+::-webkit-scrollbar-track { background: #eee7df; }
+::-webkit-scrollbar-thumb { background: #c9b6a8; border-radius: 999px; border: 3px solid #eee7df; }

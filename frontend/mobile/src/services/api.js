@@ -1,25 +1,16 @@
-import { Platform } from 'react-native';
-
 // Base URL - in production, this would come from environment variables
 const BASE_URL = __DEV__
   ? 'http://10.0.2.2:8080/api' // Android emulator
   : 'http://localhost:8080/api'; // iOS simulator or production
 
-// Helper to get auth token from storage (would be implemented with secure store)
-const getAuthToken = async () => {
-  // In a real app, this would retrieve token from secure storage
-  // For now, returning placeholder
-  return localStorage.getItem('authToken') || null;
-};
-
-// Generic fetch function with auth handling
+// The backend authenticates via a server-side session (Spring Security), not a bearer
+// token: /api/auth/login sets a session cookie, and React Native's fetch persists cookies
+// automatically per app install, the same way a browser does. So there is no token to
+// attach here — just send the cookie jar along on every request.
 const apiFetch = async (endpoint, options = {}) => {
-  const token = await getAuthToken();
-
   const headers = {
     'Content-Type': 'application/json',
-    'Accept': 'application/json',
-    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+    Accept: 'application/json',
     ...options.headers,
   };
 
@@ -82,20 +73,20 @@ export const apiService = {
   }),
 
   // Inventory
-  createStockEntry: (stockData) => apiFetch('/estoque/entrada', {
-    method: 'POST',
-    body: JSON.stringify(stockData),
-  }),
+  createStockEntry: (stockData) => {
+    const query = new URLSearchParams(stockData).toString();
+    return apiFetch(`/estoque/entrada?${query}`, { method: 'POST' });
+  },
 
-  withdrawStockFIFO: (params) => apiFetch('/estoque/saida/fifo', {
-    method: 'POST',
-    body: JSON.stringify(params),
-  }),
+  withdrawStockFIFO: (params) => {
+    const query = new URLSearchParams(params).toString();
+    return apiFetch(`/estoque/saida/fifo?${query}`, { method: 'POST' });
+  },
 
-  withdrawStockFEFO: (params) => apiFetch('/estoque/saida/fefo', {
-    method: 'POST',
-    body: JSON.stringify(params),
-  }),
+  withdrawStockFEFO: (params) => {
+    const query = new URLSearchParams(params).toString();
+    return apiFetch(`/estoque/saida/fefo?${query}`, { method: 'POST' });
+  },
 
   getProductAvailability: (productId) =>
     apiFetch(`/estoque/disponibilidade/${productId}`),

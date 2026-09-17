@@ -9,6 +9,8 @@ import com.perfumaria.estoque.service.InventoryService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -38,6 +40,18 @@ public class InventoryController {
     private UsuarioRepository usuarioRepository;
 
     /**
+     * Resolves the acting Usuario from the authenticated session rather than trusting
+     * a client-supplied id — an unauthenticated caller can't reach these endpoints at
+     * all (see SecurityConfig), but a client-supplied usuarioId would let any logged-in
+     * user attribute a stock change to someone else, which defeats the audit trail.
+     */
+    private Usuario getUsuarioAutenticado() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return usuarioRepository.findByUsername(authentication.getName())
+                .orElseThrow(() -> new IllegalStateException("Usuário autenticado não encontrado: " + authentication.getName()));
+    }
+
+    /**
      * Add stock to inventory (entrada de romaneio).
      * This corresponds to the mobile app's "Entrada de Romaneio" feature.
      *
@@ -48,7 +62,6 @@ public class InventoryController {
      * @param precoCusto Unit cost
      * @param fornecedorId Supplier ID (optional)
      * @param localizacaoArquivo Physical location (optional)
-     * @param usuarioId User ID performing the operation
      * @return Created lot
      */
     @PostMapping("/entrada")
@@ -59,23 +72,11 @@ public class InventoryController {
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate dataValidade,
             @RequestParam double precoCusto,
             @RequestParam(required = false) Long fornecedorId,
-            @RequestParam(required = false) String localizacaoArquivo,
-            @RequestParam Long usuarioId) {
-
-        // Fetch related entities
-        var produto = produtoRepository.findById(produtoId)
-                .orElseThrow(() -> new IllegalArgumentException("Produto não encontrado: " + produtoId));
-        var usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado: " + usuarioId));
-        var fornecedor = fornecedorId != null ?
-                produtoRepository.findById(fornecedorId).map(p -> {
-                    // This would need a FornecedorRepository - simplified for now
-                    return null;
-                }).orElse(null) : null;
+            @RequestParam(required = false) String localizacaoArquivo) {
 
         Lote novoLote = inventoryService.adicionarEstoque(
                 produtoId, numeroLote, quantidade, dataValidade, precoCusto,
-                fornecedorId, localizacaoArquivo, usuario);
+                fornecedorId, localizacaoArquivo, getUsuarioAutenticado());
 
         return ResponseEntity.ok(novoLote);
     }
@@ -86,19 +87,14 @@ public class InventoryController {
      *
      * @param produtoId Product ID
      * @param quantidade Quantity to remove
-     * @param usuarioId User ID performing the operation
      * @return Result indicating success/failure
      */
     @PostMapping("/saida/fifo")
     public ResponseEntity<Map<String, Object>> retirarEstoqueFIFO(
             @RequestParam Long produtoId,
-            @RequestParam int quantidade,
-            @RequestParam Long usuarioId) {
+            @RequestParam int quantidade) {
 
-        var usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado: " + usuarioId));
-
-        boolean sucesso = inventoryService.retirarEstoqueFIFO(produtoId, quantidade, usuario);
+        boolean sucesso = inventoryService.retirarEstoqueFIFO(produtoId, quantidade, getUsuarioAutenticado());
 
         Map<String, Object> response = new HashMap<>();
         response.put("sucesso", sucesso);
@@ -113,19 +109,14 @@ public class InventoryController {
      *
      * @param produtoId Product ID
      * @param quantidade Quantity to remove
-     * @param usuarioId User ID performing the operation
      * @return Result indicating success/failure
      */
     @PostMapping("/saida/fefo")
     public ResponseEntity<Map<String, Object>> retirarEstoqueFEFO(
             @RequestParam Long produtoId,
-            @RequestParam int quantidade,
-            @RequestParam Long usuarioId) {
+            @RequestParam int quantidade) {
 
-        var usuario = usuarioRepository.findById(usuarioId)
-                .orElseThrow(() -> new IllegalArgumentException("Usuário não encontrado: " + usuarioId));
-
-        boolean sucesso = inventoryService.retirarEstoqueFEFO(produtoId, quantidade, usuario);
+        boolean sucesso = inventoryService.retirarEstoqueFEFO(produtoId, quantidade, getUsuarioAutenticado());
 
         Map<String, Object> response = new HashMap<>();
         response.put("sucesso", sucesso);
@@ -183,14 +174,22 @@ public class InventoryController {
      */
     @GetMapping("/resumo")
     public ResponseEntity<Map<String, Object>> getResumoEstoque() {
-        Map<String, Object> resumo = new HashMap<>();
+        List<Lote> lotesAtivos = loteRepository.findByStatus(Lote.StatusLote.ATIVO);
 
-        // In a real implementation, we would calculate these values
-        // For now, we'll put placeholder values
-        resumo.put("total_produtos", produtoRepository.count());
-        resumo.put("total_lotes_ativos", loteRepository.countByStatus(Lote.StatusLote.ATIVO));
-        resumo.put("total_lotes_vencidos", loteRepository.countByStatus(Lote.StatusLote.VENCIDO));
-        resumo.put("valor_total_estoque", 0.0); // Would be calculated
+        java.math.BigDecimal valorTotalEstoque = lotesAtivos.stream()
+                .map(Lote::getValorTotal)
+                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+
+        java.math.BigDecimal lucroPotencial = lotesAtivos.stream()
+                .map(lote -> lote.getValorVendaPotencial().subtract(lote.getValorTotal()))
+                .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+
+        Map<String, Object> resumo = new HashMap<>();
+        resumo.put("totalProdutos", produtoRepository.count());
+        resumo.put("totalLotesAtivos", (long) lotesAtivos.size());
+        resumo.put("totalLotesVencidos", loteRepository.countByStatus(Lote.StatusLote.VENCIDO));
+        resumo.put("valorTotalEstoque", valorTotalEstoque);
+        resumo.put("lucroPotencial", lucroPotencial);
 
         return ResponseEntity.ok(resumo);
     }

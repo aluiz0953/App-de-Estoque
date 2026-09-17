@@ -1,6 +1,9 @@
 package com.perfumaria.estoque.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
+import org.hibernate.annotations.Generated;
+import org.hibernate.annotations.GenerationTime;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -60,10 +63,23 @@ public class Produto {
     private BigDecimal precoVenda;
 
     /**
-     * Calculated profit margin percentage.
-     * This is stored in the database but calculated from precoVenda and precoCusto.
+     * Tipo de produto (Perfumaria, Cuidados Diários, Rosto e Proteção, Outros)
      */
-    @Column(name = "margem_lucro_percentual", precision = 5, scale = 2)
+    @Column(name = "tipo_produto", length = 50)
+    private String tipoProduto;
+
+    /**
+     * Fragrância específica do produto
+     */
+    @Column(name = "fragrancia", length = 100)
+    private String fragrancia;
+
+    /**
+     * Calculated profit margin percentage. This is a MySQL GENERATED ALWAYS AS
+     * column (see schema.sql) — Hibernate must never write to it, only read it back.
+     */
+    @Generated(GenerationTime.ALWAYS)
+    @Column(name = "margem_lucro_percentual", precision = 5, scale = 2, insertable = false, updatable = false)
     private BigDecimal margemLucroPercentual;
 
     @Column(name = "estoque_minimo", nullable = false)
@@ -72,7 +88,7 @@ public class Produto {
     @Column(name = "estoque_maximo", nullable = false)
     private int estoqueMaximo = 999999;
 
-    @Column(nullable = false)
+    @Column(name = "is_active", nullable = false)
     private boolean active = true;
 
     @Column(name = "created_at")
@@ -82,6 +98,7 @@ public class Produto {
     private LocalDateTime updatedAt = LocalDateTime.now();
 
     // One-to-many relationship with Lote
+    @JsonIgnore // avoids Produto -> lotes -> Produto infinite recursion on serialization
     @OneToMany(mappedBy = "produto", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Lote> lotes = new HashSet<>();
 
@@ -140,6 +157,12 @@ public class Produto {
     public BigDecimal getPrecoVenda() { return precoVenda; }
     public void setPrecoVenda(BigDecimal precoVenda) { this.precoVenda = precoVenda; }
 
+    public String getTipoProduto() { return tipoProduto; }
+    public void setTipoProduto(String tipoProduto) { this.tipoProduto = tipoProduto; }
+
+    public String getFragrancia() { return fragrancia; }
+    public void setFragrancia(String fragrancia) { this.fragrancia = fragrancia; }
+
     public BigDecimal getMargemLucroPercentual() { return margemLucroPercentual; }
     public void setMargemLucroPercentual(BigDecimal margemLucroPercentual) { this.margemLucroPercentual = margemLucroPercentual; }
 
@@ -160,6 +183,49 @@ public class Produto {
 
     public Set<Lote> getLotes() { return lotes; }
     public void setLotes(Set<Lote> lotes) { this.lotes = lotes; }
+
+    /**
+     * Total active quantity across all lots — exposed as a computed API field since
+     * clients (web dashboard, mobile Estoque Crítico view) need it but it isn't a stored column.
+     */
+    @Transient
+    public int getQuantidadeTotal() {
+        return lotes.stream()
+                .filter(lote -> lote.getStatus() == Lote.StatusLote.ATIVO)
+                .mapToInt(Lote::getQuantidade)
+                .sum();
+    }
+
+    /**
+     * Sale value of the currently active stock (quantidadeTotal * precoVenda).
+     */
+    @Transient
+    public BigDecimal getValorTotalEstoque() {
+        return precoVenda.multiply(BigDecimal.valueOf(getQuantidadeTotal()));
+    }
+
+    /**
+     * Active-lot quantity already past its expiration date — feeds the
+     * "visão operacional" (rupturas e vencimentos) dashboard.
+     */
+    @Transient
+    public int getQuantidadeVencida() {
+        return lotes.stream()
+                .filter(lote -> lote.getStatus() == Lote.StatusLote.ATIVO && lote.isExpired())
+                .mapToInt(Lote::getQuantidade)
+                .sum();
+    }
+
+    /**
+     * Active-lot quantity expiring within the next 30 days (not yet expired).
+     */
+    @Transient
+    public int getQuantidadeVencendoProximos30Dias() {
+        return lotes.stream()
+                .filter(lote -> lote.getStatus() == Lote.StatusLote.ATIVO && lote.isExpiringSoon())
+                .mapToInt(Lote::getQuantidade)
+                .sum();
+    }
 
     /**
      * Business method to calculate profit margin.

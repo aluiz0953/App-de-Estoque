@@ -16,6 +16,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.List;
 
 /**
  * Security configuration for the Perfume Inventory Management System.
@@ -41,6 +46,12 @@ public class SecurityConfig {
             // Disable CSRF for simplicity in this example (in production, configure properly)
             .csrf(csrf -> csrf.disable())
 
+            // The frontend (Vite dev server, port 5173) calls this API (port 8080) from a
+            // different origin and sends cookies (credentials: 'include'), so it needs an
+            // explicit allow-listed origin + allowCredentials — "*" is rejected by browsers
+            // whenever credentials are involved.
+            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+
             // Authorize HTTP requests
             .authorizeHttpRequests(authz -> authz
                 // Public endpoints
@@ -59,16 +70,15 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
 
-            // Form login
-            .formLogin(form -> form
-                .loginPage("/api/auth/login")
-                .permitAll()
-            )
+            // No formLogin(): AuthController handles /api/auth/login itself. Registering a
+            // formLogin here (even just to permitAll it) makes Spring Security's own
+            // UsernamePasswordAuthenticationFilter claim POST /api/auth/login first,
+            // since loginPage() doubles as the default loginProcessingUrl — the
+            // controller method would never actually run.
 
             // Logout
             .logout(logout -> logout
                 .logoutUrl("/api/auth/logout")
-                .logoutSuccessUrl("/api/auth/login?logout")
                 .permitAll()
             )
 
@@ -92,5 +102,18 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowCredentials(true);
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+        return source;
     }
 }

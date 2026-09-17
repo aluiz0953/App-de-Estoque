@@ -1,6 +1,7 @@
 package com.perfumaria.estoque.repository;
 
 import com.perfumaria.estoque.model.Lote;
+import com.perfumaria.estoque.model.Produto;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -16,7 +17,7 @@ import java.util.List;
  * Provides CRUD operations and custom queries for inventory lot management.
  * Includes specialized methods for FIFO inventory logic.
  */
-@RepositoryRestResource
+@RepositoryRestResource(exported = false) // stock mutations must go through InventoryController, not raw REST CRUD
 public interface LoteRepository extends JpaRepository<Lote, Long> {
 
     // Find by product
@@ -31,15 +32,35 @@ public interface LoteRepository extends JpaRepository<Lote, Long> {
 
     List<Lote> findByDataValidadeGreaterThanEqual(LocalDate date);
 
-    // Find active lots for a product ordered by expiration date (FEFO)
+    // Find active lots for a product ordered by expiration date (FEFO - First Expired, First Out)
     @Query("SELECT l FROM Lote l WHERE l.produto.id = :produtoId AND l.status = 'ATIVO' ORDER BY l.dataValidade ASC")
     List<Lote> findActiveLotesByProdutoOrderByExpiration(@Param("produtoId") Long produtoId);
+
+    // Find active lots for a product ordered by receipt date, oldest first (true FIFO - First-In, First-Out)
+    @Query("SELECT l FROM Lote l WHERE l.produto.id = :produtoId AND l.status = 'ATIVO' ORDER BY l.criadoEm ASC")
+    List<Lote> findActiveLotesByProdutoOrderByReceiptAsc(@Param("produtoId") Long produtoId);
+
+    // Find active lots for a product ordered by receipt date, newest first (LIFO - Last-In, First-Out)
+    @Query("SELECT l FROM Lote l WHERE l.produto.id = :produtoId AND l.status = 'ATIVO' ORDER BY l.criadoEm DESC")
+    List<Lote> findActiveLotesByProdutoOrderByReceiptDesc(@Param("produtoId") Long produtoId);
 
     // Find lots by number
     List<Lote> findByNumeroLoteContainingIgnoreCase(String numeroLote);
 
     // Count active lots for a product
     Long countByProdutoAndStatus(Produto produto, Lote.StatusLote status);
+
+    // Count lots by status (dashboard summary)
+    long countByStatus(Lote.StatusLote status);
+
+    // All lots with a given status (dashboard summary totals)
+    List<Lote> findByStatus(Lote.StatusLote status);
+
+    // Find lots expiring within a date range, excluding a given status
+    List<Lote> findByDataValidadeBetweenAndStatusNot(LocalDate startDate, LocalDate endDate, Lote.StatusLote status);
+
+    // Find lots already past a date, excluding a given status
+    List<Lote> findByDataValidadeLessThanEqualAndStatusNot(LocalDate date, Lote.StatusLote status);
 
     // Custom query to get total quantity of active lots for a product
     @Query("SELECT SUM(l.quantidade) FROM Lote l WHERE l.produto.id = :produtoId AND l.status = 'ATIVO'")

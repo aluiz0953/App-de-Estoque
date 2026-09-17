@@ -3,13 +3,14 @@ package com.perfumaria.estoque.config;
 import com.perfumaria.estoque.model.Usuario;
 import com.perfumaria.estoque.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Custom UserDetailsService that loads user-specific data for Spring Security.
@@ -33,9 +34,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 true, // accountNotExpired
                 true, // credentialsNotExpired
                 true, // accountNotLocked
-                // In a real app, we would map the Usuario role to GrantedAuthority
-                // For simplicity, we're using a basic approach here
-                new ArrayList<>()
+                List.of(new SimpleGrantedAuthority("ROLE_" + usuario.getRole().name()))
         );
     }
 }

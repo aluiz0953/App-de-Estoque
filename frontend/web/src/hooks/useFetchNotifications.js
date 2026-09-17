@@ -1,16 +1,18 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import apiService from '../services/api';
 
 export const useFetchNotifications = (params = {}) => {
   const [data, setData] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [reloadToken, setReloadToken] = useState(0);
+  const paramsKey = JSON.stringify(params);
 
   useEffect(() => {
     const fetchNotifications = async () => {
       setIsLoading(true);
       try {
-        const result = await apiService.getNotifications(params);
+        const result = await apiService.getNotifications(JSON.parse(paramsKey));
         setData(result);
         setError(null);
       } catch (err) {
@@ -22,7 +24,10 @@ export const useFetchNotifications = (params = {}) => {
     };
 
     fetchNotifications();
-  }, [params]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paramsKey, reloadToken]);
 
-  return { data, isLoading, error };
+  const refetch = useCallback(() => setReloadToken((t) => t + 1), []);
+
+  return { data, isLoading, error, refetch };
 };

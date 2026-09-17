@@ -1,8 +1,12 @@
 package com.perfumaria.estoque.service;
 
+import com.perfumaria.estoque.model.Fornecedor;
 import com.perfumaria.estoque.model.Lote;
 import com.perfumaria.estoque.model.Lote.StatusLote;
+import com.perfumaria.estoque.model.Produto;
+import com.perfumaria.estoque.repository.FornecedorRepository;
 import com.perfumaria.estoque.repository.LoteRepository;
+import com.perfumaria.estoque.repository.ProdutoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +24,12 @@ public class InventoryService {
 
     @Autowired
     private LoteRepository loteRepository;
+
+    @Autowired
+    private ProdutoRepository produtoRepository;
+
+    @Autowired
+    private FornecedorRepository fornecedorRepository;
 
     /**
      * Adds stock to inventory using FIFO principle for cost calculation.
@@ -40,18 +50,23 @@ public class InventoryService {
                                 LocalDate dataValidade, double precoCusto,
                                 Long fornecedorId, String localizacaoArquivo,
                                 com.perfumaria.estoque.model.Usuario usuario) {
-        // In a real implementation, we would fetch the produto and fornecedor from their repositories
-        // For now, we'll create the lot with references that would be set properly in service layer
+        Produto produto = produtoRepository.findById(produtoId)
+                .orElseThrow(() -> new IllegalArgumentException("Produto não encontrado: " + produtoId));
+
+        Fornecedor fornecedor = fornecedorId != null
+                ? fornecedorRepository.findById(fornecedorId)
+                        .orElseThrow(() -> new IllegalArgumentException("Fornecedor não encontrado: " + fornecedorId))
+                : null;
 
         Lote novoLote = new Lote();
-        // novoLote.setProduto(produto); // Would be set from produtoRepository
+        novoLote.setProduto(produto);
         novoLote.setNumeroLote(numeroLote);
         novoLote.setQuantidade(quantidade);
         novoLote.setDataValidade(dataValidade);
         novoLote.setPrecoCustoLote(java.math.BigDecimal.valueOf(precoCusto));
-        // novoLote.setFornecedor(fornecedor); // Would be set from fornecedorRepository
+        novoLote.setFornecedor(fornecedor);
         novoLote.setLocalizacaoArquivo(localizacaoArquivo);
-        novoLote.setStatusLote(StatusLote.ATIVO);
+        novoLote.setStatus(StatusLote.ATIVO);
         novoLote.setCriadoPor(usuario);
 
         return loteRepository.save(novoLote);
@@ -69,41 +84,14 @@ public class InventoryService {
     @Transactional
     public boolean retirarEstoqueFIFO(Long produtoId, int quantidade,
                                      com.perfumaria.estoque.model.Usuario usuario) {
-        // Get active lots for the product ordered by expiration date (FEFO - First Expired, First Out)
-        // For pure FIFO, we would order by creation date instead
-        List<Lote> lotesAtivos = loteRepository.findActiveLotesByProdutoOrderByExpiration(produtoId);
-
-        int quantidadeRestante = quantidade;
-
-        for (Lote lote : lotesAtivos) {
-            if (quantidadeRestante <= 0) {
-                break;
-            }
-
-            int quantidadeDisponivel = lote.getQuantidade();
-
-            if (quantidadeDisponivel <= quantidadeRestante) {
-                // Use entire lot
-                quantidadeRestante -= quantidadeDisponivel;
-                lote.setQuantidade(0);
-                lote.setStatusLote(StatusLote.BLOQUEADO); // Mark as depleted
-            } else {
-                // Use partial lot
-                lote.setQuantidade(quantidadeDisponivel - quantidadeRestante);
-                quantidadeRestante = 0;
-            }
-
-            // Update the lot (in a real app, we'd save each change)
-            // loteRepository.save(lote); // Would be called in real implementation
-        }
-
-        // If we still have quantity remaining, we don't have enough stock
-        return quantidadeRestante == 0;
+        // True FIFO: oldest receipt date (criadoEm) first
+        List<Lote> lotesAtivos = loteRepository.findActiveLotesByProdutoOrderByReceiptAsc(produtoId);
+        return consumirLotes(lotesAtivos, quantidade);
     }
 
     /**
      * Removes stock from inventory using LIFO (Last-In, First-Out) principle.
-     * Alternative method for comparison.
+     * Prioritizes the most recently received lots.
      *
      * @param produtoId The product ID
      * @param quantidade Quantity to remove
@@ -113,9 +101,8 @@ public class InventoryService {
     @Transactional
     public boolean retirarEstoqueLIFO(Long produtoId, int quantidade,
                                      com.perfumaria.estoque.model.Usuario usuario) {
-        // For LIFO, we would get lots ordered by most recent first
-        // Implementation would be similar to FIFO but with different ordering
-        return retirarEstoqueFIFO(produtoId, quantidade, usuario); // Simplified
+        List<Lote> lotesAtivos = loteRepository.findActiveLotesByProdutoOrderByReceiptDesc(produtoId);
+        return consumirLotes(lotesAtivos, quantidade);
     }
 
     /**
@@ -130,9 +117,40 @@ public class InventoryService {
     @Transactional
     public boolean retirarEstoqueFEFO(Long produtoId, int quantidade,
                                      com.perfumaria.estoque.model.Usuario usuario) {
-        // This is actually what our FIFO method above does - order by expiration date
-        // In practice, true FIFO would order by receipt date, while FEFO orders by expiration
-        return retirarEstoqueFIFO(produtoId, quantidade, usuario);
+        List<Lote> lotesAtivos = loteRepository.findActiveLotesByProdutoOrderByExpiration(produtoId);
+        return consumirLotes(lotesAtivos, quantidade);
+    }
+
+    /**
+     * Shared consumption logic: walks the given lots (already sorted by the caller's
+     * chosen strategy) and draws down quantity from each until satisfied or exhausted.
+     */
+    private boolean consumirLotes(List<Lote> lotesOrdenados, int quantidade) {
+        int quantidadeRestante = quantidade;
+
+        for (Lote lote : lotesOrdenados) {
+            if (quantidadeRestante <= 0) {
+                break;
+            }
+
+            int quantidadeDisponivel = lote.getQuantidade();
+
+            if (quantidadeDisponivel <= quantidadeRestante) {
+                // Use entire lot
+                quantidadeRestante -= quantidadeDisponivel;
+                lote.setQuantidade(0);
+                lote.setStatus(StatusLote.BLOQUEADO); // Mark as depleted
+            } else {
+                // Use partial lot
+                lote.setQuantidade(quantidadeDisponivel - quantidadeRestante);
+                quantidadeRestante = 0;
+            }
+
+            loteRepository.save(lote);
+        }
+
+        // If we still have quantity remaining, we don't have enough stock
+        return quantidadeRestante == 0;
     }
 
     /**

@@ -1,5 +1,7 @@
 package com.perfumaria.estoque.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
@@ -23,6 +25,7 @@ public class Usuario {
     @Column(nullable = false, length = 50, unique = true)
     private String username;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY) // accept it on register, never echo it back
     @Column(nullable = false)
     private String passwordHash;
 
@@ -36,7 +39,7 @@ public class Usuario {
     @Column(nullable = false, length = 20)
     private Role role;
 
-    @Column(nullable = false)
+    @Column(name = "is_active", nullable = false)
     private boolean active = true;
 
     @Column(name = "created_at")
@@ -54,9 +57,11 @@ public class Usuario {
     private LocalDateTime lockedUntil;
 
     // One-to-many relationships (audit trails)
+    @JsonIgnore // avoids Usuario -> lotesCriados -> Usuario infinite recursion on serialization
     @OneToMany(mappedBy = "criadoPor")
     private Set<Lote> lotesCriados = new HashSet<>();
 
+    @JsonIgnore // avoids Usuario -> lotesAtualizados -> Usuario infinite recursion on serialization
     @OneToMany(mappedBy = "atualizadoPor")
     private Set<Lote> lotesAtualizados = new HashSet<>();
 

@@ -27,6 +27,32 @@ export const fetchProductById = createAsyncThunk(
   }
 );
 
+// Thunk para criar produto
+export const createProduct = createAsyncThunk(
+  'inventory/createProduct',
+  async (productData, { rejectWithValue }) => {
+    try {
+      const response = await apiService.createProduct(productData);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+// Thunk para atualizar produto
+export const updateProduct = createAsyncThunk(
+  'inventory/updateProduct',
+  async ({ id, ...productData }, { rejectWithValue }) => {
+    try {
+      const response = await apiService.updateProduct(id, productData);
+      return response;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
 // Thunk para entrada de estoque
 export const createStockEntry = createAsyncThunk(
   'inventory/createStockEntry',
@@ -180,6 +206,29 @@ const inventorySlice = createSlice({
         state.productDetail = action.payload;
       })
       .addCase(fetchProductById.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
+      // Create Product
+      .addCase(createProduct.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(createProduct.fulfilled, (state) => {
+        state.isLoading = false;
+      })
+      .addCase(createProduct.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
+      // Update Product
+      .addCase(updateProduct.pending, (state) => {
+        state.isLoading = true;
+      })
+      .addCase(updateProduct.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.productDetail = action.payload;
+      })
+      .addCase(updateProduct.rejected, (state, action) => {
         state.isLoading = false;
         state.error = action.payload;
       })

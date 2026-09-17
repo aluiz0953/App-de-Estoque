@@ -1,7 +1,7 @@
 import { get, post, put, del } from './request';
 
 // URL base da API - em produção, isso viria de variáveis de ambiente
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8080/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
 
 const apiService = {
   // Métodos auxiliares para requisições
@@ -52,6 +52,13 @@ const apiService = {
 
   getMarginCategory: (id) =>
     apiService.request.get(`/produtos/${id}/categoria-margem`),
+
+  // Marcas e Linhas
+  getMarcas: () =>
+    apiService.request.get('/marcas'),
+
+  getLinhas: (marcaId) =>
+    apiService.request.get('/linhas', marcaId ? { marcaId } : {}),
 
   // Estoque
   createStockEntry: (stockData) =>

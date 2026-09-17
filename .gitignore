@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+target/
+build/
+frontend/mobile/android/app/build/
+frontend/mobile/android/.gradle/
+
+# Logs and scratch debug output
+*.log
+error*.txt
+
+# graphify knowledge-graph cache (regenerable)
+graphify-out/
+graphify-out.graphify_python
+graphify-out.graphify_root
+
+# Editor/OS
+.DS_Store
+Thumbs.db

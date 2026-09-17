@@ -73,7 +73,7 @@ class NotificacaoServiceTest {
         loteVencendoProximos.setNumeroLote("LOTE-EXPIRANDO");
         loteVencendoProximos.setQuantidade(20);
         loteVencendoProximos.setDataValidade(LocalDate.now().plusDays(15)); // 15 days from now
-        loteVencendoProximos.setStatusLote(StatusLote.ATIVO);
+        loteVencendoProximos.setStatus(StatusLote.ATIVO);
 
         // Setup test data - Expired lot
         loteVencido = new Lote();
@@ -82,7 +82,7 @@ class NotificacaoServiceTest {
         loteVencido.setNumeroLote("LOTE-VENCIDO");
         loteVencido.setQuantidade(10);
         loteVencido.setDataValidade(LocalDate.now().minusDays(5)); // 5 days ago
-        loteVencido.setStatusLote(StatusLote.ATIVO);
+        loteVencido.setStatus(StatusLote.ATIVO);
 
         // Setup test data - Valid lot (far in future)
         loteValido = new Lote();
@@ -91,7 +91,7 @@ class NotificacaoServiceTest {
         loteValido.setNumeroLote("LOTE-VALIDO");
         loteValido.setQuantidade(30);
         loteValido.setDataValidade(LocalDate.now().plusDays(365)); // 1 year from now
-        loteValido.setStatusLote(StatusLote.ATIVO);
+        loteValido.setStatus(StatusLote.ATIVO);
     }
 
     @Test
