@@ -25,6 +25,9 @@ const apiService = {
   getProfile: () =>
     apiService.request.get('/auth/profile'),
 
+  getUsuarios: () =>
+    apiService.request.get('/usuarios'),
+
   // Produtos
   getProducts: (params = {}) =>
     apiService.request.get('/produtos', params),
@@ -57,8 +60,14 @@ const apiService = {
   getMarcas: () =>
     apiService.request.get('/marcas'),
 
+  createMarca: (marcaData) =>
+    apiService.request.post('/marcas', marcaData),
+
   getLinhas: (marcaId) =>
     apiService.request.get('/linhas', marcaId ? { marcaId } : {}),
+
+  createLinha: (linhaData) =>
+    apiService.request.post('/linhas', linhaData),
 
   // Estoque
   createStockEntry: (stockData) =>
@@ -81,6 +90,9 @@ const apiService = {
 
   getEstoqueResumo: () =>
     apiService.request.get('/estoque/resumo'),
+
+  getMovimentacoes: (params = {}) =>
+    apiService.request.get('/estoque/movimentacoes', params),
 
   // Notificações
   getNotifications: (params = {}) =>

@@ -5,7 +5,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import useFetchProducts from '../hooks/useFetchProducts';
 import useFetchEstoqueResumo from '../hooks/useFetchEstoqueResumo';
 import { useNavigate } from '../hooks/useNavigate';
-import { colors, tabularNums } from '../theme/colors';
+import { colors, fonts, tabularNums } from '../theme/colors';
 
 const HomeScreen = () => {
   const [tab, setTab] = useState('fisico'); // 'fisico' or 'financeiro'
@@ -28,7 +28,7 @@ const HomeScreen = () => {
       <FlatList
         style={{ flex: 1 }}
         contentContainerStyle={{ padding: 16 }}
-        ListHeaderComponent={<Title style={{ marginBottom: 16 }}>Estoque Crítico e Vencimentos</Title>}
+        ListHeaderComponent={<Title style={styles.sectionTitle}>Estoque Crítico e Vencimentos</Title>}
         data={produtosCriticos}
         keyExtractor={item => item.id.toString()}
         renderItem={({ item }) => (
@@ -84,7 +84,7 @@ const HomeScreen = () => {
 
     return (
       <View style={{ padding: 16, flex: 1 }}>
-        <Title style={{ marginBottom: 16 }}>Capital Empatado no Estoque</Title>
+        <Title style={styles.sectionTitle}>Capital Empatado no Estoque</Title>
 
         {resumo ? (
           <View>
@@ -125,6 +125,7 @@ const HomeScreen = () => {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       {/* Header */}
       <View style={styles.header}>
+        <Text style={styles.eyebrow}>ESTOQUE</Text>
         <Text style={styles.headerText}>Dashboard de Estoque</Text>
       </View>
 
@@ -175,10 +176,23 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     elevation: 4,
   },
+  eyebrow: {
+    fontFamily: fonts.mono,
+    fontSize: 10,
+    letterSpacing: 2,
+    color: colors.primaryLight,
+    opacity: 0.65,
+    marginBottom: 4,
+  },
   headerText: {
-    color: 'white',
-    fontSize: 20,
-    fontWeight: '600',
+    fontFamily: fonts.display,
+    color: colors.primaryLight,
+    fontSize: 22,
+  },
+  sectionTitle: {
+    fontFamily: fonts.display,
+    color: colors.text,
+    marginBottom: 16,
   },
   segmentedControl: {
     flexDirection: 'row',
@@ -197,17 +211,18 @@ const styles = StyleSheet.create({
     backgroundColor: colors.secondary,
   },
   segmentText: {
+    fontFamily: fonts.sansMedium,
     color: colors.text,
-    fontWeight: '600',
   },
   segmentTextActive: {
-    color: 'white',
+    color: colors.primary,
   },
   card: {
     marginBottom: 12,
+    backgroundColor: colors.surface,
   },
   bold: {
-    fontWeight: '700',
+    fontFamily: fonts.sansMedium,
   },
   fabContainer: {
     position: 'absolute',

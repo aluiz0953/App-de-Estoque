@@ -8,6 +8,7 @@ DROP VIEW IF EXISTS view_estoque_financeiro;
 -- but they FK-reference usuarios/produtos/lotes, so they must go first.
 DROP TABLE IF EXISTS audit_logs;
 DROP TABLE IF EXISTS notificacoes;
+DROP TABLE IF EXISTS movimentacoes_estoque;
 DROP TABLE IF EXISTS lotes;
 DROP TABLE IF EXISTS produtos;
 DROP TABLE IF EXISTS linhas;

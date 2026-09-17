@@ -1,19 +1,65 @@
 import React, { useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link } from 'react-router-dom';
+import { Bar, BarChart, CartesianGrid, Legend, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { fetchProducts } from '../store/slices/inventorySlice';
 import { useFetchEstoqueResumo } from '../hooks/useFetchEstoqueResumo';
+import { useFetchMovimentacoes } from '../hooks/useFetchMovimentacoes';
 
 const money = (value) => `R$ ${(value ?? 0).toFixed(2).replace('.', ',')}`;
+
+const MARCA_CORES = ['#a96d6e', '#7a966e', '#c98a52', '#6b7fa8', '#8f6fa8', '#c1666b'];
+
+function agruparSaidaPorSemanaEMarca(movimentacoes) {
+  if (!movimentacoes?.length) return { semanas: [], marcas: [] };
+
+  const marcas = Array.from(
+    new Set(movimentacoes.map((m) => m.produto?.linha?.marca?.nome || 'Outras'))
+  ).sort();
+
+  const inicioSemana = (date) => {
+    const d = new Date(date);
+    const diaSemana = d.getDay();
+    d.setDate(d.getDate() - diaSemana);
+    d.setHours(0, 0, 0, 0);
+    return d;
+  };
+
+  const porSemana = new Map();
+  for (const mov of movimentacoes) {
+    const semana = inicioSemana(mov.dataMovimentacao);
+    const chave = semana.toISOString();
+    if (!porSemana.has(chave)) {
+      const label = semana.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit' });
+      const linha = { semana: label, _data: semana };
+      marcas.forEach((m) => (linha[m] = 0));
+      porSemana.set(chave, linha);
+    }
+    const marca = mov.produto?.linha?.marca?.nome || 'Outras';
+    porSemana.get(chave)[marca] += mov.quantidade;
+  }
+
+  const semanas = Array.from(porSemana.values()).sort((a, b) => a._data - b._data);
+  return { semanas, marcas };
+}
 
 const DashboardPage = () => {
   const dispatch = useDispatch();
   const { products, isLoading: isLoadingProducts } = useSelector((state) => state.inventory);
   const { data: resumo, isLoading: isLoadingResumo, error: errorResumo } = useFetchEstoqueResumo();
+  const { data: movimentacoes, isLoading: isLoadingMov, error: errorMov } = useFetchMovimentacoes(45);
 
   useEffect(() => {
     dispatch(fetchProducts());
   }, [dispatch]);
+
+  const { semanas, marcas } = useMemo(() => agruparSaidaPorSemanaEMarca(movimentacoes), [movimentacoes]);
+  const marcaMaisVendida = useMemo(() => {
+    if (!marcas.length) return null;
+    const totais = marcas.map((m) => [m, semanas.reduce((sum, s) => sum + s[m], 0)]);
+    totais.sort((a, b) => b[1] - a[1]);
+    return totais[0];
+  }, [marcas, semanas]);
 
   const estoqueBaixo = useMemo(
     () => products.filter((p) => p.quantidadeTotal <= p.estoqueMinimo).slice(0, 6),
@@ -58,7 +104,48 @@ const DashboardPage = () => {
         </div>
       )}
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-2">
+      <div className="mt-8">
+        <Panel
+          title="Saída por marca"
+          subtitle={
+            marcaMaisVendida
+              ? `${marcaMaisVendida[0]} lidera com ${marcaMaisVendida[1]} unidades nos últimos 45 dias`
+              : 'Unidades vendidas por semana, últimos 45 dias'
+          }
+        >
+          {isLoadingMov ? (
+            <p className="py-16 text-center text-[12px] text-muted-light">Carregando movimentações...</p>
+          ) : errorMov ? (
+            <p className="py-16 text-center text-[13px] text-danger">Erro ao carregar movimentações: {errorMov.message}</p>
+          ) : semanas.length === 0 ? (
+            <p className="py-16 text-center text-[12px] text-muted-light">Nenhuma saída de estoque registrada ainda.</p>
+          ) : (
+            <div className="h-72 pb-5 pt-2">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={semanas} margin={{ left: -20 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
+                  <XAxis dataKey="semana" tick={{ fontSize: 11, fill: 'var(--color-muted)' }} axisLine={{ stroke: 'var(--color-border)' }} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: 'var(--color-muted)' }} axisLine={false} tickLine={false} allowDecimals={false} />
+                  <Tooltip
+                    contentStyle={{
+                      background: 'var(--color-surface)',
+                      border: '1px solid var(--color-border)',
+                      borderRadius: 8,
+                      fontSize: 12,
+                    }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                  {marcas.map((marca, i) => (
+                    <Bar key={marca} dataKey={marca} stackId="saida" fill={MARCA_CORES[i % MARCA_CORES.length]} radius={i === marcas.length - 1 ? [4, 4, 0, 0] : 0} />
+                  ))}
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )}
+        </Panel>
+      </div>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <Panel title="Estoque crítico" subtitle="Produtos no ou abaixo do mínimo">
           {isLoadingProducts ? (
             <p className="py-8 text-center text-[12px] text-muted-light">Carregando...</p>

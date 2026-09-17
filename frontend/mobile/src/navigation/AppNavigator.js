@@ -2,7 +2,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { colors } from '../theme/colors';
+import { colors, fonts } from '../theme/colors';
 
 // Screens
 import HomeScreen from '../screens/HomeScreen';
@@ -28,8 +28,13 @@ function MainTabs() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.disabled,
+        tabBarActiveTintColor: colors.secondaryDark,
+        tabBarInactiveTintColor: colors.textMutedLight,
+        tabBarStyle: {
+          backgroundColor: colors.surface,
+          borderTopColor: colors.border,
+        },
+        tabBarLabelStyle: { fontFamily: fonts.sansMedium, fontSize: 11 },
         tabBarIcon: ({ color, size }) => (
           <MaterialCommunityIcons name={TAB_ICONS[route.name]} color={color} size={size} />
         ),

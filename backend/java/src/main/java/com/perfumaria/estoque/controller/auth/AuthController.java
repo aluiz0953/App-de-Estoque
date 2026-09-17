@@ -94,6 +94,19 @@ public class AuthController {
     }
 
     /**
+     * Returns the currently authenticated user's profile.
+     *
+     * @return Authenticated Usuario (passwordHash is write-only and never serialized)
+     */
+    @GetMapping("/profile")
+    public ResponseEntity<Usuario> profile() {
+        String username = SecurityContextHolder.getContext().getAuthentication().getName();
+        Usuario usuario = usuarioRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("Usuário autenticado não encontrado: " + username));
+        return ResponseEntity.ok(usuario);
+    }
+
+    /**
      * Register a new user (admin function).
      * In a real application, this would be more restricted.
      *

@@ -56,6 +56,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(authz -> authz
                 // Public endpoints
                 .requestMatchers("/api/produtos/sku/**", "/api/produtos/{id}/margem-lucro").permitAll()
+                // Must come before the /api/auth/** permitAll below - first match wins.
+                .requestMatchers("/api/auth/profile").authenticated()
                 .requestMatchers("/api/auth/**").permitAll()
 
                 // Protected endpoints - Role-based access

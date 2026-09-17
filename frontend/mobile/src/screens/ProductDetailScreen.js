@@ -6,7 +6,7 @@ import useFetchProductById from '../hooks/useFetchProductById';
 import useFetchProductLotes from '../hooks/useFetchProductLotes';
 import { useNavigate } from '../hooks/useNavigate';
 import { useRoute } from '@react-navigation/native';
-import { colors, tabularNums } from '../theme/colors';
+import { colors, fonts, tabularNums } from '../theme/colors';
 
 const STATUS_COLORS = {
   ATIVO: colors.success,
@@ -62,9 +62,9 @@ const ProductDetailScreen = () => {
   }
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={{ backgroundColor: colors.primary, paddingVertical: 20, paddingHorizontal: 16, elevation: 4 }}>
-        <Text style={{ color: 'white', fontSize: 20, fontWeight: '600' }}>
+        <Text style={{ color: colors.primaryLight, fontSize: 20, fontFamily: fonts.display }}>
           {produto.nome}
         </Text>
       </View>

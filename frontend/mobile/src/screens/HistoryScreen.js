@@ -4,7 +4,7 @@ import { Title, Caption, Paragraph } from 'react-native-paper';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import useFetchHistory from '../hooks/useFetchHistory';
 import { useNavigate } from '../hooks/useNavigate';
-import { colors, tabularNums } from '../theme/colors';
+import { colors, fonts, tabularNums } from '../theme/colors';
 
 const HistoryScreen = () => {
   const [filter, setFilter] = useState('all'); // 'all', 'entrada', 'saida'
@@ -25,8 +25,8 @@ const HistoryScreen = () => {
           style={{ marginRight: 12 }}
         />
         <View style={{ flex: 1 }}>
-          <Title>{item.produtoNome}</Title>
-          <Caption style={tabularNums}>{item.sku}</Caption>
+          <Title style={styles.itemTitle}>{item.produtoNome}</Title>
+          <Caption style={[styles.itemCaption, tabularNums]}>{item.sku}</Caption>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
             <Text>
               <Text style={styles.bold}>{isEntrada ? 'Entrada: ' : 'Saída: '}</Text>
@@ -63,7 +63,7 @@ const HistoryScreen = () => {
   }
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={styles.segmentedControl}>
         {[
           { key: 'all', label: 'Todas' },
@@ -121,11 +121,11 @@ const styles = StyleSheet.create({
     backgroundColor: colors.secondary,
   },
   segmentText: {
+    fontFamily: fonts.sansMedium,
     color: colors.text,
-    fontWeight: '600',
   },
   segmentTextActive: {
-    color: 'white',
+    color: colors.primary,
   },
   row: {
     padding: 12,
@@ -134,8 +134,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  itemTitle: {
+    fontFamily: fonts.sansMedium,
+    fontSize: 15,
+    color: colors.text,
+  },
+  itemCaption: {
+    fontFamily: fonts.mono,
+    color: colors.textMutedLight,
+  },
   bold: {
-    fontWeight: '700',
+    fontFamily: fonts.sansMedium,
   },
 });
 
