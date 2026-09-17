@@ -2,8 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --color-brand-bg: #f4efe8;
+  --color-surface: #fbf8f3;
+  --color-ink: #2d2724;
+  --color-muted: #766e68;
+  --color-muted-light: #998b82;
+  --color-border: #ded3c8;
+}
+
+:root.dark {
+  --color-brand-bg: #1c1815;
+  --color-surface: #262019;
+  --color-ink: #f2ece4;
+  --color-muted: #b8ab9f;
+  --color-muted-light: #8f8177;
+  --color-border: #3d332c;
+}
+
 body {
-  background-color: #f4efe8;
+  background-color: var(--color-brand-bg);
+  transition: background-color 200ms ease;
 }
 
 .App {
@@ -19,7 +38,7 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.16em;
   font-size: 0.66rem;
-  color: #998b82;
+  color: var(--color-muted-light);
 }
 
 .pressable {

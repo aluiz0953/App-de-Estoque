@@ -12,7 +12,12 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle")
+        // Pinned explicitly: an unversioned "com.android.tools.build:gradle" classpath lets
+        // Gradle resolve whatever AGP happens to be cached/newest on the machine, which is
+        // nondeterministic across runs (observed resolving 7.0.4 - too old for RN 0.73's
+        // Kotlin sourceSets DSL - on one run and 8.1.1, the version RN 0.73 actually ships
+        // with, on another).
+        classpath("com.android.tools.build:gradle:8.1.1")
         classpath("com.facebook.react:react-native-gradle-plugin")
         classpath("org.jetbrains.kotlin:kotlin-gradle-plugin")
     }

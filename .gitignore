@@ -6,7 +6,11 @@ dist/
 target/
 build/
 frontend/mobile/android/app/build/
+frontend/mobile/android/app/.cxx/
 frontend/mobile/android/.gradle/
+
+# Editor project files
+.idea/
 
 # Logs and scratch debug output
 *.log

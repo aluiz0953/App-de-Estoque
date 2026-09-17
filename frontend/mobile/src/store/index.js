@@ -1,4 +1,4 @@
-import { configureStore } from '@reduxjs/toolkit';
+import { combineReducers, configureStore } from '@reduxjs/toolkit';
 import {
   persistStore,
   persistReducer,
@@ -20,12 +20,13 @@ const persistConfig = {
   whitelist: ['auth'], // apenas auth será persistido
 };
 
-const rootReducer = (state, action) => {
-  return {
-    auth: authReducer(state.auth, action),
-    inventory: inventoryReducer(state.inventory, action),
-  };
-};
+// combineReducers (not a hand-rolled function) so Redux's initial dispatch with
+// state === undefined is handled correctly - each slice reducer supplies its own
+// default state instead of crashing on `state.auth` before anything exists.
+const rootReducer = combineReducers({
+  auth: authReducer,
+  inventory: inventoryReducer,
+});
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
 

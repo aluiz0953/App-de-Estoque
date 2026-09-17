@@ -3,9 +3,12 @@ package com.perfumaria.estoque.service;
 import com.perfumaria.estoque.model.Fornecedor;
 import com.perfumaria.estoque.model.Lote;
 import com.perfumaria.estoque.model.Lote.StatusLote;
+import com.perfumaria.estoque.model.MovimentacaoEstoque;
+import com.perfumaria.estoque.model.MovimentacaoEstoque.TipoMovimentacao;
 import com.perfumaria.estoque.model.Produto;
 import com.perfumaria.estoque.repository.FornecedorRepository;
 import com.perfumaria.estoque.repository.LoteRepository;
+import com.perfumaria.estoque.repository.MovimentacaoEstoqueRepository;
 import com.perfumaria.estoque.repository.ProdutoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -30,6 +33,9 @@ public class InventoryService {
 
     @Autowired
     private FornecedorRepository fornecedorRepository;
+
+    @Autowired
+    private MovimentacaoEstoqueRepository movimentacaoEstoqueRepository;
 
     /**
      * Adds stock to inventory using FIFO principle for cost calculation.
@@ -69,7 +75,10 @@ public class InventoryService {
         novoLote.setStatus(StatusLote.ATIVO);
         novoLote.setCriadoPor(usuario);
 
-        return loteRepository.save(novoLote);
+        Lote salvo = loteRepository.save(novoLote);
+        movimentacaoEstoqueRepository.save(
+                new MovimentacaoEstoque(produto, TipoMovimentacao.ENTRADA, quantidade, null, usuario));
+        return salvo;
     }
 
     /**
@@ -86,7 +95,7 @@ public class InventoryService {
                                      com.perfumaria.estoque.model.Usuario usuario) {
         // True FIFO: oldest receipt date (criadoEm) first
         List<Lote> lotesAtivos = loteRepository.findActiveLotesByProdutoOrderByReceiptAsc(produtoId);
-        return consumirLotes(lotesAtivos, quantidade);
+        return registrarSaida(produtoId, quantidade, "FIFO", usuario, consumirLotes(lotesAtivos, quantidade));
     }
 
     /**
@@ -102,7 +111,7 @@ public class InventoryService {
     public boolean retirarEstoqueLIFO(Long produtoId, int quantidade,
                                      com.perfumaria.estoque.model.Usuario usuario) {
         List<Lote> lotesAtivos = loteRepository.findActiveLotesByProdutoOrderByReceiptDesc(produtoId);
-        return consumirLotes(lotesAtivos, quantidade);
+        return registrarSaida(produtoId, quantidade, "LIFO", usuario, consumirLotes(lotesAtivos, quantidade));
     }
 
     /**
@@ -118,7 +127,22 @@ public class InventoryService {
     public boolean retirarEstoqueFEFO(Long produtoId, int quantidade,
                                      com.perfumaria.estoque.model.Usuario usuario) {
         List<Lote> lotesAtivos = loteRepository.findActiveLotesByProdutoOrderByExpiration(produtoId);
-        return consumirLotes(lotesAtivos, quantidade);
+        return registrarSaida(produtoId, quantidade, "FEFO", usuario, consumirLotes(lotesAtivos, quantidade));
+    }
+
+    /**
+     * Logs a SAIDA movement only when the withdrawal actually succeeded — a failed
+     * withdrawal (insufficient stock) must not appear in the movement history/chart.
+     */
+    private boolean registrarSaida(Long produtoId, int quantidade, String estrategia,
+                                    com.perfumaria.estoque.model.Usuario usuario, boolean sucesso) {
+        if (sucesso) {
+            Produto produto = produtoRepository.findById(produtoId)
+                    .orElseThrow(() -> new IllegalArgumentException("Produto não encontrado: " + produtoId));
+            movimentacaoEstoqueRepository.save(
+                    new MovimentacaoEstoque(produto, TipoMovimentacao.SAIDA, quantidade, estrategia, usuario));
+        }
+        return sucesso;
     }
 
     /**

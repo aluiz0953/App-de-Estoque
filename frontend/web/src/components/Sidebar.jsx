@@ -29,8 +29,6 @@ const Sidebar = () => {
     { name: 'Estoque', icon: 'package-variant', to: '/estoque', auth: true },
     { name: 'Produtos', icon: 'package', to: '/produtos', auth: ['ADMIN', 'MANAGER'] },
     { name: 'Fornecedores', icon: 'delivery-truck', to: '/fornecedores', auth: ['ADMIN', 'MANAGER'] },
-    { name: 'Marcas', icon: 'copyright', to: '/marcas', auth: ['ADMIN', 'MANAGER'] },
-    { name: 'Linhas', icon: 'format-list-bulleted', to: '/linhas', auth: ['ADMIN', 'MANAGER'] },
     { name: 'Notificações', icon: 'bell', to: '/notificacoes', auth: ['ADMIN', 'MANAGER', 'AUDITOR'] },
     { name: 'Relatórios', icon: 'chart-bar', to: '/relatorios', auth: ['ADMIN', 'MANAGER'] },
     { name: 'Usuários', icon: 'account-multiple', to: '/usuarios', auth: ['ADMIN'] },
@@ -74,11 +72,11 @@ const Sidebar = () => {
       </div>
       <div className="mt-auto border-t border-white/10 p-5">
         <div className="flex items-center gap-3 rounded-lg bg-white/5 p-3">
-          <div className="grid h-8 w-8 place-items-center rounded-full bg-secondary font-display text-[14px] text-ink">
-            {(user.username || user.nome || 'U').slice(0, 2).toUpperCase()}
+          <div className="grid h-8 w-8 place-items-center rounded-full bg-secondary font-display text-[14px] text-[#2d2724]">
+            {(user.user || user.username || user.nome || 'U').slice(0, 2).toUpperCase()}
           </div>
           <div className="min-w-0">
-            <p className="truncate text-[12px] font-medium text-primary-50">{user.username || user.nome}</p>
+            <p className="truncate text-[12px] font-medium text-primary-50">{user.user || user.username || user.nome}</p>
             <p className="truncate text-[10px] text-muted-light">{user.role}</p>
           </div>
           <button onClick={handleLogout} aria-label="Sair" className="ml-auto text-muted-light hover:text-primary-50">
@@ -107,14 +105,14 @@ const Sidebar = () => {
         </button>
       </header>
 
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[238px] flex-col border-r border-border bg-ink lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[238px] flex-col border-r border-border bg-[#2d2724] lg:flex">
         {nav}
       </aside>
 
       {mobileOpen && (
         <div className="fixed inset-0 z-40 flex lg:hidden">
-          <div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-          <aside className="relative flex w-[238px] flex-col bg-ink">
+          <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
+          <aside className="relative flex w-[238px] flex-col bg-[#2d2724]">
             <button
               onClick={() => setMobileOpen(false)}
               className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full text-primary-50/70 hover:text-primary-50"

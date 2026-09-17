@@ -6,7 +6,7 @@ import BottomSheet, { BottomSheetView, BottomSheetBackdrop } from '@gorhom/botto
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import useFetchProducts from '../hooks/useFetchProducts';
 import { useNavigate } from '../hooks/useNavigate';
-import { colors, tabularNums } from '../theme/colors';
+import { colors, fonts, tabularNums } from '../theme/colors';
 
 const InventoryScreen = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -73,8 +73,8 @@ const InventoryScreen = () => {
           style={{ marginRight: 12 }}
         />
         <View style={{ flex: 1 }}>
-          <Title>{item.nome}</Title>
-          <Caption style={tabularNums}>{item.sku}</Caption>
+          <Title style={styles.itemTitle}>{item.nome}</Title>
+          <Caption style={[styles.itemCaption, tabularNums]}>{item.sku}</Caption>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
             <Text>
               <Text style={styles.bold}>Estoque: </Text>
@@ -110,7 +110,7 @@ const InventoryScreen = () => {
   }
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={styles.searchRow}>
         <Searchbar
           placeholder="Buscar por nome, SKU, marca ou linha..."
@@ -163,7 +163,7 @@ const InventoryScreen = () => {
         backdropComponent={renderBackdrop}
       >
         <BottomSheetView style={{ padding: 16 }}>
-          <Title style={{ marginBottom: 12 }}>Filtrar por Marca</Title>
+          <Title style={[styles.itemTitle, { marginBottom: 12, fontSize: 18 }]}>Filtrar por Marca</Title>
           <View style={styles.chipRow}>
             <Chip
               selected={!selectedMarca}
@@ -213,8 +213,17 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
+  itemTitle: {
+    fontFamily: fonts.sansMedium,
+    fontSize: 15,
+    color: colors.text,
+  },
+  itemCaption: {
+    fontFamily: fonts.mono,
+    color: colors.textMutedLight,
+  },
   bold: {
-    fontWeight: '700',
+    fontFamily: fonts.sansMedium,
   },
   swipeActions: {
     flexDirection: 'row',

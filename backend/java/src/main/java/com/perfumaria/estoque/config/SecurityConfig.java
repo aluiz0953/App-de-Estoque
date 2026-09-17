@@ -56,6 +56,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(authz -> authz
                 // Public endpoints
                 .requestMatchers("/api/produtos/sku/**", "/api/produtos/{id}/margem-lucro").permitAll()
+                // Must come before the /api/auth/** permitAll below - first match wins.
+                .requestMatchers("/api/auth/profile").authenticated()
                 .requestMatchers("/api/auth/**").permitAll()
 
                 // Protected endpoints - Role-based access
@@ -104,10 +106,15 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    // Comma-separated list, e.g. "https://estoque-tico-e-tica.onrender.com" in production.
+    // Defaults to the Vite dev server origin so local development keeps working unset.
+    @org.springframework.beans.factory.annotation.Value("${ALLOWED_ORIGINS:http://localhost:5173}")
+    private String allowedOrigins;
+
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173"));
+        configuration.setAllowedOrigins(List.of(allowedOrigins.split(",")));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

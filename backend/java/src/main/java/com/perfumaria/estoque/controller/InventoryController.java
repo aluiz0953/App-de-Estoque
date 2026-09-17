@@ -1,8 +1,10 @@
 package com.perfumaria.estoque.controller;
 
 import com.perfumaria.estoque.model.Lote;
+import com.perfumaria.estoque.model.MovimentacaoEstoque;
 import com.perfumaria.estoque.model.Usuario;
 import com.perfumaria.estoque.repository.LoteRepository;
+import com.perfumaria.estoque.repository.MovimentacaoEstoqueRepository;
 import com.perfumaria.estoque.repository.ProdutoRepository;
 import com.perfumaria.estoque.repository.UsuarioRepository;
 import com.perfumaria.estoque.service.InventoryService;
@@ -14,6 +16,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +41,9 @@ public class InventoryController {
 
     @Autowired
     private UsuarioRepository usuarioRepository;
+
+    @Autowired
+    private MovimentacaoEstoqueRepository movimentacaoEstoqueRepository;
 
     /**
      * Resolves the acting Usuario from the authenticated session rather than trusting
@@ -192,5 +198,22 @@ public class InventoryController {
         resumo.put("lucroPotencial", lucroPotencial);
 
         return ResponseEntity.ok(resumo);
+    }
+
+    /**
+     * Stock-outflow history for the dashboard chart: which brand/line sold the most
+     * over a given window. Returns raw movement rows (with produto->linha->marca
+     * populated) so the client can aggregate by whatever bucket it needs.
+     *
+     * @param dias How many days back to look (default 30)
+     */
+    @GetMapping("/movimentacoes")
+    public ResponseEntity<List<MovimentacaoEstoque>> getMovimentacoes(
+            @RequestParam(defaultValue = "30") int dias,
+            @RequestParam(defaultValue = "SAIDA") MovimentacaoEstoque.TipoMovimentacao tipo) {
+
+        LocalDateTime fim = LocalDateTime.now();
+        LocalDateTime inicio = fim.minusDays(dias);
+        return ResponseEntity.ok(movimentacaoEstoqueRepository.findByTipoAndDataMovimentacaoBetween(tipo, inicio, fim));
     }
 }
