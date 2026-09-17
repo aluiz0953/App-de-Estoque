@@ -124,6 +124,10 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+                <!-- Without an explicit version, Maven resolved a 4.2.0-M1 pre-release
+                     plugin (unrelated to this app's actual Spring Boot 3.2.0) instead
+                     of one matching the BOM. -->
+                <version>${spring-boot.version}</version>
                 <configuration>
                     <excludes>
                         <exclude>
@@ -132,6 +136,18 @@
                         </exclude>
                     </excludes>
                 </configuration>
+                <executions>
+                    <!-- This project doesn't inherit spring-boot-starter-parent (only its
+                         dependency BOM), so the repackage goal isn't auto-bound to `package`
+                         the way it would be otherwise - without this, `mvn package` produces
+                         a plain jar with no Main-Class manifest, and `java -jar` fails with
+                         "no main manifest attribute". -->
+                    <execution>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
 
             <!-- Compiler Plugin -->
