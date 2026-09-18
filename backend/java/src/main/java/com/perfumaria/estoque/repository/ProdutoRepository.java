@@ -34,12 +34,19 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
 
     // General quick-search across name/SKU/brand/line — backs the web search box and the
     // mobile "Entrada de Romaneio" autocomplete (busca rápida por Linha/Marca).
-    @Query("SELECT p FROM Produto p WHERE " +
+    @Query("SELECT DISTINCT p FROM Produto p JOIN FETCH p.linha l JOIN FETCH l.marca m WHERE " +
             "LOWER(p.nome) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
             "LOWER(p.sku) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
-            "LOWER(p.linha.nome) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
-            "LOWER(p.linha.marca.nome) LIKE LOWER(CONCAT('%', :termo, '%'))")
+            "LOWER(l.nome) LIKE LOWER(CONCAT('%', :termo, '%')) OR " +
+            "LOWER(m.nome) LIKE LOWER(CONCAT('%', :termo, '%'))")
     List<Produto> search(@Param("termo") String termo);
+
+    // linha/marca are lazy @ManyToOne, so a plain findAll() triggers one extra query
+    // per produto (N+1) when the response gets serialized with nested linha/marca -
+    // fine with a handful of seed products, but with the real catalog (dozens of
+    // produtos) it was slow enough to blow past the mobile app's request timeout.
+    @Query("SELECT DISTINCT p FROM Produto p JOIN FETCH p.linha l JOIN FETCH l.marca WHERE p.active = true")
+    List<Produto> findAllActiveWithLinhaAndMarca();
 
     // New methods for tipoProduto and fragrancia fields
     List<Produto> findByTipoProduto(String tipoProduto);
