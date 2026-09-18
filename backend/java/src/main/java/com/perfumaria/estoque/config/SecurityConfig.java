@@ -62,7 +62,7 @@ public class SecurityConfig {
 
                 // Protected endpoints - Role-based access
                 .requestMatchers("/api/estoque/**").hasAnyRole(Role.ADMIN.name(), Role.OPERATOR.name(), Role.MANAGER.name())
-                .requestMatchers("/api/produtos/**").hasAnyRole(Role.ADMIN.name(), Role.MANAGER.name())
+                .requestMatchers("/api/produtos/**", "/api/marcas/**", "/api/linhas/**").hasAnyRole(Role.ADMIN.name(), Role.MANAGER.name())
                 .requestMatchers("/api/notificacoes/**").hasAnyRole(Role.ADMIN.name(), Role.AUDITOR.name(), Role.MANAGER.name())
                 // Confirming a pedido withdraws stock, same as /api/estoque/** - same roles.
                 .requestMatchers("/api/pedidos/**", "/api/clientes/**").hasAnyRole(Role.ADMIN.name(), Role.OPERATOR.name(), Role.MANAGER.name())

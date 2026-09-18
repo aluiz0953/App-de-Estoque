@@ -78,6 +78,9 @@ const apiService = {
   createMarca: (marcaData) =>
     apiService.request.post('/marcas', marcaData),
 
+  deleteMarca: (id) =>
+    apiService.request.delete(`/marcas/${id}`),
+
   getLinhas: (marcaId) =>
     apiService.request.get('/linhas', marcaId ? { marcaId } : {}),
 
