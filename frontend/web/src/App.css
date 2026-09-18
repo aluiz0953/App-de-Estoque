@@ -59,6 +59,19 @@ body {
   .animate-rise { animation-duration: 1ms; }
 }
 
+/* Page/tab switch - snappier and shorter than rise-in, which is only for the
+   one-off login card entrance. This fires on every nav, so it stays quick. */
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-page {
+  animation: page-in 180ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-page { animation-duration: 1ms; }
+}
+
 ::-webkit-scrollbar { width: 10px; }
 ::-webkit-scrollbar-track { background: #eee7df; }
 ::-webkit-scrollbar-thumb { background: #c9b6a8; border-radius: 999px; border: 3px solid #eee7df; }

@@ -33,10 +33,11 @@ public class ProdutoController {
      */
     @GetMapping
     public List<Produto> getAllProdutos(@RequestParam(required = false) String search) {
-        List<Produto> produtos = (search != null && !search.isBlank())
-                ? produtoRepository.search(search.trim())
-                : produtoRepository.findAllActiveWithLinhaAndMarca();
-        return produtos.stream().filter(Produto::isActive).toList();
+        if (search != null && !search.isBlank()) {
+            return produtoRepository.search(search.trim()).stream().filter(Produto::isActive).toList();
+        }
+        // Already active-only and JOIN FETCHed (see #findAllActiveWithLinhaAndMarca) - no extra filter needed.
+        return produtoRepository.findAllActiveWithLinhaAndMarca();
     }
 
     /**
@@ -390,3 +391,4 @@ public class ProdutoController {
                 linhaNome, fragrancia);
     }
 }
+
