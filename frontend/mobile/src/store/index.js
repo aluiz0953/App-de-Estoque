@@ -13,25 +13,27 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import authReducer from './slices/authSlice';
 import inventoryReducer from './slices/inventorySlice';
 
-const persistConfig = {
-  key: 'root',
-  version: 1,
+const authPersistConfig = {
+  key: 'auth',
   storage: AsyncStorage,
-  whitelist: ['auth'], // apenas auth será persistido
+  // isAuthenticating/error are transient, in-flight UI state - persisting them
+  // meant that killing the app mid-login left isAuthenticating: true in
+  // AsyncStorage, and redux-persist's root-level merge overwrote the slice's
+  // own reset on every future rehydrate, permanently stuck on the loading
+  // gate in LoginScreen from the moment the app launched.
+  blacklist: ['isAuthenticating', 'error'],
 };
 
 // combineReducers (not a hand-rolled function) so Redux's initial dispatch with
 // state === undefined is handled correctly - each slice reducer supplies its own
 // default state instead of crashing on `state.auth` before anything exists.
 const rootReducer = combineReducers({
-  auth: authReducer,
+  auth: persistReducer(authPersistConfig, authReducer),
   inventory: inventoryReducer,
 });
 
-const persistedReducer = persistReducer(persistConfig, rootReducer);
-
 export const store = configureStore({
-  reducer: persistedReducer,
+  reducer: rootReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {

@@ -35,7 +35,7 @@ public class ProdutoController {
     public List<Produto> getAllProdutos(@RequestParam(required = false) String search) {
         List<Produto> produtos = (search != null && !search.isBlank())
                 ? produtoRepository.search(search.trim())
-                : produtoRepository.findAll();
+                : produtoRepository.findAllActiveWithLinhaAndMarca();
         return produtos.stream().filter(Produto::isActive).toList();
     }
 

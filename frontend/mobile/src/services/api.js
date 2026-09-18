@@ -1,12 +1,14 @@
 // Base URL - in production, this would come from environment variables
 const BASE_URL = __DEV__
-  ? 'http://10.0.2.2:8080/api' // Android emulator
-  : 'http://localhost:8080/api'; // iOS simulator or production
+  ? 'http://10.0.2.2:8080/api' // Android emulator, talking to a backend running on the dev machine
+  : 'https://app-de-estoque.onrender.com/api'; // release build, same backend the web app talks to
 
 // The backend authenticates via a server-side session (Spring Security), not a bearer
 // token: /api/auth/login sets a session cookie, and React Native's fetch persists cookies
 // automatically per app install, the same way a browser does. So there is no token to
 // attach here — just send the cookie jar along on every request.
+const REQUEST_TIMEOUT_MS = 15000;
+
 const apiFetch = async (endpoint, options = {}) => {
   const headers = {
     'Content-Type': 'application/json',
@@ -14,10 +16,27 @@ const apiFetch = async (endpoint, options = {}) => {
     ...options.headers,
   };
 
-  const response = await fetch(`${BASE_URL}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  // Without this, a request that never gets a response (seen on-device as a
+  // fetch that neither resolves nor rejects) left login.pending forever,
+  // stuck showing a full-screen spinner with no way out but force-closing.
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+  let response;
+  try {
+    response = await fetch(`${BASE_URL}${endpoint}`, {
+      ...options,
+      headers,
+      signal: controller.signal,
+    });
+  } catch (err) {
+    if (err.name === 'AbortError') {
+      throw new Error('Tempo de conexão esgotado. Verifique sua internet e tente novamente.');
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
 
   // Handle non-2xx responses
   if (!response.ok) {
