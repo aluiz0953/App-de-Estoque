@@ -1,5 +1,4 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { REHYDRATE } from 'redux-persist';
 import apiService from '../../services/api';
 
 // Thunk para login
@@ -70,12 +69,6 @@ const authSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // A persisted isAuthenticating: true (e.g. the tab closed mid-request) must
-      // not survive rehydration - otherwise the login button stays permanently
-      // disabled until storage is cleared, even though no request is in flight.
-      .addCase(REHYDRATE, (state) => {
-        state.isAuthenticating = false;
-      })
       // Login
       .addCase(login.pending, (state) => {
         state.isAuthenticating = true;

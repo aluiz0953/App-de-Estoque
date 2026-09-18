@@ -14,23 +14,25 @@ import authReducer from './slices/authSlice';
 import inventoryReducer from './slices/inventorySlice';
 import pedidosReducer from './slices/pedidosSlice';
 
-const persistConfig = {
-  key: 'root',
-  version: 1,
+const authPersistConfig = {
+  key: 'auth',
   storage,
-  whitelist: ['auth'], // apenas auth será persistido
+  // isAuthenticating/error are transient, in-flight UI state - persisting them
+  // meant that closing the tab (or refreshing) mid-login left isAuthenticating:
+  // true in localStorage, and redux-persist's root-level merge overwrote the
+  // slice's own reset on every future rehydrate, permanently stuck showing
+  // "Entrando..." from the moment the page loaded.
+  blacklist: ['isAuthenticating', 'error'],
 };
 
 const rootReducer = combineReducers({
-  auth: authReducer,
+  auth: persistReducer(authPersistConfig, authReducer),
   inventory: inventoryReducer,
   pedidos: pedidosReducer,
 });
 
-const persistedReducer = persistReducer(persistConfig, rootReducer);
-
 export const store = configureStore({
-  reducer: persistedReducer,
+  reducer: rootReducer,
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
       serializableCheck: {

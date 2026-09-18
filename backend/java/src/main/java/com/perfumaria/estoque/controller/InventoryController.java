@@ -214,6 +214,11 @@ public class InventoryController {
      * over a given window. Returns raw movement rows (with produto->linha->marca
      * populated) so the client can aggregate by whatever bucket it needs.
      *
+     * Movements for a since-archived produto (see MarcaController#deleteMarca) are
+     * dropped here - this chart is a "what's selling now" snapshot, not an audit
+     * trail, so a brand that was only ever test/seed data and got deleted shouldn't
+     * keep showing up. /movimentacoes/historico is the full, unfiltered ledger.
+     *
      * @param dias How many days back to look (default 30)
      */
     @GetMapping("/movimentacoes")
@@ -223,7 +228,12 @@ public class InventoryController {
 
         LocalDateTime fim = LocalDateTime.now();
         LocalDateTime inicio = fim.minusDays(dias);
-        return ResponseEntity.ok(movimentacaoEstoqueRepository.findByTipoAndDataMovimentacaoBetween(tipo, inicio, fim));
+        List<MovimentacaoEstoque> movimentacoes = movimentacaoEstoqueRepository
+                .findByTipoAndDataMovimentacaoBetween(tipo, inicio, fim)
+                .stream()
+                .filter(m -> m.getProduto() != null && m.getProduto().isActive())
+                .toList();
+        return ResponseEntity.ok(movimentacoes);
     }
 
     /**
