@@ -186,10 +186,42 @@ public class InventoryService {
      * @param produtoId The product ID
      * @return Object containing availability information
      */
-    public com.perfumaria.estoque.service.InventoryService.AvailabilityInfo verificarDisponibilidade(Long produtoId) {
-        // In a real implementation, we would query the database
-        // This is a simplified version showing the concept
-        return new AvailabilityInfo();
+    public AvailabilityInfo verificarDisponibilidade(Long produtoId) {
+        AvailabilityInfo info = new AvailabilityInfo();
+        java.math.BigDecimal valorTotalCusto = java.math.BigDecimal.ZERO;
+        java.math.BigDecimal valorTotalVenda = java.math.BigDecimal.ZERO;
+
+        for (Lote lote : loteRepository.findByProdutoId(produtoId)) {
+            int quantidade = lote.getQuantidade();
+            info.setQuantidadeTotal(info.getQuantidadeTotal() + quantidade);
+
+            if (lote.getStatus() == StatusLote.RESERVADO) {
+                info.setQuantidadeReservada(info.getQuantidadeReservada() + quantidade);
+            }
+
+            if (lote.isExpired()) {
+                info.setQuantidadeVencida(info.getQuantidadeVencida() + quantidade);
+            } else if (lote.isExpiringSoon()) {
+                info.setQuantidadeVencendoProximos30Dias(info.getQuantidadeVencendoProximos30Dias() + quantidade);
+            }
+
+            // Only stock that is actually sellable right now (active status, not
+            // past its expiration date yet) counts as "disponível" and feeds the
+            // potential value totals — reserved/expired/blocked lots don't.
+            if (lote.getStatus() == StatusLote.ATIVO && !lote.isExpired()) {
+                info.setQuantidadeDisponivel(info.getQuantidadeDisponivel() + quantidade);
+                // preco_custo_lote is nullable in schema.sql - a lot without a
+                // recorded cost just doesn't contribute to the cost total.
+                if (lote.getPrecoCustoLote() != null) {
+                    valorTotalCusto = valorTotalCusto.add(lote.getValorTotal());
+                }
+                valorTotalVenda = valorTotalVenda.add(lote.getValorVendaPotencial());
+            }
+        }
+
+        info.setValorTotalCusto(valorTotalCusto);
+        info.setValorTotalVenda(valorTotalVenda);
+        return info;
     }
 
     /**
@@ -201,14 +233,15 @@ public class InventoryService {
     @Transactional
     public int processarVencimentos() {
         LocalDate hoje = LocalDate.now();
-        // In a real implementation:
-        // List<Lote> lotesVencidos = loteRepository.findByDataValidadeLessThanEqualAndStatus(hoje, StatusLote.ATIVO);
-        // for (Lote lote : lotesVencidos) {
-        //     lote.setStatusLote(StatusLote.VENCIDO);
-        //     loteRepository.save(lote);
-        // }
-        // return lotesVencidos.size();
-        return 0; // Placeholder
+        // Excludes lots already VENCIDO so re-running this (it's meant to run daily)
+        // doesn't keep re-touching the same rows; every other status (ATIVO,
+        // RESERVADO, BLOQUEADO) still flips once its expiration date has passed.
+        List<Lote> lotesVencidos = loteRepository.findByDataValidadeLessThanEqualAndStatusNot(hoje, StatusLote.VENCIDO);
+        for (Lote lote : lotesVencidos) {
+            lote.setStatus(StatusLote.VENCIDO);
+            loteRepository.save(lote);
+        }
+        return lotesVencidos.size();
     }
 
     /**
