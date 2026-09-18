@@ -15,6 +15,8 @@ import java.util.Optional;
 @RepositoryRestResource(exported = false) // ProdutoController already fronts this at /api/produtos with proper margin logic
 public interface ProdutoRepository extends JpaRepository<Produto, Long> {
 
+    List<Produto> findByLinhaId(Long linhaId);
+
     Optional<Produto> findBySku(String sku);
 
     Optional<Produto> findByBarcodeEan13(String barcodeEan13);

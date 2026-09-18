@@ -24,17 +24,19 @@ public class ProdutoController {
     private ProfitMarginService profitMarginService;
 
     /**
-     * Get all products, optionally filtered by a quick-search term across
+     * Get all active products, optionally filtered by a quick-search term across
      * nome/SKU/linha/marca (web search box, mobile "Entrada de Romaneio" autocomplete).
+     * Archived products (see #archiveProduto) are excluded - restore them via
+     * their own id first if they need to reappear here.
      * @param search Optional search term
      * @return List of matching products
      */
     @GetMapping
     public List<Produto> getAllProdutos(@RequestParam(required = false) String search) {
-        if (search != null && !search.isBlank()) {
-            return produtoRepository.search(search.trim());
-        }
-        return produtoRepository.findAll();
+        List<Produto> produtos = (search != null && !search.isBlank())
+                ? produtoRepository.search(search.trim())
+                : produtoRepository.findAll();
+        return produtos.stream().filter(Produto::isActive).toList();
     }
 
     /**

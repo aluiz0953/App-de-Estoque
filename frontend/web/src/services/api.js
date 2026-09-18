@@ -40,6 +40,9 @@ const apiService = {
   rejectUsuario: (id) =>
     apiService.request.delete(`/usuarios/${id}`),
 
+  updateUsuarioRole: (id, role) =>
+    apiService.request.put(`/usuarios/${id}/role`, { role }),
+
   // Produtos
   getProducts: (params = {}) =>
     apiService.request.get('/produtos', params),
@@ -74,6 +77,9 @@ const apiService = {
 
   createMarca: (marcaData) =>
     apiService.request.post('/marcas', marcaData),
+
+  deleteMarca: (id) =>
+    apiService.request.delete(`/marcas/${id}`),
 
   getLinhas: (marcaId) =>
     apiService.request.get('/linhas', marcaId ? { marcaId } : {}),
