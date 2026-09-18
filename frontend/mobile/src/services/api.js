@@ -1,13 +1,9 @@
-// Base URL - in production, this would come from environment variables
-// Dev backend host: 10.0.2.2 only resolves inside the Android EMULATOR (its alias
-// for the host machine's localhost) - a physical phone on the same Wi-Fi can't
-// reach it and just times out. Point this at the dev machine's LAN IP instead
-// when testing on a real device (find it via `ipconfig`, look for IPv4 on the
-// active adapter); switch back to 10.0.2.2 for emulator-only testing.
-const DEV_BACKEND_HOST = '192.168.3.152';
-const BASE_URL = __DEV__
-  ? `http://${DEV_BACKEND_HOST}:8080/api`
-  : 'https://app-de-estoque.onrender.com/api'; // release build, same backend the web app talks to
+// Always hits the real deployed backend (Railway) so the app works from any
+// network, not just the dev machine's Wi-Fi. For local-only testing against a
+// backend running on your own machine, temporarily swap this for
+// `http://<your-LAN-IP>:8080/api` (find the IP via `ipconfig`; 10.0.2.2
+// instead of the LAN IP if using the Android emulator).
+const BASE_URL = 'https://app-de-estoque-production.up.railway.app/api';
 
 // The backend authenticates via a server-side session (Spring Security), not a bearer
 // token: /api/auth/login sets a session cookie, and React Native's fetch persists cookies
