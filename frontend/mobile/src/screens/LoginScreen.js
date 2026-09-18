@@ -8,6 +8,7 @@ import { colors, fonts } from '../theme/colors';
 const LoginScreen = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -62,14 +63,23 @@ const LoginScreen = () => {
         />
 
         <Text style={[styles.label, { marginTop: 16 }]}>SENHA</Text>
-        <TextInput
-          value={password}
-          onChangeText={setPassword}
-          placeholder="Digite sua senha"
-          placeholderTextColor={colors.textMutedLight}
-          secureTextEntry
-          style={styles.input}
-        />
+        <View style={styles.passwordRow}>
+          <TextInput
+            value={password}
+            onChangeText={setPassword}
+            placeholder="Digite sua senha"
+            placeholderTextColor={colors.textMutedLight}
+            secureTextEntry={!showPassword}
+            style={[styles.input, styles.passwordInput]}
+          />
+          <TouchableOpacity
+            onPress={() => setShowPassword((v) => !v)}
+            style={styles.showPasswordBtn}
+            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+          >
+            <Text style={styles.showPasswordText}>{showPassword ? 'Ocultar' : 'Mostrar'}</Text>
+          </TouchableOpacity>
+        </View>
 
         {error && <Text style={styles.error}>{error}</Text>}
 
@@ -123,6 +133,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   error: { fontFamily: fonts.sans, color: colors.error, marginTop: 12, fontSize: 13 },
+  passwordRow: { position: 'relative', justifyContent: 'center' },
+  passwordInput: { paddingRight: 72 },
+  showPasswordBtn: { position: 'absolute', right: 14 },
+  showPasswordText: { fontFamily: fonts.sansMedium, fontSize: 12, color: colors.secondaryDark },
   button: {
     marginTop: 24,
     height: 48,

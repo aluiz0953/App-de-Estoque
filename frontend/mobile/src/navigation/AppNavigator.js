@@ -1,4 +1,5 @@
 import React from 'react';
+import { useSelector } from 'react-redux';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import BottomTabBar from '../components/BottomTabBar';
@@ -38,8 +39,14 @@ function MainTabs() {
 }
 
 export default function AppNavigator() {
+  // authSlice is redux-persist'd (AsyncStorage), so isAuthenticated survives
+  // an app restart - without reading it here, the stack always opened on
+  // Login regardless, forcing a fresh username/password every time.
+  const { isAuthenticated } = useSelector((state) => state.auth);
+
   return (
     <Stack.Navigator
+      initialRouteName={isAuthenticated ? 'Home' : 'Login'}
       screenOptions={{
         headerShown: false,
       }}

@@ -14,6 +14,7 @@ const LoginPage = () => {
   const [mode, setMode] = useState('login'); // 'login' | 'register'
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const [registerForm, setRegisterForm] = useState(emptyRegisterForm);
   const [isRegistering, setIsRegistering] = useState(false);
@@ -88,13 +89,22 @@ const LoginPage = () => {
 
             <label className="grid gap-2">
               <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted-light">Senha</span>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Digite sua senha"
-                className="h-11 w-full rounded-lg border border-border bg-brand-bg px-3 text-[13px] outline-none placeholder:text-muted-light focus:border-secondary-dark"
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Digite sua senha"
+                  className="h-11 w-full rounded-lg border border-border bg-brand-bg px-3 pr-16 text-[13px] outline-none placeholder:text-muted-light focus:border-secondary-dark"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-medium text-secondary-dark hover:text-primary"
+                >
+                  {showPassword ? 'Ocultar' : 'Mostrar'}
+                </button>
+              </div>
             </label>
 
             {error && (
