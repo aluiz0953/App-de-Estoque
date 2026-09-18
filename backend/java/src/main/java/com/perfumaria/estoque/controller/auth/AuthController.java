@@ -65,13 +65,18 @@ public class AuthController {
         SecurityContextHolder.setContext(context);
         securityContextRepository.saveContext(context, request, response);
 
-        Usuario usuario = usuarioRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado após autenticação"));
+        // authenticate() already loaded the Usuario once (UserDetailsServiceImpl) and its
+        // role is right there in the granted authorities - re-querying it here was a second
+        // round trip to the DB for data already in hand, doubling login latency for nothing.
+        String role = authentication.getAuthorities().stream()
+                .findFirst()
+                .map(a -> a.getAuthority().replaceFirst("^ROLE_", ""))
+                .orElseThrow(() -> new RuntimeException("Usuário sem papel definido"));
 
         Map<String, Object> body = new HashMap<>();
         body.put("authenticated", true);
-        body.put("user", usuario.getUsername());
-        body.put("role", usuario.getRole().toString());
+        body.put("user", authentication.getName());
+        body.put("role", role);
         body.put("message", "Login realizado com sucesso");
 
         return ResponseEntity.ok(body);
