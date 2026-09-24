@@ -4,9 +4,9 @@ import apiService from '../../services/api';
 // Thunk para login
 export const login = createAsyncThunk(
   'auth/login',
-  async ({ username, password }, { rejectWithValue }) => {
+  async ({ username, password, rememberMe }, { rejectWithValue }) => {
     try {
-      const response = await apiService.login({ username, password });
+      const response = await apiService.login({ username, password, rememberMe });
       // Salvar token em localStorage (em produção, usar secure storage)
       localStorage.setItem('authToken', response.access_token || response.token || '');
       return response;
