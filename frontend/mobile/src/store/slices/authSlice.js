@@ -37,6 +37,8 @@ const authSlice = createSlice({
     isAuthenticating: false,
     isAuthenticated: false,
     error: null,
+    // "Manter conectado": when false, the saved session is dropped on the next launch (see store/index.js).
+    rememberMe: true,
   },
   reducers: {
     // Limpar erro
@@ -66,6 +68,7 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
         state.user = action.payload;
         state.error = null;
+        state.rememberMe = action.meta.arg.rememberMe !== false;
       })
       .addCase(login.rejected, (state, action) => {
         state.isAuthenticating = false;

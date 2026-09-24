@@ -22,6 +22,8 @@ const authPersistConfig = {
   // own reset on every future rehydrate, permanently stuck on the loading
   // gate in LoginScreen from the moment the app launched.
   blacklist: ['isAuthenticating', 'error'],
+  // "Manter conectado" off: don't restore the saved session when the app starts again.
+  migrate: (state) => Promise.resolve(state && state.rememberMe === false ? undefined : state),
 };
 
 // combineReducers (not a hand-rolled function) so Redux's initial dispatch with
