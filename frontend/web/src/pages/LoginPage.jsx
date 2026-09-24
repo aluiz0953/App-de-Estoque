@@ -25,6 +25,7 @@ const LoginPage = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
 
   const [registerForm, setRegisterForm] = useState(emptyRegisterForm);
   const [isRegistering, setIsRegistering] = useState(false);
@@ -35,7 +36,7 @@ const LoginPage = () => {
     e.preventDefault();
     dispatch(clearError());
     try {
-      await dispatch(login({ username, password })).unwrap();
+      await dispatch(login({ username, password, rememberMe })).unwrap();
       navigate('/dashboard');
     } catch (err) {
       // error is already reflected in state.auth.error
@@ -118,6 +119,16 @@ const LoginPage = () => {
                   {showPassword ? 'Ocultar' : 'Mostrar'}
                 </button>
               </div>
+            </label>
+
+            <label className="inline-flex items-center gap-2 text-[12px] text-muted">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="h-3.5 w-3.5 accent-primary"
+              />
+              Manter conectado
             </label>
 
             {error && (

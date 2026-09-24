@@ -10,7 +10,7 @@ import {
   REGISTER,
 } from 'redux-persist';
 import storage from 'redux-persist/lib/storage'; // usa localStorage para web
-import authReducer from './slices/authSlice';
+import authReducer, { SESSION_MARKER } from './slices/authSlice';
 import inventoryReducer from './slices/inventorySlice';
 import pedidosReducer from './slices/pedidosSlice';
 
@@ -23,6 +23,15 @@ const authPersistConfig = {
   // slice's own reset on every future rehydrate, permanently stuck showing
   // "Entrando..." from the moment the page loaded.
   blacklist: ['isAuthenticating', 'error'],
+  // "Manter conectado" off: the session lasts while the browser session does
+  // (reloads keep it; closing the browser clears sessionStorage and logs out).
+  migrate: (state) => {
+    if (state && state.rememberMe === false && !sessionStorage.getItem(SESSION_MARKER)) {
+      localStorage.removeItem('authToken');
+      return Promise.resolve(undefined);
+    }
+    return Promise.resolve(state);
+  },
 };
 
 const rootReducer = combineReducers({
