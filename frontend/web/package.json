@@ -11,13 +11,15 @@
     "lint": "eslint src --ext .tsx,.ts,.jsx,.js"
   },
   "dependencies": {
+    "@react-three/fiber": "^8.18.0",
     "@reduxjs/toolkit": "^2.0.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-redux": "^9.0.4",
     "react-router-dom": "^6.15.0",
     "recharts": "^3.10.1",
-    "redux-persist": "^6.0.0"
+    "redux-persist": "^6.0.0",
+    "three": "^0.186.0"
   },
   "devDependencies": {
     "@types/react": "^18.2.0",
