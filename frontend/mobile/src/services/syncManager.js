@@ -20,9 +20,13 @@ export function isSyncing() {
 // A timed-out/unreachable-server fetch surfaces as a plain TypeError (or our
 // own "Tempo de conexão esgotado" message from the abort handler in api.js) —
 // that's the backend being unreachable, not the backend rejecting the action,
-// so it must not be treated the same as a real business conflict below.
+// so it must not be treated the same as a real business conflict below. A 401
+// belongs in the same bucket: it means the session died (backend redeploy —
+// sessions are in-memory), not that this specific action was rejected. api.js
+// already forces a logout on 401 (see App.js's onUnauthorized), so the action
+// just needs to survive as 'pending' for when the user logs back in.
 function isTransientNetworkError(err) {
-  return err.name === 'TypeError' || /Tempo de conexão esgotado/.test(err.message || '');
+  return err.name === 'TypeError' || err.status === 401 || /Tempo de conexão esgotado/.test(err.message || '');
 }
 
 // "Block and ask": a conflicted action is never retried or discarded

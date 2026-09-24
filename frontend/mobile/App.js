@@ -6,9 +6,11 @@ import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { PaperProvider, MD3LightTheme, configureFonts } from 'react-native-paper';
 import { store, persistor } from './src/store';
+import { logoutUser } from './src/store/slices/authSlice';
 import AppNavigator from './src/navigation/AppNavigator';
 import { ToastProvider } from './src/components/Toast';
 import { startSyncManager } from './src/services/syncManager';
+import { onUnauthorized } from './src/services/api';
 import { colors, fonts } from './src/theme/colors';
 
 // Mirrors frontend/web's boutique palette + type system inside react-native-paper's
@@ -36,6 +38,11 @@ const paperTheme = {
 export default function App() {
   useEffect(() => {
     startSyncManager();
+    // A 401 means the server-side session is gone (in-memory, wiped on every
+    // backend redeploy) even though redux-persist still thinks we're logged
+    // in - clear that stale state so AppNavigator drops back to Login instead
+    // of leaving every screen quietly 401ing.
+    return onUnauthorized(() => store.dispatch(logoutUser()));
   }, []);
 
   return (

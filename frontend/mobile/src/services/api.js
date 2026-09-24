@@ -11,6 +11,18 @@ const BASE_URL = 'https://app-de-estoque-production.up.railway.app/api';
 // attach here — just send the cookie jar along on every request.
 const REQUEST_TIMEOUT_MS = 15000;
 
+// Backend sessions are in-memory (see application.properties) and get wiped on
+// every redeploy - the app can be holding a persisted isAuthenticated: true
+// (redux-persist) for a session the server no longer has. Rather than every
+// screen guessing at what a stale-session error looks like, apiFetch notifies
+// here once, centrally, whenever the server says 401; App.js subscribes and
+// clears auth state, which flips AppNavigator back to the Login screen.
+const unauthorizedListeners = new Set();
+export function onUnauthorized(fn) {
+  unauthorizedListeners.add(fn);
+  return () => unauthorizedListeners.delete(fn);
+}
+
 const apiFetch = async (endpoint, options = {}) => {
   const headers = {
     'Content-Type': 'application/json',
@@ -43,10 +55,12 @@ const apiFetch = async (endpoint, options = {}) => {
   // Handle non-2xx responses
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(
-      errorData.message ||
-      `HTTP ${response.status}: ${response.statusText}`
-    );
+    const err = new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+    err.status = response.status;
+    if (response.status === 401) {
+      unauthorizedListeners.forEach((fn) => fn());
+    }
+    throw err;
   }
 
   // Return parsed JSON if response has content
