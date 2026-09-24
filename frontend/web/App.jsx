@@ -3,8 +3,12 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Provider, useSelector } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { store, persistor } from './src/store';
+import { logoutUser } from './src/store/slices/authSlice';
+import { onUnauthorized } from './src/services/request';
 import { ThemeProvider } from './src/contexts/ThemeContext';
 import './src/App.css';
+
+onUnauthorized(() => store.dispatch(logoutUser()));
 
 // Components
 import Sidebar from './src/components/Sidebar';

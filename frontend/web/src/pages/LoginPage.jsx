@@ -121,7 +121,7 @@ const LoginPage = () => {
               </div>
             </label>
 
-            <label className="inline-flex items-center gap-2 text-[12px] text-muted">
+            <label className="inline-flex cursor-pointer items-center gap-2 text-[12px] text-muted">
               <input
                 type="checkbox"
                 checked={rememberMe}

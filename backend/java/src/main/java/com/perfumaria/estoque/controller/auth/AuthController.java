@@ -13,6 +13,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
@@ -37,6 +38,9 @@ public class AuthController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    @Autowired
+    private RememberMeServices rememberMeServices;
+
     private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
 
     /**
@@ -47,11 +51,15 @@ public class AuthController {
      * @return Authentication success response
      */
     @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> credentials,
+    public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, Object> credentials,
                                                        HttpServletRequest request,
                                                        HttpServletResponse response) {
-        String username = credentials.get("username");
-        String password = credentials.get("password");
+        String username = (String) credentials.get("username");
+        String password = (String) credentials.get("password");
+        // "Manter conectado" defaults to on when the client doesn't say - an older
+        // client that never sends the flag still gets a login that survives redeploys.
+        Object rememberFlag = credentials.get("rememberMe");
+        boolean rememberMe = rememberFlag == null || Boolean.parseBoolean(String.valueOf(rememberFlag));
 
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(username, password)
@@ -64,6 +72,9 @@ public class AuthController {
         context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
         securityContextRepository.saveContext(context, request, response);
+        if (rememberMe) {
+            rememberMeServices.loginSuccess(request, response, authentication);
+        }
 
         // authenticate() already loaded the Usuario once (UserDetailsServiceImpl) and its
         // role is right there in the granted authorities - re-querying it here was a second

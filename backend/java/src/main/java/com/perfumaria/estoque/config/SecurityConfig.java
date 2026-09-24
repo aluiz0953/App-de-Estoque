@@ -1,8 +1,14 @@
 package com.perfumaria.estoque.config;
 
 import com.perfumaria.estoque.model.Usuario.Role;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.web.server.Cookie.SameSite;
+import org.springframework.boot.web.servlet.server.CookieSameSiteSupplier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -13,14 +19,18 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
+import org.springframework.security.web.authentication.rememberme.TokenBasedRememberMeServices;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Security configuration for the Perfume Inventory Management System.
@@ -32,6 +42,19 @@ import java.util.List;
 @EnableMethodSecurity
 public class SecurityConfig {
 
+    private static final Logger log = LoggerFactory.getLogger(SecurityConfig.class);
+
+    // Signs the "manter conectado" cookie. Must be stable across restarts or every
+    // redeploy invalidates everyone's cookie - set it once in the environment.
+    @Value("${REMEMBER_ME_KEY:}")
+    private String rememberMeKey;
+
+    @Value("${COOKIE_SECURE:false}")
+    private boolean cookieSecure;
+
+    @Value("${COOKIE_SAME_SITE:lax}")
+    private String cookieSameSite;
+
     private final UserDetailsService userDetailsService;
     private final AuditLogFilter auditLogFilter;
 
@@ -42,6 +65,11 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        // Plain 401, no `WWW-Authenticate: Basic` challenge - that header made the
+        // browser pop its own native username/password dialog over the web app
+        // every time a session expired. The apps handle 401 themselves.
+        AuthenticationEntryPoint unauthorized = new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED);
+
         http
             // Disable CSRF for simplicity in this example (in production, configure properly)
             .csrf(csrf -> csrf.disable())
@@ -80,14 +108,23 @@ public class SecurityConfig {
             // since loginPage() doubles as the default loginProcessingUrl — the
             // controller method would never actually run.
 
-            // Logout
+            // Logout - 200 instead of the default redirect to /login?logout, which the
+            // API doesn't have. Also clears the remember-me cookie (rememberMe below
+            // registers itself as a logout handler).
             .logout(logout -> logout
                 .logoutUrl("/api/auth/logout")
+                .logoutSuccessHandler(new HttpStatusReturningLogoutSuccessHandler())
                 .permitAll()
             )
 
+            // "Manter conectado": sessions are in-memory and die on every redeploy;
+            // this cookie re-authenticates the next request after one. Only issued
+            // when AuthController#login is asked to.
+            .rememberMe(rm -> rm.rememberMeServices(rememberMeServices()))
+
             // HTTP Basic for API clients (optional)
-            .httpBasic(Customizer.withDefaults())
+            .httpBasic(basic -> basic.authenticationEntryPoint(unauthorized))
+            .exceptionHandling(e -> e.authenticationEntryPoint(unauthorized))
 
             // Add custom audit filter to log access to sensitive operations
             .addFilterBefore(auditLogFilter, UsernamePasswordAuthenticationFilter.class);
@@ -106,6 +143,31 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public TokenBasedRememberMeServices rememberMeServices() {
+        String key = rememberMeKey;
+        if (key.isBlank()) {
+            // ponytail: random per boot - "manter conectado" works but won't survive a
+            // restart until REMEMBER_ME_KEY is set in the environment.
+            key = UUID.randomUUID().toString();
+            log.warn("REMEMBER_ME_KEY not set: 'manter conectado' will not survive a restart");
+        }
+        TokenBasedRememberMeServices services = new TokenBasedRememberMeServices(key, userDetailsService);
+        services.setTokenValiditySeconds(30 * 24 * 60 * 60);
+        // AuthController only calls loginSuccess() when the user opted in, so there's
+        // no form parameter to look for.
+        services.setAlwaysRemember(true);
+        services.setUseSecureCookie(cookieSecure);
+        return services;
+    }
+
+    // The session cookie gets its SameSite from server.servlet.session.cookie.same-site;
+    // the remember-me cookie needs the same, or a cross-site web frontend never sends it.
+    @Bean
+    public CookieSameSiteSupplier rememberMeCookieSameSite() {
+        return CookieSameSiteSupplier.of(SameSite.valueOf(cookieSameSite.toUpperCase())).whenHasName("remember-me");
     }
 
     // Comma-separated list, e.g. "https://estoque-tico-e-tica.onrender.com" in production.

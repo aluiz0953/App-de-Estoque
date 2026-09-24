@@ -6,9 +6,10 @@ export const SESSION_MARKER = 'estoque.session';
 // Thunk para login
 export const login = createAsyncThunk(
   'auth/login',
-  async ({ username, password }, { rejectWithValue }) => {
+  async ({ username, password, rememberMe }, { rejectWithValue }) => {
     try {
-      const response = await apiService.login({ username, password });
+      // rememberMe also tells the backend whether to issue the cookie that survives a redeploy.
+      const response = await apiService.login({ username, password, rememberMe });
       // Marks this browser session, so a non-remembered login survives page reloads (store/index.js).
       sessionStorage.setItem(SESSION_MARKER, '1');
       // Salvar token em localStorage (em produção, usar secure storage)
