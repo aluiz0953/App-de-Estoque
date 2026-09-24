@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { login } from '../store/slices/authSlice';
-import { useNavigate } from '../hooks/useNavigate';
+import { flushQueue } from '../services/syncManager';
 import { colors, fonts } from '../theme/colors';
 
 const LoginScreen = () => {
@@ -14,14 +14,15 @@ const LoginScreen = () => {
 
   const { isAuthenticating } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
-  const navigate = useNavigate();
 
   const handleLogin = async () => {
     setLoading(true);
     setError(null);
     try {
+      // No explicit navigate('Home') - AppNavigator swaps to the
+      // authenticated screens as soon as isAuthenticated flips true.
       await dispatch(login({ username, password })).unwrap();
-      navigate('Home');
+      flushQueue(); // retry anything left pending from before the session died
     } catch (err) {
       setError(err.message || err || 'Falha no login');
     } finally {

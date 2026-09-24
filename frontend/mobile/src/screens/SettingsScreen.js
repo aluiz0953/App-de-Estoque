@@ -61,12 +61,14 @@ const SettingsScreen = () => {
   };
 
   const handleLogout = async () => {
+    // No explicit navigate() needed - AppNavigator renders only the Login
+    // screen once isAuthenticated flips to false, same as an api.js-triggered
+    // forced logout.
     try {
       await dispatch(logout()).unwrap();
     } catch {
       dispatch(logoutUser());
     }
-    navigate('Login');
   };
 
   return (

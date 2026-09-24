@@ -40,34 +40,38 @@ function MainTabs() {
 
 export default function AppNavigator() {
   // authSlice is redux-persist'd (AsyncStorage), so isAuthenticated survives
-  // an app restart - without reading it here, the stack always opened on
-  // Login regardless, forcing a fresh username/password every time.
+  // an app restart. Conditionally rendering the screen set (not just an
+  // initialRouteName, which only applies once at mount) also means a logout
+  // that happens mid-session - e.g. api.js's onUnauthorized firing because the
+  // backend's in-memory session got wiped by a redeploy - actually navigates
+  // back to Login instead of leaving the user stranded on a screen that just
+  // 401s on every request.
   const { isAuthenticated } = useSelector((state) => state.auth);
 
   return (
-    <Stack.Navigator
-      initialRouteName={isAuthenticated ? 'Home' : 'Login'}
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
-      <Stack.Screen name="Login" component={LoginScreen} />
-      <Stack.Screen name="Home" component={MainTabs} />
-      <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
-      <Stack.Screen
-        name="AddEditProduct"
-        component={AddEditProductScreen}
-        options={{ presentation: 'modal' }}
-      />
-      <Stack.Screen name="Histórico" component={HistoryScreen} />
-      <Stack.Screen name="MovimentacaoDetail" component={MovimentacaoDetailScreen} />
-      <Stack.Screen name="EntradaRomaneio" component={EntradaRomaneioScreen} />
-      <Stack.Screen name="PedidoDetail" component={PedidoDetailScreen} />
-      <Stack.Screen
-        name="AddEditPedido"
-        component={AddEditPedidoScreen}
-        options={{ presentation: 'modal' }}
-      />
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      {isAuthenticated ? (
+        <>
+          <Stack.Screen name="Home" component={MainTabs} />
+          <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
+          <Stack.Screen
+            name="AddEditProduct"
+            component={AddEditProductScreen}
+            options={{ presentation: 'modal' }}
+          />
+          <Stack.Screen name="Histórico" component={HistoryScreen} />
+          <Stack.Screen name="MovimentacaoDetail" component={MovimentacaoDetailScreen} />
+          <Stack.Screen name="EntradaRomaneio" component={EntradaRomaneioScreen} />
+          <Stack.Screen name="PedidoDetail" component={PedidoDetailScreen} />
+          <Stack.Screen
+            name="AddEditPedido"
+            component={AddEditPedidoScreen}
+            options={{ presentation: 'modal' }}
+          />
+        </>
+      ) : (
+        <Stack.Screen name="Login" component={LoginScreen} />
+      )}
     </Stack.Navigator>
   );
 }
