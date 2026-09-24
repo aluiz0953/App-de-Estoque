@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ActivityIndicator, Switch, StyleSheet } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import { login } from '../store/slices/authSlice';
 import { flushQueue } from '../services/syncManager';
@@ -9,6 +9,7 @@ const LoginScreen = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -21,7 +22,7 @@ const LoginScreen = () => {
     try {
       // No explicit navigate('Home') - AppNavigator swaps to the
       // authenticated screens as soon as isAuthenticated flips true.
-      await dispatch(login({ username, password })).unwrap();
+      await dispatch(login({ username, password, rememberMe })).unwrap();
       flushQueue(); // retry anything left pending from before the session died
     } catch (err) {
       setError(err.message || err || 'Falha no login');
@@ -82,6 +83,21 @@ const LoginScreen = () => {
           </TouchableOpacity>
         </View>
 
+        <TouchableOpacity
+          style={styles.rememberRow}
+          onPress={() => setRememberMe((v) => !v)}
+          accessibilityRole="switch"
+          accessibilityState={{ checked: rememberMe }}
+        >
+          <Switch
+            value={rememberMe}
+            onValueChange={setRememberMe}
+            trackColor={{ false: colors.border, true: colors.secondary }}
+            thumbColor={rememberMe ? colors.secondaryDark : colors.surface}
+          />
+          <Text style={styles.rememberText}>Manter conectado</Text>
+        </TouchableOpacity>
+
         {error && <Text style={styles.error}>{error}</Text>}
 
         <TouchableOpacity
@@ -134,6 +150,8 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   error: { fontFamily: fonts.sans, color: colors.error, marginTop: 12, fontSize: 13 },
+  rememberRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginTop: 16 },
+  rememberText: { fontFamily: fonts.sans, fontSize: 13, color: colors.text },
   passwordRow: { position: 'relative', justifyContent: 'center' },
   passwordInput: { paddingRight: 72 },
   showPasswordBtn: { position: 'absolute', right: 14 },
