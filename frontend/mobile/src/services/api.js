@@ -79,6 +79,12 @@ export const apiService = {
     body: JSON.stringify(credentials),
   }),
 
+  // Public self-registration; the account stays pending until an admin activates it.
+  register: (data) => apiFetch('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  }),
+
   getProfile: () => apiFetch('/auth/profile'),
 
   logout: () => apiFetch('/auth/logout', {
