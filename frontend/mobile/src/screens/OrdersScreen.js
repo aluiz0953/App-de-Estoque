@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import apiService from '../services/api';
@@ -29,9 +29,12 @@ const OrdersScreen = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
+  const hasLoadedOnce = useRef(false);
 
+  // Only block the list with a spinner on the very first load - switching
+  // status filters afterward keeps the last list visible while it refetches.
   const load = () => {
-    setIsLoading(true);
+    if (!hasLoadedOnce.current) setIsLoading(true);
     apiService
       .getPedidos(status ? { status } : {})
       .then((r) => {
@@ -39,7 +42,10 @@ const OrdersScreen = () => {
         setError(null);
       })
       .catch(setError)
-      .finally(() => setIsLoading(false));
+      .finally(() => {
+        setIsLoading(false);
+        hasLoadedOnce.current = true;
+      });
   };
 
   useEffect(load, [status]);

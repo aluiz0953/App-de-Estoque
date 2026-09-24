@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl, StyleSheet } from 'react-native';
 import { Button, Title, Searchbar, Chip } from 'react-native-paper';
 import BottomSheet, { BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
@@ -22,10 +22,22 @@ const STATUS_FILTERS = [
 // plus a secondary marca filter in a bottom sheet (existing pattern, kept).
 const InventoryScreen = () => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const searchDebounce = useRef(null);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedMarca, setSelectedMarca] = useState(null);
   const [statusFilter, setStatusFilter] = useState('Todos');
-  const { data: produtos, isLoading, error, refetch } = useFetchProducts({ search: searchTerm });
+
+  // Every keystroke used to refetch immediately, wiping the whole screen with
+  // a full-screen spinner each time (see useFetchProducts) - debounce so
+  // typing doesn't fire a request, and a flash, per character.
+  useEffect(() => {
+    if (searchDebounce.current) clearTimeout(searchDebounce.current);
+    searchDebounce.current = setTimeout(() => setDebouncedSearch(searchTerm), 300);
+    return () => clearTimeout(searchDebounce.current);
+  }, [searchTerm]);
+
+  const { data: produtos, isLoading, error, refetch } = useFetchProducts({ search: debouncedSearch });
   const navigate = useNavigate();
   const showToast = useToast();
   const [removingProduct, setRemovingProduct] = useState(null);
