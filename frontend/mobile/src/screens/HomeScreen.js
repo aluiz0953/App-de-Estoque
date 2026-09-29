@@ -3,7 +3,9 @@ import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet }
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import useFetchProducts from '../hooks/useFetchProducts';
 import { useNavigate } from '../hooks/useNavigate';
-import { colors, fonts, tabularNums } from '../theme/colors';
+import { fonts, tabularNums } from '../theme/colors';
+import { useThemedStyles } from '../theme/ThemeContext';
+import { useDockClearance } from '../components/BottomTabBar';
 import MetricCard from '../components/MetricCard';
 import QuickActionCard from '../components/QuickActionCard';
 import SyncIndicator from '../components/SyncIndicator';
@@ -19,6 +21,8 @@ const formatDate = () =>
 // Tela 01 — Hoje. Answers "how much is available, what needs attention, what's
 // the next action" in one screen (spec §2 "Clareza antes de completude").
 const HomeScreen = () => {
+  const { colors, styles } = useThemedStyles(createStyles);
+  const dockClearance = useDockClearance();
   const { data: produtos, isLoading, error, refetch } = useFetchProducts();
   const navigate = useNavigate();
   const isOnline = useNetworkStatus();
@@ -46,7 +50,7 @@ const HomeScreen = () => {
       </View>
 
       <FlatList
-        contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+        contentContainerStyle={{ padding: 16, paddingBottom: dockClearance }}
         ListHeaderComponent={
           <View>
             <View style={styles.greetingRow}>
@@ -89,10 +93,10 @@ const HomeScreen = () => {
             ) : (
               <>
                 <View style={styles.metricsGrid}>
-                  <MetricCard label="Unidades disponíveis" value={stats.unidades} variant="dark" icon={<MaterialCommunityIcons name="cube-outline" size={16} color="rgba(248,242,234,0.65)" />} />
-                  <MetricCard label="Produtos ativos" value={stats.ativos} icon={<MaterialCommunityIcons name="bottle-tonic-outline" size={16} color={colors.textMutedLight} />} />
-                  <MetricCard label="Estoque baixo" value={stats.baixo} variant="rose" icon={<MaterialCommunityIcons name="arrow-down-thin" size={16} color="rgba(92,69,64,0.65)" />} />
-                  <MetricCard label="Sem estoque" value={stats.sem} icon={<MaterialCommunityIcons name="archive-outline" size={16} color={colors.textMutedLight} />} />
+                  <MetricCard label="Unidades disponíveis" value={stats.unidades} variant="dark" onPress={() => navigate('Estoque', { status: 'inStock' })} icon={<MaterialCommunityIcons name="cube-outline" size={16} color={colors.headerSoft} />} />
+                  <MetricCard label="Produtos ativos" value={stats.ativos} onPress={() => navigate('Estoque', { status: 'Todos' })} icon={<MaterialCommunityIcons name="bottle-tonic-outline" size={16} color={colors.textMutedLight} />} />
+                  <MetricCard label="Estoque baixo" value={stats.baixo} variant="rose" onPress={() => navigate('Estoque', { status: 'low' })} icon={<MaterialCommunityIcons name="arrow-down-thin" size={16} color={colors.roseSoft} />} />
+                  <MetricCard label="Sem estoque" value={stats.sem} onPress={() => navigate('Estoque', { status: 'out' })} icon={<MaterialCommunityIcons name="archive-outline" size={16} color={colors.textMutedLight} />} />
                 </View>
 
                 <View style={styles.actionsRow}>
@@ -144,9 +148,9 @@ const HomeScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   header: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.headerBg,
     paddingVertical: 20,
     paddingHorizontal: 16,
     elevation: 4,
@@ -155,13 +159,13 @@ const styles = StyleSheet.create({
     fontFamily: fonts.mono,
     fontSize: 10,
     letterSpacing: 2,
-    color: colors.primaryLight,
+    color: colors.headerInk,
     opacity: 0.65,
     marginBottom: 4,
   },
   headerText: {
     fontFamily: fonts.display,
-    color: colors.primaryLight,
+    color: colors.headerInk,
     fontSize: 22,
   },
   greetingRow: {

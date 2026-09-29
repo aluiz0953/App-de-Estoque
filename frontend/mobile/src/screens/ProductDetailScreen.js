@@ -6,20 +6,17 @@ import useFetchProductById from '../hooks/useFetchProductById';
 import useFetchProductLotes from '../hooks/useFetchProductLotes';
 import { useNavigate } from '../hooks/useNavigate';
 import { useRoute } from '@react-navigation/native';
-import { colors, fonts, tabularNums } from '../theme/colors';
+import { fonts, tabularNums } from '../theme/colors';
+import { useThemedStyles } from '../theme/ThemeContext';
 import RemoveStockModal from '../components/RemoveStockModal';
 import { useToast } from '../components/Toast';
 import apiService from '../services/api';
 import { submitStockWithdrawal } from '../services/stockMutations';
 
-const STATUS_COLORS = {
-  ATIVO: colors.success,
-  VENCIDO: colors.error,
-  RESERVADO: colors.warning,
-  BLOQUEADO: colors.disabled,
-};
+const STATUS_COLORS = { ATIVO: 'success', VENCIDO: 'error', RESERVADO: 'warning', BLOQUEADO: 'disabled' };
 
 const ProductDetailScreen = () => {
+  const { colors, styles } = useThemedStyles(createStyles);
   const route = useRoute();
   const navigate = useNavigate();
   const showToast = useToast();
@@ -95,7 +92,7 @@ const ProductDetailScreen = () => {
   if (errorProduto || errorLotes) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
-        <Text>{errorProduto?.message || errorLotes?.message}</Text>
+        <Text style={{ color: colors.text }}>{errorProduto?.message || errorLotes?.message}</Text>
         <Button mode="contained" onPress={() => navigate.goBack()}>
           Voltar
         </Button>
@@ -106,7 +103,7 @@ const ProductDetailScreen = () => {
   if (!produto) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <Text>Produto não encontrado</Text>
+        <Text style={{ color: colors.text }}>Produto não encontrado</Text>
         <Button mode="contained" onPress={() => navigate.goBack()}>
           Voltar
         </Button>
@@ -116,8 +113,8 @@ const ProductDetailScreen = () => {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <View style={{ backgroundColor: colors.primary, paddingVertical: 20, paddingHorizontal: 16, elevation: 4 }}>
-        <Text style={{ color: colors.primaryLight, fontSize: 20, fontFamily: fonts.display }}>
+      <View style={{ backgroundColor: colors.headerBg, paddingVertical: 20, paddingHorizontal: 16, elevation: 4 }}>
+        <Text style={{ color: colors.headerInk, fontSize: 20, fontFamily: fonts.display }}>
           {produto.nome}
         </Text>
       </View>
@@ -195,7 +192,7 @@ const ProductDetailScreen = () => {
                 <View style={{ alignItems: 'flex-end' }}>
                   <Text
                     style={{
-                      backgroundColor: STATUS_COLORS[item.status] || colors.disabled,
+                      backgroundColor: colors[STATUS_COLORS[item.status] || 'disabled'],
                       color: 'white',
                       paddingHorizontal: 8,
                       paddingVertical: 4,
@@ -283,7 +280,7 @@ const ProductDetailScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   actionBar: {
     position: 'absolute',
     bottom: 16,

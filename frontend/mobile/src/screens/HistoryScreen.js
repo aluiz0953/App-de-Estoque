@@ -14,7 +14,8 @@ import useFetchHistory from '../hooks/useFetchHistory';
 import { useNavigate } from '../hooks/useNavigate';
 import { LIST_PERF_PROPS } from '../utils/listPerf';
 import SkeletonList from '../components/SkeletonList';
-import { colors, fonts, tabularNums } from '../theme/colors';
+import { fonts, tabularNums } from '../theme/colors';
+import { useThemedStyles } from '../theme/ThemeContext';
 import ReasonMenu from '../components/ReasonMenu';
 import apiService from '../services/api';
 import { MOTIVO_LABEL } from '../utils/motivos';
@@ -32,6 +33,7 @@ const toIsoDate = (date) => date.toISOString().slice(0, 10);
 // permitir — /api/usuarios é admin-only) e período (chips), com paginação por
 // rolagem (onEndReached), tudo consumindo o endpoint real de histórico.
 const HistoryScreen = () => {
+  const { colors, styles } = useThemedStyles(createStyles);
   const [tipo, setTipo] = useState(null); // null | 'ENTRADA' | 'SAIDA'
   const [periodoDias, setPeriodoDias] = useState(null);
   const [produtoSearch, setProdutoSearch] = useState('');
@@ -92,7 +94,7 @@ const HistoryScreen = () => {
           <Text style={styles.itemTitle}>{item.produto?.nome}</Text>
           <Caption style={[styles.itemCaption, tabularNums]}>{item.produto?.sku}</Caption>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
-            <Text>
+            <Text style={{ color: colors.text }}>
               <Text style={styles.bold}>{isEntrada ? 'Entrada: ' : 'Saída: '}</Text>
               <Text style={tabularNums}>{item.quantidade}</Text>
             </Text>
@@ -153,7 +155,7 @@ const HistoryScreen = () => {
                       style={styles.produtoResultRow}
                       onPress={() => { setSelectedProduto(p); setProdutoResults([]); }}
                     >
-                      <Text numberOfLines={1}>{p.nome} · {p.sku}</Text>
+                      <Text numberOfLines={1} style={{ color: colors.text }}>{p.nome} · {p.sku}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -222,7 +224,7 @@ const HistoryScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   segmentedControl: {
     flexDirection: 'row',
     backgroundColor: colors.surface,

@@ -1,7 +1,8 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { colors, fonts, tabularNums } from '../theme/colors';
+import { fonts, tabularNums } from '../theme/colors';
+import { useThemedStyles } from '../theme/ThemeContext';
 import StatusPill from './StatusPill';
 import { getStockState } from '../utils/stock';
 
@@ -14,6 +15,7 @@ import { getStockState } from '../utils/stock';
 // Memoized: a screen re-render (typing, modal state) must not re-render every row.
 // Callbacks receive the item, so the parent can pass stable handlers.
 const ProductRow = ({ item, onPress, onReceive, onRequestRemove }) => {
+  const { colors, styles } = useThemedStyles(createStyles);
   const quantidade = item.quantidadeTotal ?? 0;
   const state = getStockState(quantidade, item.estoqueMinimo);
 
@@ -53,7 +55,7 @@ const ProductRow = ({ item, onPress, onReceive, onRequestRemove }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -11,7 +11,8 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { useNavigate } from '../hooks/useNavigate';
 import { useToast } from '../components/Toast';
 import apiService from '../services/api';
-import { colors, fonts, tabularNums } from '../theme/colors';
+import { fonts, tabularNums } from '../theme/colors';
+import { useThemedStyles } from '../theme/ThemeContext';
 
 const money = (v) => `R$ ${(v ?? 0).toFixed(2)}`;
 
@@ -19,6 +20,7 @@ const money = (v) => `R$ ${(v ?? 0).toFixed(2)}`;
 // (busca de produto + quantidade), mesmo padrão de busca já usado em
 // EntradaRomaneioScreen/HistoryScreen.
 const AddEditPedidoScreen = () => {
+  const { colors, styles } = useThemedStyles(createStyles);
   const navigate = useNavigate();
   const showToast = useToast();
 
@@ -171,7 +173,7 @@ const AddEditPedidoScreen = () => {
                 style={styles.resultRow}
                 onPress={() => { setSelectedCliente(c); setClienteResults([]); setClienteSearch(''); }}
               >
-                <Text>{c.nome} {c.telefone ? `· ${c.telefone}` : ''}</Text>
+                <Text style={{ color: colors.text }}>{c.nome} {c.telefone ? `· ${c.telefone}` : ''}</Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -243,7 +245,7 @@ const AddEditPedidoScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },
   header: {
     flexDirection: 'row',

@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { View } from 'react-native';
 import { Menu } from 'react-native-paper';
-import { colors, fonts } from '../theme/colors';
+import { fonts } from '../theme/colors';
+import { useTheme } from '../theme/ThemeContext';
 
 // Anchors a required-reason picker to whatever trigger is passed as children.
 // Used anywhere a stock entry/withdrawal happens, since the backend now rejects
 // any /estoque/entrada or /estoque/saida/* call with no `motivo`.
 const ReasonMenu = ({ options, onSelect, children, disabled }) => {
+  const { colors } = useTheme();
   const [visible, setVisible] = useState(false);
 
   return (

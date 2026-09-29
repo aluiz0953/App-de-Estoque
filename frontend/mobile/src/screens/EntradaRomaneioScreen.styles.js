@@ -1,9 +1,8 @@
 import { StyleSheet } from 'react-native';
-import { colors } from '../theme/colors';
 
-export const styles = StyleSheet.create({
+export const createStyles = (colors) => StyleSheet.create({
   header: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.headerBg,
     paddingVertical: 20,
     paddingHorizontal: 16,
     elevation: 4,

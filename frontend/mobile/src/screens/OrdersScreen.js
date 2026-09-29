@@ -5,14 +5,17 @@ import apiService from '../services/api';
 import { useNavigate } from '../hooks/useNavigate';
 import { LIST_PERF_PROPS } from '../utils/listPerf';
 import SkeletonList from '../components/SkeletonList';
-import { colors, fonts, tabularNums } from '../theme/colors';
+import { fonts, tabularNums } from '../theme/colors';
+import { useThemedStyles } from '../theme/ThemeContext';
+import { useDockClearance } from '../components/BottomTabBar';
 
+// tone = which StatusPill palette (see theme/colors.js: <tone>Bg / <tone>Ink)
 const STATUS_TONE = {
-  PENDENTE: { bg: colors.warningBg, ink: colors.warningInk, label: 'Pendente' },
-  CONFIRMADO: { bg: colors.successBg, ink: colors.successInk, label: 'Confirmado' },
-  ENVIADO: { bg: colors.neutralBg, ink: colors.neutralInk, label: 'Enviado' },
-  ENTREGUE: { bg: colors.successBg, ink: colors.successInk, label: 'Entregue' },
-  CANCELADO: { bg: colors.neutralBg, ink: colors.neutralInk, label: 'Cancelado' },
+  PENDENTE: { tone: 'warning', label: 'Pendente' },
+  CONFIRMADO: { tone: 'success', label: 'Confirmado' },
+  ENVIADO: { tone: 'neutral', label: 'Enviado' },
+  ENTREGUE: { tone: 'success', label: 'Entregue' },
+  CANCELADO: { tone: 'neutral', label: 'Cancelado' },
 };
 
 const STATUS_FILTERS = [
@@ -27,6 +30,8 @@ const STATUS_FILTERS = [
 const keyExtractor = (item) => item.id.toString();
 
 const OrdersScreen = () => {
+  const { colors, styles } = useThemedStyles(createStyles);
+  const dockClearance = useDockClearance();
   const navigate = useNavigate();
   const [status, setStatus] = useState(null);
   const [pedidos, setPedidos] = useState([]);
@@ -70,7 +75,7 @@ const OrdersScreen = () => {
         <View style={styles.topHeaderRow}>
           <Text style={styles.title}>Pedidos</Text>
           <TouchableOpacity onPress={() => navigate('AddEditPedido')} style={styles.addBtn}>
-            <MaterialCommunityIcons name="plus" size={16} color={colors.primaryLight} />
+            <MaterialCommunityIcons name="plus" size={16} color={colors.headerInk} />
             <Text style={styles.addBtnText}>Novo pedido</Text>
           </TouchableOpacity>
         </View>
@@ -98,10 +103,11 @@ const OrdersScreen = () => {
         <FlatList
           data={pedidos}
           keyExtractor={keyExtractor}
+          contentContainerStyle={{ paddingBottom: dockClearance }}
           {...LIST_PERF_PROPS}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
           renderItem={({ item }) => {
-            const tone = STATUS_TONE[item.status] || STATUS_TONE.PENDENTE;
+            const status = STATUS_TONE[item.status] || STATUS_TONE.PENDENTE;
             return (
               <TouchableOpacity style={styles.row} onPress={() => navigate('PedidoDetail', { pedidoId: item.id })}>
                 <View style={{ flex: 1 }}>
@@ -113,8 +119,8 @@ const OrdersScreen = () => {
                     {item.dataCriacao ? new Date(item.dataCriacao).toLocaleDateString('pt-BR') : ''}
                   </Text>
                 </View>
-                <View style={[styles.statusPill, { backgroundColor: tone.bg }]}>
-                  <Text style={[styles.statusPillText, { color: tone.ink }]}>{tone.label}</Text>
+                <View style={[styles.statusPill, { backgroundColor: colors[`${status.tone}Bg`] }]}>
+                  <Text style={[styles.statusPillText, { color: colors[`${status.tone}Ink`] }]}>{status.label}</Text>
                 </View>
                 <MaterialCommunityIcons name="chevron-right" size={20} color={colors.disabled} />
               </TouchableOpacity>
@@ -134,9 +140,9 @@ const OrdersScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   topHeader: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.headerBg,
     paddingVertical: 16,
     paddingHorizontal: 16,
   },
@@ -144,7 +150,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.mono,
     fontSize: 10,
     letterSpacing: 2,
-    color: colors.primaryLight,
+    color: colors.headerInk,
     opacity: 0.65,
   },
   topHeaderRow: {
@@ -155,7 +161,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: fonts.display,
-    color: colors.primaryLight,
+    color: colors.headerInk,
     fontSize: 22,
   },
   addBtn: {
@@ -163,7 +169,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     borderWidth: 1,
-    borderColor: 'rgba(248,242,234,0.3)',
+    borderColor: colors.headerLine,
     borderRadius: 999,
     paddingVertical: 6,
     paddingHorizontal: 12,
@@ -171,7 +177,7 @@ const styles = StyleSheet.create({
   addBtnText: {
     fontFamily: fonts.sansMedium,
     fontSize: 11,
-    color: colors.primaryLight,
+    color: colors.headerInk,
   },
   chipsRow: {
     flexDirection: 'row',

@@ -4,7 +4,8 @@ import { useRoute } from '@react-navigation/native';
 import { useNavigate } from '../hooks/useNavigate';
 import { useToast } from '../components/Toast';
 import apiService from '../services/api';
-import { colors, fonts, tabularNums } from '../theme/colors';
+import { fonts, tabularNums } from '../theme/colors';
+import { useThemedStyles } from '../theme/ThemeContext';
 
 const money = (v) => `R$ ${(v ?? 0).toFixed(2)}`;
 
@@ -20,6 +21,7 @@ const NEXT_STATUS = { CONFIRMADO: 'ENVIADO', ENVIADO: 'ENTREGUE' };
 const NEXT_LABEL = { ENVIADO: 'Marcar como enviado', ENTREGUE: 'Marcar como entregue' };
 
 const PedidoDetailScreen = () => {
+  const { colors, styles } = useThemedStyles(createStyles);
   const route = useRoute();
   const navigate = useNavigate();
   const showToast = useToast();
@@ -160,9 +162,9 @@ const PedidoDetailScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   header: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.headerBg,
     paddingVertical: 20,
     paddingHorizontal: 16,
   },
@@ -170,12 +172,12 @@ const styles = StyleSheet.create({
     fontFamily: fonts.mono,
     fontSize: 10,
     letterSpacing: 2,
-    color: colors.primaryLight,
+    color: colors.headerInk,
     opacity: 0.65,
   },
   headerTitle: {
     fontFamily: fonts.display,
-    color: colors.primaryLight,
+    color: colors.headerInk,
     fontSize: 22,
     marginTop: 4,
   },

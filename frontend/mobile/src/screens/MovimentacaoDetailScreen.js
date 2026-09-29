@@ -5,10 +5,13 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { useNavigate } from '../hooks/useNavigate';
 import { useRoute } from '@react-navigation/native';
 import apiService from '../services/api';
-import { colors, fonts, tabularNums } from '../theme/colors';
+import { fonts, tabularNums } from '../theme/colors';
+import { useTheme } from '../theme/ThemeContext';
 import { MOTIVO_LABEL } from '../utils/motivos';
 
-const Row = ({ item }) => (
+const Row = ({ item }) => {
+  const { colors } = useTheme();
+  return (
   <View style={{ padding: 12, borderBottomWidth: 1, borderColor: colors.border }}>
     <View style={{ flexDirection: 'row', alignItems: 'center' }}>
       <MaterialCommunityIcons
@@ -21,11 +24,11 @@ const Row = ({ item }) => (
         <Title>{item.produto?.nome}</Title>
         <Caption style={tabularNums}>{item.produto?.sku}</Caption>
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 4 }}>
-          <Text>
+          <Text style={{ color: colors.text }}>
             <Text style={{ fontWeight: '700' }}>{item.tipo === 'ENTRADA' ? 'Entrada: ' : 'Saída: '}</Text>
             <Text style={tabularNums}>{item.quantidade}</Text>
           </Text>
-          <Text>
+          <Text style={{ color: colors.text }}>
             <Text style={{ fontWeight: '700' }}>Motivo: </Text>
             {MOTIVO_LABEL[item.motivo] || item.motivo || '—'}
           </Text>
@@ -37,12 +40,14 @@ const Row = ({ item }) => (
       </View>
     </View>
   </View>
-);
+  );
+};
 
 // Two call sites: ProductDetailScreen's "Ver Movimentações" passes only
 // produtoId (show every movement for that product); HistoryScreen's row tap
 // passes the full movimentacao object it already has (show just that one).
 const MovimentacaoDetailScreen = () => {
+  const { colors } = useTheme();
   const route = useRoute();
   const navigate = useNavigate();
   const { produtoId, movimentacao } = route.params || {};
@@ -63,8 +68,8 @@ const MovimentacaoDetailScreen = () => {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <View style={{ backgroundColor: colors.primary, paddingVertical: 20, paddingHorizontal: 16, elevation: 4 }}>
-        <Text style={{ color: colors.primaryLight, fontSize: 20, fontFamily: fonts.display }}>
+      <View style={{ backgroundColor: colors.headerBg, paddingVertical: 20, paddingHorizontal: 16, elevation: 4 }}>
+        <Text style={{ color: colors.headerInk, fontSize: 20, fontFamily: fonts.display }}>
           {movimentacao ? 'Detalhe da Movimentação' : 'Movimentações do Produto'}
         </Text>
       </View>

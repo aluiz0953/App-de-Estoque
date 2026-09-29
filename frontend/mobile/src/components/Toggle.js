@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { AccessibilityInfo, Animated, Easing, Pressable, StyleSheet } from 'react-native';
-import { colors } from '../theme/colors';
+import { useThemedStyles } from '../theme/ThemeContext';
 
 // Native counterpart of the "Toggle" transition from transitions.dev: the thumb slides
 // with an overshoot-and-settle bounce (same easing curve, 350 ms) while the "on" track
@@ -12,6 +12,7 @@ const THUMB = 16;
 const TRAVEL = TRACK_W - PAD * 2 - THUMB;
 
 const Toggle = ({ value, onValueChange, disabled, accessibilityLabel }) => {
+  const { styles } = useThemedStyles(createStyles);
   const progress = useRef(new Animated.Value(value ? 1 : 0)).current;
   const mounted = useRef(false);
   const reduceMotion = useRef(false);
@@ -54,22 +55,22 @@ const Toggle = ({ value, onValueChange, disabled, accessibilityLabel }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   track: {
     width: TRACK_W,
     height: TRACK_H,
     borderRadius: TRACK_H / 2,
     padding: PAD,
-    backgroundColor: colors.border,
+    backgroundColor: colors.toggleOff,
     justifyContent: 'center',
     overflow: 'hidden',
   },
-  trackOn: { ...StyleSheet.absoluteFillObject, backgroundColor: colors.primary },
+  trackOn: { ...StyleSheet.absoluteFillObject, backgroundColor: colors.toggleOn },
   thumb: {
     width: THUMB,
     height: THUMB,
     borderRadius: THUMB / 2,
-    backgroundColor: '#ffffff',
+    backgroundColor: colors.toggleThumb,
     elevation: 1,
   },
   disabled: { opacity: 0.5 },

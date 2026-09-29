@@ -16,11 +16,13 @@ import { flushQueue } from '../services/syncManager';
 import apiService from '../services/api';
 import LoginBackground from '../components/LoginBackground';
 import Toggle from '../components/Toggle';
-import { colors, fonts } from '../theme/colors';
+import { fonts } from '../theme/colors';
+import { useThemedStyles } from '../theme/ThemeContext';
 
 const emptyRegisterForm = { fullName: '', username: '', email: '', password: '' };
 
 const LoginScreen = () => {
+  const { colors, styles } = useThemedStyles(createStyles);
   const [mode, setMode] = useState('login'); // 'login' | 'register'
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -215,7 +217,7 @@ const LoginScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   flex: { flex: 1 },
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: colors.background },
   screen: { flex: 1, backgroundColor: colors.background },

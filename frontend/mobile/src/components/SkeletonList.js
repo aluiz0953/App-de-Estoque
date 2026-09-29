@@ -1,11 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
-import { colors } from '../theme/colors';
+import { useThemedStyles } from '../theme/ThemeContext';
 
 // Placeholder rows shown while a list loads: the screen keeps its final shape
 // (no jump when data arrives) and feels faster than a centered spinner. One
 // shared native-driven pulse animates every block, so it costs almost nothing.
 const SkeletonList = ({ rows = 8 }) => {
+  const { styles } = useThemedStyles(createStyles);
   const pulse = useRef(new Animated.Value(0.45)).current;
 
   useEffect(() => {
@@ -35,7 +36,7 @@ const SkeletonList = ({ rows = 8 }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
