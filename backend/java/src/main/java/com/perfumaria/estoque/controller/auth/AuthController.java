@@ -1,5 +1,6 @@
 package com.perfumaria.estoque.controller.auth;
 
+import com.perfumaria.estoque.config.AuditLogFilter;
 import com.perfumaria.estoque.model.Usuario;
 import com.perfumaria.estoque.repository.UsuarioRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -67,7 +68,7 @@ public class AuthController {
         Object rememberFlag = credentials.get("rememberMe");
         boolean rememberMe = rememberFlag == null || Boolean.parseBoolean(String.valueOf(rememberFlag));
 
-        String attemptKey = LoginAttemptService.key(username, request.getRemoteAddr());
+        String attemptKey = LoginAttemptService.key(username, AuditLogFilter.clientIp(request));
         if (loginAttempts.isBlocked(attemptKey)) {
             return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
                     .body(Map.of("message", "Muitas tentativas. Tente novamente em alguns minutos."));

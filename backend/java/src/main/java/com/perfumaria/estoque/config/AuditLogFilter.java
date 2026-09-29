@@ -89,7 +89,7 @@ public class AuditLogFilter implements Filter {
     /**
      * Extracts the client IP address from the request, considering proxies and load balancers.
      */
-    static String clientIp(HttpServletRequest request) {
+    public static String clientIp(HttpServletRequest request) {
         String xfHeader = request.getHeader("X-Forwarded-For");
         if (xfHeader != null && !xfHeader.isBlank()) {
             return xfHeader.split(",")[0].trim();
