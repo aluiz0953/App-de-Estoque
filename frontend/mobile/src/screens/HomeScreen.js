@@ -10,7 +10,8 @@ import MetricCard from '../components/MetricCard';
 import QuickActionCard from '../components/QuickActionCard';
 import SyncIndicator from '../components/SyncIndicator';
 import StatusPill from '../components/StatusPill';
-import { getStockState } from '../utils/stock';
+import { getStockState, STOCK_STATE_LABEL } from '../utils/stock';
+import { decorative } from '../utils/a11y';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { useSyncQueue } from '../hooks/useSyncQueue';
 
@@ -46,7 +47,7 @@ const HomeScreen = () => {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={styles.header}>
         <Text style={styles.eyebrow}>ESTOQUE</Text>
-        <Text style={styles.headerText}>Dashboard</Text>
+        <Text style={styles.headerText} accessibilityRole="header">Dashboard</Text>
       </View>
 
       <FlatList
@@ -114,7 +115,7 @@ const HomeScreen = () => {
                   />
                 </View>
 
-                <Text style={styles.sectionTitle}>Itens que exigem atenção</Text>
+                <Text style={styles.sectionTitle} accessibilityRole="header">Itens que exigem atenção</Text>
               </>
             )}
           </View>
@@ -124,7 +125,13 @@ const HomeScreen = () => {
         renderItem={({ item }) => {
           const state = getStockState(item.quantidadeTotal, item.estoqueMinimo);
           return (
-            <TouchableOpacity style={styles.attentionRow} onPress={() => navigate('ProductDetail', { productId: item.id })}>
+            <TouchableOpacity
+              style={styles.attentionRow}
+              onPress={() => navigate('ProductDetail', { productId: item.id })}
+              accessibilityRole="button"
+              accessibilityLabel={`${item.nome}, SKU ${item.sku}, ${STOCK_STATE_LABEL[state]}, ${item.quantidadeTotal ?? 0} unidades`}
+              accessibilityHint="Toque duas vezes para abrir os detalhes do produto"
+            >
               <View style={{ flex: 1 }}>
                 <Text style={styles.itemName}>{item.nome}</Text>
                 <Text style={[styles.itemMeta, tabularNums]}>
@@ -138,7 +145,7 @@ const HomeScreen = () => {
         ListEmptyComponent={
           !isLoading && !error ? (
             <View style={styles.empty}>
-              <MaterialCommunityIcons name="check-circle-outline" size={28} color={colors.success} />
+              <MaterialCommunityIcons name="check-circle-outline" size={28} color={colors.success} {...decorative} />
               <Text style={styles.emptyText}>Tudo em ordem. Nenhum produto precisa de atenção agora.</Text>
             </View>
           ) : null

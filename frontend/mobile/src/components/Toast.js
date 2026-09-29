@@ -1,10 +1,11 @@
 import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { Animated, Dimensions, Easing, StatusBar, StyleSheet, Text, View } from 'react-native';
+import { AccessibilityInfo, Animated, Dimensions, Easing, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { Snackbar } from 'react-native-paper';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useTheme } from '../theme/ThemeContext';
 import { focusIslandSupported, showFocusIsland } from '../services/focusIsland';
+import { decorative, haptic, useReduceMotion } from '../utils/a11y';
 
 const ToastContext = createContext(() => {});
 
@@ -45,7 +46,7 @@ function Capsule({ item, compact, style }) {
   const badge = badgeFor(item.message, colors);
   return (
     <Animated.View style={[styles.capsule, style]}>
-      <View style={[styles.badge, { backgroundColor: badge.bg }]}>
+      <View style={[styles.badge, { backgroundColor: badge.bg }]} {...decorative}>
         <MaterialCommunityIcons name={badge.icon} size={16} color="#fff" />
       </View>
       {!compact && (
@@ -66,22 +67,23 @@ function Island({ items, top }) {
   const split = useRef(new Animated.Value(0)).current; // 0 = one pill, 1 = two capsules
   const visible = items.length > 0;
   const two = items.length > 1;
+  const reduceMotion = useReduceMotion(); // no travelling/splitting: the island just fades in and out
 
   useEffect(() => {
-    Animated.timing(enter, { toValue: visible ? 1 : 0, duration: visible ? 380 : 260, easing: EASE, useNativeDriver: true }).start();
-  }, [visible, enter]);
+    Animated.timing(enter, { toValue: visible ? 1 : 0, duration: reduceMotion ? 120 : visible ? 380 : 260, easing: EASE, useNativeDriver: true }).start();
+  }, [visible, enter, reduceMotion]);
 
   useEffect(() => {
-    Animated.timing(split, { toValue: two ? 1 : 0, duration: 340, easing: EASE, useNativeDriver: false }).start();
-  }, [two, split]);
+    Animated.timing(split, { toValue: two ? 1 : 0, duration: reduceMotion ? 0 : 340, easing: EASE, useNativeDriver: false }).start();
+  }, [two, split, reduceMotion]);
 
   const [first, second] = items;
   const leftWidth = split.interpolate({ inputRange: [0, 1], outputRange: [ISLAND_W, SPLIT_LEFT_W] });
   const rightWidth = split.interpolate({ inputRange: [0, 1], outputRange: [0, ISLAND_W - SPLIT_LEFT_W - SPLIT_GAP] });
-  const scaleX = enter.interpolate({ inputRange: [0, 1], outputRange: [0.32, 1] });
-  const scaleY = enter.interpolate({ inputRange: [0, 1], outputRange: [0.72, 1] });
+  const scaleX = enter.interpolate({ inputRange: [0, 1], outputRange: [reduceMotion ? 1 : 0.32, 1] });
+  const scaleY = enter.interpolate({ inputRange: [0, 1], outputRange: [reduceMotion ? 1 : 0.72, 1] });
   // Starts up at the camera cutout and settles just below the status bar (never over the camera).
-  const translateY = enter.interpolate({ inputRange: [0, 1], outputRange: [-(top / 2 + ISLAND_H / 2 + 3), 0] });
+  const translateY = enter.interpolate({ inputRange: [0, 1], outputRange: [reduceMotion ? 0 : -(top / 2 + ISLAND_H / 2 + 3), 0] });
 
   return (
     <Animated.View
@@ -134,6 +136,10 @@ export const ToastProvider = ({ children }) => {
   // otherwise the app's island under the status bar (notch phones) or a snackbar.
   const showToast = useCallback(
     (message) => {
+      // A screen reader user cannot see the island: say it, and give a short vibration (longer pattern for problems).
+      AccessibilityInfo.announceForAccessibility(String(message));
+      if (badgeFor(message, colors).icon === 'check') haptic.success();
+      else haptic.error();
       if (systemIsland.current) {
         showFocusIsland('Perfumaria Estoque', String(message)).then((handled) => {
           if (!handled) showInApp(message);
@@ -142,7 +148,7 @@ export const ToastProvider = ({ children }) => {
       }
       showInApp(message);
     },
-    [showInApp]
+    [showInApp, colors]
   );
 
   return (

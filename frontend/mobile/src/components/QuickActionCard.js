@@ -3,13 +3,20 @@ import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { fonts } from '../theme/colors';
 import { useThemedStyles } from '../theme/ThemeContext';
+import { decorative } from '../utils/a11y';
 
 // High-use action with icon + title + description, per Tela 01 spec.
 const QuickActionCard = ({ icon, title, description, onPress, style }) => {
   const { colors, styles } = useThemedStyles(createStyles);
   return (
-    <TouchableOpacity activeOpacity={0.75} onPress={onPress} style={[styles.card, style]}>
-      <View style={styles.iconWrap}>
+    <TouchableOpacity
+      activeOpacity={0.75}
+      onPress={onPress}
+      style={[styles.card, style]}
+      accessibilityRole="button"
+      accessibilityLabel={`${title}. ${description}`}
+    >
+      <View style={styles.iconWrap} {...decorative}>
         <MaterialCommunityIcons name={icon} size={20} color={colors.secondaryDark} />
       </View>
       <Text style={styles.title}>{title}</Text>

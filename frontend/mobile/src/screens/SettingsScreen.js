@@ -11,6 +11,7 @@ import { fonts, tabularNums } from '../theme/colors';
 import { useThemedStyles } from '../theme/ThemeContext';
 import { useDockClearance } from '../components/BottomTabBar';
 import Toggle from '../components/Toggle';
+import { decorative, slopFor } from '../utils/a11y';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { useSyncQueue } from '../hooks/useSyncQueue';
 import { removeFromQueue, markPending } from '../services/offlineQueue';
@@ -82,7 +83,7 @@ const SettingsScreen = () => {
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: dockClearance }}>
       <View style={styles.header}>
         <Text style={styles.eyebrow}>CONTA</Text>
-        <Text style={styles.title}>Configurações</Text>
+        <Text style={styles.title} accessibilityRole="header">Configurações</Text>
       </View>
 
       <View style={styles.section}>
@@ -106,7 +107,7 @@ const SettingsScreen = () => {
         <Text style={styles.sectionLabel}>Aparência</Text>
         <View style={styles.card}>
           <View style={styles.row}>
-            <MaterialCommunityIcons name={darkMode ? 'weather-night' : 'white-balance-sunny'} size={20} color={colors.textMuted} style={{ marginRight: 12 }} />
+            <MaterialCommunityIcons name={darkMode ? 'weather-night' : 'white-balance-sunny'} size={20} color={colors.textMuted} style={{ marginRight: 12 }} {...decorative} />
             <View style={{ flex: 1 }}>
               <Text style={styles.rowTitle}>Tema escuro</Text>
               <Text style={styles.rowSubtitle}>{darkMode ? 'Escuro' : 'Claro'} · preferência salva neste aparelho.</Text>
@@ -127,6 +128,7 @@ const SettingsScreen = () => {
             <Switch
               value={alertsEnabled}
               onValueChange={toggleAlerts}
+              accessibilityLabel="Notificar estoque baixo"
               trackColor={{ false: colors.border, true: colors.secondary }}
               thumbColor={colors.surface}
             />
@@ -138,6 +140,7 @@ const SettingsScreen = () => {
                 value={threshold}
                 onChangeText={saveThreshold}
                 keyboardType="number-pad"
+                accessibilityLabel="Limite padrão de estoque baixo, em unidades"
                 style={styles.thresholdInput}
               />
             </View>
@@ -176,10 +179,20 @@ const SettingsScreen = () => {
                   </Text>
                   <Text style={styles.conflictReason}>{c.conflictReason}</Text>
                   <View style={styles.conflictActions}>
-                    <TouchableOpacity onPress={() => handleDiscardConflict(c.id)}>
+                    <TouchableOpacity
+                      onPress={() => handleDiscardConflict(c.id)}
+                      hitSlop={slopFor(20)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Descartar a alteração de ${c.productSnapshot?.nome || 'produto'}`}
+                    >
                       <Text style={styles.conflictDiscard}>Descartar</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => handleRetryConflict(c.id)}>
+                    <TouchableOpacity
+                      onPress={() => handleRetryConflict(c.id)}
+                      hitSlop={slopFor(20)}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Tentar novamente a alteração de ${c.productSnapshot?.nome || 'produto'}`}
+                    >
                       <Text style={styles.conflictRetry}>Tentar novamente</Text>
                     </TouchableOpacity>
                   </View>
@@ -194,22 +207,32 @@ const SettingsScreen = () => {
         <Text style={styles.sectionLabel}>Central de ajuda</Text>
         <View style={styles.card}>
           <View style={styles.helpRow}>
-            <MaterialCommunityIcons name="history" size={18} color={colors.textMuted} />
-            <TouchableOpacity onPress={() => navigate('Histórico')} style={{ flex: 1 }}>
+            <MaterialCommunityIcons name="history" size={18} color={colors.textMuted} {...decorative} />
+            <TouchableOpacity
+              onPress={() => navigate('Histórico')}
+              style={{ flex: 1, minHeight: 48, justifyContent: 'center' }}
+              accessibilityRole="button"
+              accessibilityHint="Abre a lista de movimentações de estoque"
+            >
               <Text style={styles.helpText}>Histórico de movimentações</Text>
             </TouchableOpacity>
-            <MaterialCommunityIcons name="chevron-right" size={18} color={colors.disabled} />
+            <MaterialCommunityIcons name="chevron-right" size={18} color={colors.disabled} {...decorative} />
           </View>
           <View style={styles.helpDivider} />
           <View style={styles.helpRow}>
-            <MaterialCommunityIcons name="help-circle-outline" size={18} color={colors.textMuted} />
+            <MaterialCommunityIcons name="help-circle-outline" size={18} color={colors.textMuted} {...decorative} />
             <Text style={styles.helpText}>Dúvidas ou problemas? Fale com o administrador do sistema.</Text>
           </View>
         </View>
       </View>
 
-      <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
-        <MaterialCommunityIcons name="logout" size={16} color={colors.error} />
+      <TouchableOpacity
+        onPress={handleLogout}
+        style={styles.logoutBtn}
+        accessibilityRole="button"
+        accessibilityHint="Encerra a sessão neste aparelho"
+      >
+        <MaterialCommunityIcons name="logout" size={16} color={colors.error} {...decorative} />
         <Text style={styles.logoutText}>Sair da conta</Text>
       </TouchableOpacity>
     </ScrollView>
@@ -297,7 +320,7 @@ const createStyles = (colors) => StyleSheet.create({
   },
   thresholdInput: {
     width: 56,
-    height: 36,
+    minHeight: 44,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.border,

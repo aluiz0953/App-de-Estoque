@@ -13,6 +13,7 @@ import { useToast } from '../components/Toast';
 import apiService from '../services/api';
 import { fonts, tabularNums } from '../theme/colors';
 import { useThemedStyles } from '../theme/ThemeContext';
+import { decorative, slopFor } from '../utils/a11y';
 
 const money = (v) => `R$ ${(v ?? 0).toFixed(2)}`;
 
@@ -113,10 +114,16 @@ const AddEditPedidoScreen = () => {
       <View style={styles.header}>
         <View>
           <Text style={styles.eyebrow}>Novo pedido</Text>
-          <Text style={styles.title}>Registrar venda.</Text>
+          <Text style={styles.title} accessibilityRole="header">Registrar venda.</Text>
         </View>
-        <TouchableOpacity onPress={() => navigate.goBack()} style={styles.closeBtn}>
-          <MaterialCommunityIcons name="close" size={18} color={colors.textMuted} />
+        <TouchableOpacity
+          onPress={() => navigate.goBack()}
+          style={styles.closeBtn}
+          hitSlop={slopFor(32)}
+          accessibilityRole="button"
+          accessibilityLabel="Fechar sem salvar"
+        >
+          <MaterialCommunityIcons name="close" size={18} color={colors.textMuted} {...decorative} />
         </TouchableOpacity>
       </View>
 
@@ -128,8 +135,13 @@ const AddEditPedidoScreen = () => {
               <Text style={styles.selectedName}>{selectedCliente.nome}</Text>
               <Text style={styles.selectedMeta}>{selectedCliente.telefone || selectedCliente.email}</Text>
             </View>
-            <TouchableOpacity onPress={() => setSelectedCliente(null)}>
-              <MaterialCommunityIcons name="close-circle" size={20} color={colors.textMuted} />
+            <TouchableOpacity
+              onPress={() => setSelectedCliente(null)}
+              hitSlop={slopFor(20)}
+              accessibilityRole="button"
+              accessibilityLabel={`Trocar cliente (${selectedCliente.nome})`}
+            >
+              <MaterialCommunityIcons name="close-circle" size={20} color={colors.textMuted} {...decorative} />
             </TouchableOpacity>
           </View>
         ) : showNewCliente ? (
@@ -138,21 +150,24 @@ const AddEditPedidoScreen = () => {
               value={newCliente.nome}
               onChangeText={(t) => setNewCliente({ ...newCliente, nome: t })}
               placeholder="Nome"
+              accessibilityLabel="Nome do cliente"
               style={styles.input}
             />
             <TextInput
               value={newCliente.telefone}
               onChangeText={(t) => setNewCliente({ ...newCliente, telefone: t })}
               placeholder="Telefone"
+              accessibilityLabel="Telefone do cliente"
               style={[styles.input, { marginTop: 8 }]}
             />
             <TextInput
               value={newCliente.email}
               onChangeText={(t) => setNewCliente({ ...newCliente, email: t })}
               placeholder="E-mail"
+              accessibilityLabel="E-mail do cliente"
               style={[styles.input, { marginTop: 8 }]}
             />
-            <TouchableOpacity onPress={() => setShowNewCliente(false)} style={{ marginTop: 8 }}>
+            <TouchableOpacity onPress={() => setShowNewCliente(false)} style={{ marginTop: 8, minHeight: 44, justifyContent: 'center' }} accessibilityRole="button">
               <Text style={styles.linkText}>Buscar cliente existente</Text>
             </TouchableOpacity>
           </View>
@@ -162,9 +177,10 @@ const AddEditPedidoScreen = () => {
               value={clienteSearch}
               onChangeText={setClienteSearch}
               placeholder="Buscar cliente por nome..."
+              accessibilityLabel="Buscar cliente por nome"
               style={styles.input}
             />
-            <TouchableOpacity onPress={() => setShowNewCliente(true)} style={{ marginTop: 8 }}>
+            <TouchableOpacity onPress={() => setShowNewCliente(true)} style={{ marginTop: 8, minHeight: 44, justifyContent: 'center' }} accessibilityRole="button" accessibilityLabel="Novo cliente">
               <Text style={styles.linkText}>+ Novo cliente</Text>
             </TouchableOpacity>
             {clienteResults.map((c) => (
@@ -184,10 +200,17 @@ const AddEditPedidoScreen = () => {
           value={produtoSearch}
           onChangeText={setProdutoSearch}
           placeholder="Buscar produto por nome ou SKU..."
+          accessibilityLabel="Buscar produto por nome ou SKU"
           style={styles.input}
         />
         {produtoResults.map((p) => (
-          <TouchableOpacity key={p.id} style={styles.resultRow} onPress={() => addItem(p)}>
+          <TouchableOpacity
+            key={p.id}
+            style={styles.resultRow}
+            onPress={() => addItem(p)}
+            accessibilityRole="button"
+            accessibilityLabel={`Adicionar ${p.nome}, SKU ${p.sku}, ${money(p.precoVenda)}`}
+          >
             <Text style={{ flex: 1 }} numberOfLines={1}>{p.nome} · {p.sku}</Text>
             <Text style={tabularNums}>{money(p.precoVenda)}</Text>
           </TouchableOpacity>
@@ -205,11 +228,17 @@ const AddEditPedidoScreen = () => {
                   value={String(item.quantidade)}
                   onChangeText={(t) => updateQuantidade(item.produtoId, t)}
                   keyboardType="number-pad"
+                  accessibilityLabel={`Quantidade de ${item.nome}`}
                   style={styles.qtyInput}
                 />
                 <Text style={[styles.itemTotal, tabularNums]}>{money(item.precoVenda * item.quantidade)}</Text>
-                <TouchableOpacity onPress={() => removeItem(item.produtoId)}>
-                  <MaterialCommunityIcons name="close-circle" size={18} color={colors.textMuted} />
+                <TouchableOpacity
+                  onPress={() => removeItem(item.produtoId)}
+                  hitSlop={slopFor(18)}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Remover ${item.nome} do pedido`}
+                >
+                  <MaterialCommunityIcons name="close-circle" size={18} color={colors.textMuted} {...decorative} />
                 </TouchableOpacity>
               </View>
             ))}
@@ -225,18 +254,21 @@ const AddEditPedidoScreen = () => {
           value={observacoes}
           onChangeText={setObservacoes}
           multiline
-          style={[styles.input, { height: 70 }]}
+          accessibilityLabel="Observações do pedido"
+          style={[styles.input, { minHeight: 70 }]}
         />
       </ScrollView>
 
       <View style={styles.footer}>
-        <TouchableOpacity onPress={() => navigate.goBack()} style={styles.cancelBtn}>
+        <TouchableOpacity onPress={() => navigate.goBack()} style={styles.cancelBtn} accessibilityRole="button">
           <Text style={styles.cancelText}>Cancelar</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={handleSubmit}
           disabled={!isValid || saving}
           style={[styles.saveBtn, (!isValid || saving) && { opacity: 0.5 }]}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: !isValid || saving, busy: saving }}
         >
           <Text style={styles.saveText}>{saving ? 'Salvando...' : 'Criar pedido'}</Text>
         </TouchableOpacity>
@@ -287,7 +319,7 @@ const createStyles = (colors) => StyleSheet.create({
     marginBottom: 8,
   },
   input: {
-    height: 42,
+    minHeight: 44,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: colors.border,
@@ -401,7 +433,7 @@ const createStyles = (colors) => StyleSheet.create({
   },
   cancelBtn: {
     flex: 1,
-    height: 46,
+    minHeight: 48,
     borderRadius: 999,
     borderWidth: 1,
     borderColor: colors.border,
@@ -415,7 +447,7 @@ const createStyles = (colors) => StyleSheet.create({
   },
   saveBtn: {
     flex: 2,
-    height: 46,
+    minHeight: 48,
     borderRadius: 999,
     backgroundColor: colors.primary,
     alignItems: 'center',

@@ -6,26 +6,26 @@ export const lightColors = {
   primaryDark: '#5b4842',
   primaryLight: '#efe9e2', // texto claro sobre fundo escuro / tint claro
   secondary: '#d5a0a2', // Rosa empoeirado (acento da boutique)
-  secondaryDark: '#a96d6e',
+  secondaryDark: '#915e5f',
   background: '#f4efe8', // Fundo creme
   surface: '#fbf8f3', // Cartões e painéis
   text: '#2d2724', // Texto principal
-  textMuted: '#766e68', // Texto secundário
-  textMutedLight: '#998b82', // Texto terciário / labels
+  textMuted: '#716a64', // Texto secundário
+  textMutedLight: '#746a63', // Texto terciário / labels
   border: '#ded3c8',
-  error: '#c1666b',
-  success: '#7a966e',
-  warning: '#c98a52',
+  error: '#a05559',
+  success: '#748f69',
+  warning: '#b37b49',
   disabled: '#c9beb4',
 
   // StatusPill badge pairs (bg/ink) — same tones UsersPage.jsx uses on the web app,
   // so "Available"/"Low stock"/"Out of stock" read consistently across platforms.
   successBg: '#dce6d8',
-  successInk: '#5f7658',
+  successInk: '#55694e',
   warningBg: '#f0d6c5',
-  warningInk: '#94634d',
+  warningInk: '#7f5542',
   neutralBg: '#ded7d4',
-  neutralInk: '#716562',
+  neutralInk: '#665b58',
 
   // Screen headers and the dark metric card, the rose card, modal scrim.
   headerBg: '#2d2724',
@@ -62,7 +62,7 @@ export const darkColors = {
   surface: '#1f1a17',
   text: '#efe9e2',
   textMuted: '#a99f97',
-  textMutedLight: '#8b8078',
+  textMutedLight: '#8d837b',
   border: '#382f2a',
   error: '#d67b80',
   success: '#93b085',

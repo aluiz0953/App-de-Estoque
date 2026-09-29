@@ -2,6 +2,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { fonts, tabularNums } from '../theme/colors';
 import { useTheme } from '../theme/ThemeContext';
+import { decorative } from '../utils/a11y';
 
 const VARIANTS = {
   dark: (c) => ({ bg: c.headerBg, fg: c.headerInk, sub: c.headerSoft }),
@@ -16,7 +17,9 @@ const MetricCard = ({ label, value, detail, icon, variant = 'neutral', style, on
   const Root = onPress ? TouchableOpacity : View;
   return (
     <Root
-      {...(onPress ? { onPress, activeOpacity: 0.8, accessibilityRole: 'button', accessibilityLabel: `${label}: ${value}` } : null)}
+      accessible
+      accessibilityLabel={`${label}: ${value}${detail ? `, ${detail}` : ''}`}
+      {...(onPress ? { onPress, activeOpacity: 0.8, accessibilityRole: 'button', accessibilityHint: 'Toque duas vezes para ver esses produtos' } : null)}
       style={[
         styles.card,
         { backgroundColor: tone.bg },
@@ -26,7 +29,7 @@ const MetricCard = ({ label, value, detail, icon, variant = 'neutral', style, on
     >
       <View style={styles.header}>
         <Text style={[styles.label, { color: tone.sub }]}>{label}</Text>
-        {icon}
+        <View {...decorative}>{icon}</View>
       </View>
       <Text style={[styles.value, tabularNums, { color: tone.fg }]}>{value}</Text>
       {detail ? <Text style={[styles.detail, { color: tone.sub }]}>{detail}</Text> : null}

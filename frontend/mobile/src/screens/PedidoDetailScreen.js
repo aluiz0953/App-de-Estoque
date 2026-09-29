@@ -108,7 +108,7 @@ const PedidoDetailScreen = () => {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={styles.header}>
         <Text style={styles.headerEyebrow}>PEDIDO #{pedido.id}</Text>
-        <Text style={styles.headerTitle}>{pedido.cliente?.nome}</Text>
+        <Text style={styles.headerTitle} accessibilityRole="header">{pedido.cliente?.nome}</Text>
       </View>
 
       <FlatList
@@ -141,20 +141,20 @@ const PedidoDetailScreen = () => {
       <View style={styles.actionBar}>
         {pedido.status === 'PENDENTE' && (
           <View style={styles.actionRow}>
-            <TouchableOpacity onPress={handleConfirm} disabled={busy} style={styles.primaryBtn}>
+            <TouchableOpacity onPress={handleConfirm} disabled={busy} style={styles.primaryBtn} accessibilityRole="button" accessibilityState={{ disabled: busy, busy }}>
               <Text style={styles.primaryBtnText}>Confirmar pedido</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={handleCancel} disabled={busy} style={styles.secondaryBtn}>
+            <TouchableOpacity onPress={handleCancel} disabled={busy} style={styles.secondaryBtn} accessibilityRole="button" accessibilityHint="Cancela este pedido" accessibilityState={{ disabled: busy, busy }}>
               <Text style={styles.secondaryBtnText}>Cancelar</Text>
             </TouchableOpacity>
           </View>
         )}
         {NEXT_STATUS[pedido.status] && (
-          <TouchableOpacity onPress={handleAdvance} disabled={busy} style={styles.primaryBtn}>
+          <TouchableOpacity onPress={handleAdvance} disabled={busy} style={styles.primaryBtn} accessibilityRole="button" accessibilityState={{ disabled: busy, busy }}>
             <Text style={styles.primaryBtnText}>{NEXT_LABEL[NEXT_STATUS[pedido.status]]}</Text>
           </TouchableOpacity>
         )}
-        <TouchableOpacity onPress={() => navigate.goBack()} style={{ marginTop: 10, alignItems: 'center' }}>
+        <TouchableOpacity onPress={() => navigate.goBack()} style={{ marginTop: 10, alignItems: 'center', minHeight: 48, justifyContent: 'center' }} accessibilityRole="button">
           <Text style={styles.backText}>Voltar</Text>
         </TouchableOpacity>
       </View>
@@ -257,7 +257,7 @@ const createStyles = (colors) => StyleSheet.create({
   },
   primaryBtn: {
     flex: 1,
-    height: 46,
+    minHeight: 48,
     borderRadius: 999,
     backgroundColor: colors.primary,
     alignItems: 'center',
@@ -270,7 +270,7 @@ const createStyles = (colors) => StyleSheet.create({
   },
   secondaryBtn: {
     flex: 1,
-    height: 46,
+    minHeight: 48,
     borderRadius: 999,
     borderWidth: 1,
     borderColor: colors.border,

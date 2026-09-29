@@ -45,7 +45,7 @@ const Toggle = ({ value, onValueChange, disabled, accessibilityLabel }) => {
       accessibilityLabel={accessibilityLabel}
       accessibilityState={{ checked: value, disabled }}
       disabled={disabled}
-      hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }}
+      hitSlop={{ top: 13, bottom: 13, left: 5, right: 5 }}
       onPress={() => onValueChange(!value)}
       style={[styles.track, disabled && styles.disabled]}
     >

@@ -16,6 +16,7 @@ import { LIST_PERF_PROPS } from '../utils/listPerf';
 import SkeletonList from '../components/SkeletonList';
 import { fonts, tabularNums } from '../theme/colors';
 import { useThemedStyles } from '../theme/ThemeContext';
+import { decorative, slopFor } from '../utils/a11y';
 import ReasonMenu from '../components/ReasonMenu';
 import apiService from '../services/api';
 import { MOTIVO_LABEL } from '../utils/motivos';
@@ -83,12 +84,16 @@ const HistoryScreen = () => {
       <TouchableOpacity
         onPress={() => navigate('MovimentacaoDetail', { movimentacao: item })}
         style={[styles.row, { backgroundColor: isEntrada ? colors.background : colors.surface }]}
+        accessibilityRole="button"
+        accessibilityLabel={`${isEntrada ? 'Entrada' : 'Saída'} de ${item.quantidade} unidades de ${item.produto?.nome}, ${MOTIVO_LABEL[item.motivo] || item.motivo || 'sem motivo'}${item.dataMovimentacao ? `, ${new Date(item.dataMovimentacao).toLocaleString('pt-BR')}` : ''}${item.usuario?.username ? `, por ${item.usuario.username}` : ''}`}
+        accessibilityHint="Toque duas vezes para ver os detalhes"
       >
         <MaterialCommunityIcons
           name={isEntrada ? 'arrow-up-bold' : 'arrow-down-bold'}
           size={24}
           color={isEntrada ? colors.success : colors.error}
           style={{ marginRight: 12 }}
+          {...decorative}
         />
         <View style={{ flex: 1 }}>
           <Text style={styles.itemTitle}>{item.produto?.nome}</Text>
@@ -105,14 +110,14 @@ const HistoryScreen = () => {
             {item.usuario?.username ? ` · ${item.usuario.username}` : ''}
           </Text>
         </View>
-        <MaterialCommunityIcons name="chevron-right" size={20} color={colors.disabled} />
+        <MaterialCommunityIcons name="chevron-right" size={20} color={colors.disabled} {...decorative} />
       </TouchableOpacity>
     );
   };
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <View style={styles.segmentedControl}>
+      <View style={styles.segmentedControl} accessibilityRole="tablist">
         {[
           { key: null, label: 'Todas' },
           { key: 'ENTRADA', label: 'Entradas' },
@@ -122,6 +127,9 @@ const HistoryScreen = () => {
             key={option.label}
             style={[styles.segment, tipo === option.key && styles.segmentActive]}
             onPress={() => setTipo(option.key)}
+            accessibilityRole="tab"
+            accessibilityLabel={option.label}
+            accessibilityState={{ selected: tipo === option.key }}
           >
             <Text style={[styles.segmentText, tipo === option.key && styles.segmentTextActive]}>
               {option.label}
@@ -135,8 +143,13 @@ const HistoryScreen = () => {
           {selectedProduto ? (
             <View style={styles.produtoChip}>
               <Text style={styles.produtoChipText} numberOfLines={1}>{selectedProduto.nome}</Text>
-              <TouchableOpacity onPress={() => { setSelectedProduto(null); setProdutoSearch(''); }}>
-                <MaterialCommunityIcons name="close-circle" size={16} color={colors.textMuted} />
+              <TouchableOpacity
+                onPress={() => { setSelectedProduto(null); setProdutoSearch(''); }}
+                hitSlop={slopFor(16)}
+                accessibilityRole="button"
+                accessibilityLabel={`Remover filtro de produto (${selectedProduto.nome})`}
+              >
+                <MaterialCommunityIcons name="close-circle" size={16} color={colors.textMuted} {...decorative} />
               </TouchableOpacity>
             </View>
           ) : (
@@ -145,6 +158,7 @@ const HistoryScreen = () => {
                 value={produtoSearch}
                 onChangeText={setProdutoSearch}
                 placeholder="Filtrar por produto..."
+                accessibilityLabel="Filtrar por produto"
                 style={styles.produtoInput}
               />
               {produtoResults.length > 0 && (
@@ -154,6 +168,8 @@ const HistoryScreen = () => {
                       key={p.id}
                       style={styles.produtoResultRow}
                       onPress={() => { setSelectedProduto(p); setProdutoResults([]); }}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Filtrar por ${p.nome}, SKU ${p.sku}`}
                     >
                       <Text numberOfLines={1} style={{ color: colors.text }}>{p.nome} · {p.sku}</Text>
                     </TouchableOpacity>
@@ -170,8 +186,14 @@ const HistoryScreen = () => {
             onSelect={(id) => setSelectedUsuario(id ? usuarios.find((u) => u.id === id) : null)}
           >
             {({ open }) => (
-              <TouchableOpacity onPress={open} style={styles.operadorBtn}>
-                <MaterialCommunityIcons name="account-outline" size={14} color={colors.textMuted} />
+              <TouchableOpacity
+                onPress={open}
+                style={styles.operadorBtn}
+                accessibilityRole="button"
+                accessibilityLabel={`Operador: ${selectedUsuario?.username || 'todos'}`}
+                accessibilityHint="Toque duas vezes para escolher o operador"
+              >
+                <MaterialCommunityIcons name="account-outline" size={14} color={colors.textMuted} {...decorative} />
                 <Text style={styles.operadorBtnText} numberOfLines={1}>
                   {selectedUsuario?.username || 'Operador'}
                 </Text>
@@ -187,6 +209,9 @@ const HistoryScreen = () => {
             key={p.label}
             onPress={() => setPeriodoDias(p.value)}
             style={[styles.periodoChip, periodoDias === p.value && styles.periodoChipActive]}
+            accessibilityRole="button"
+            accessibilityLabel={`Período: ${p.label}`}
+            accessibilityState={{ selected: periodoDias === p.value }}
           >
             <Text style={[styles.periodoChipText, periodoDias === p.value && styles.periodoChipTextActive]}>
               {p.label}
@@ -212,7 +237,7 @@ const HistoryScreen = () => {
           ListFooterComponent={isLoadingMore ? <ActivityIndicator style={{ margin: 16 }} color={colors.primary} /> : null}
           ListEmptyComponent={
             <View style={{ padding: 40, alignItems: 'center' }}>
-              <MaterialCommunityIcons name="history" size={48} color={colors.disabled} />
+              <MaterialCommunityIcons name="history" size={48} color={colors.disabled} {...decorative} />
               <Text style={{ marginTop: 16, color: colors.textMuted, textAlign: 'center' }}>
                 Nenhuma movimentação encontrada
               </Text>
@@ -257,7 +282,7 @@ const createStyles = (colors) => StyleSheet.create({
   },
   produtoFilterWrap: { flex: 1 },
   produtoInput: {
-    height: 38,
+    minHeight: 44,
     borderRadius: 8,
     borderWidth: 1,
     borderColor: colors.border,
@@ -281,7 +306,7 @@ const createStyles = (colors) => StyleSheet.create({
     borderColor: colors.border,
   },
   produtoChip: {
-    height: 38,
+    minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -299,7 +324,7 @@ const createStyles = (colors) => StyleSheet.create({
     marginRight: 6,
   },
   operadorBtn: {
-    height: 38,
+    minHeight: 44,
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,

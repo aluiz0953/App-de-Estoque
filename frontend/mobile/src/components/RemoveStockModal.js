@@ -4,6 +4,7 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import { fonts, tabularNums } from '../theme/colors';
 import { useThemedStyles } from '../theme/ThemeContext';
 import { MOTIVOS_SAIDA } from '../utils/motivos';
+import { decorative, haptic, slopFor } from '../utils/a11y';
 
 // Lets the operator type or step to an exact quantity instead of tapping "-1"
 // repeatedly. Always requires a motivo (backend rejects withdrawals without one).
@@ -35,41 +36,63 @@ const RemoveStockModal = ({ visible, product, onClose, onConfirm, busy }) => {
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.backdrop}>
-        <View style={styles.card}>
+        <View style={styles.card} accessibilityViewIsModal>
           <View style={styles.header}>
             <View style={{ flex: 1, marginRight: 12 }}>
               <Text style={styles.eyebrow}>Remover estoque</Text>
-              <Text style={styles.productName} numberOfLines={1}>{product.nome}</Text>
+              <Text style={styles.productName} numberOfLines={2} accessibilityRole="header">{product.nome}</Text>
             </View>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <MaterialCommunityIcons name="close" size={16} color={colors.textMuted} />
+            <TouchableOpacity
+              onPress={onClose}
+              style={styles.closeBtn}
+              hitSlop={slopFor(28)}
+              accessibilityRole="button"
+              accessibilityLabel="Fechar"
+            >
+              <MaterialCommunityIcons name="close" size={16} color={colors.textMuted} {...decorative} />
             </TouchableOpacity>
           </View>
 
           <Text style={styles.label}>Quantidade (estoque atual: {max})</Text>
           <View style={styles.stepperRow}>
-            <TouchableOpacity onPress={() => adjust(-1)} style={styles.stepBtn}>
-              <MaterialCommunityIcons name="minus" size={16} color={colors.text} />
+            <TouchableOpacity
+              onPress={() => adjust(-1)}
+              style={styles.stepBtn}
+              hitSlop={slopFor(38)}
+              accessibilityRole="button"
+              accessibilityLabel="Diminuir quantidade"
+            >
+              <MaterialCommunityIcons name="minus" size={16} color={colors.text} {...decorative} />
             </TouchableOpacity>
             <TextInput
               value={quantity}
               onChangeText={(t) => setQuantity(t.replace(/[^0-9]/g, ''))}
               keyboardType="number-pad"
+              accessibilityLabel="Quantidade a remover"
               style={[styles.qtyInput, tabularNums]}
             />
-            <TouchableOpacity onPress={() => adjust(1)} style={styles.stepBtn}>
-              <MaterialCommunityIcons name="plus" size={16} color={colors.text} />
+            <TouchableOpacity
+              onPress={() => adjust(1)}
+              style={styles.stepBtn}
+              hitSlop={slopFor(38)}
+              accessibilityRole="button"
+              accessibilityLabel="Aumentar quantidade"
+            >
+              <MaterialCommunityIcons name="plus" size={16} color={colors.text} {...decorative} />
             </TouchableOpacity>
           </View>
-          {qtyNum > max && <Text style={styles.errorText}>Máximo disponível: {max}</Text>}
+          {qtyNum > max && <Text style={styles.errorText} accessibilityLiveRegion="polite">Máximo disponível: {max}</Text>}
 
           <Text style={[styles.label, { marginTop: 16 }]}>Motivo</Text>
-          <View style={styles.motivoGrid}>
+          <View style={styles.motivoGrid} accessibilityRole="radiogroup">
             {MOTIVOS_SAIDA.map((opt) => (
               <TouchableOpacity
                 key={opt.value}
                 onPress={() => setMotivo(opt.value)}
                 style={[styles.motivoChip, motivo === opt.value && styles.motivoChipActive]}
+                accessibilityRole="radio"
+                accessibilityLabel={opt.label}
+                accessibilityState={{ checked: motivo === opt.value }}
               >
                 <Text style={[styles.motivoChipText, motivo === opt.value && styles.motivoChipTextActive]}>
                   {opt.label}
@@ -79,9 +102,15 @@ const RemoveStockModal = ({ visible, product, onClose, onConfirm, busy }) => {
           </View>
 
           <TouchableOpacity
-            onPress={() => onConfirm(qtyNum, motivo)}
+            onPress={() => {
+              haptic.tap();
+              onConfirm(qtyNum, motivo);
+            }}
             disabled={!valid || busy}
             style={[styles.confirmBtn, (!valid || busy) && { opacity: 0.5 }]}
+            accessibilityRole="button"
+            accessibilityState={{ disabled: !valid || busy, busy }}
+            accessibilityHint={valid ? undefined : 'Escolha a quantidade e o motivo para liberar'}
           >
             <Text style={styles.confirmText}>
               {busy ? 'Removendo...' : `Remover ${qtyNum || ''} unidade${qtyNum === 1 ? '' : 's'}`}
@@ -184,7 +213,7 @@ const createStyles = (colors) => StyleSheet.create({
     borderRadius: 999,
     borderWidth: 1,
     borderColor: colors.border,
-    paddingVertical: 7,
+    paddingVertical: 12,
     paddingHorizontal: 12,
   },
   motivoChipActive: {
@@ -201,7 +230,7 @@ const createStyles = (colors) => StyleSheet.create({
   },
   confirmBtn: {
     marginTop: 20,
-    height: 46,
+    minHeight: 48,
     borderRadius: 999,
     backgroundColor: colors.primary,
     alignItems: 'center',
