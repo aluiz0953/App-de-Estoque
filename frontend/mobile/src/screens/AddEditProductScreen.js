@@ -14,7 +14,8 @@ import { useNavigate } from '../hooks/useNavigate';
 import { useToast } from '../components/Toast';
 import ReasonMenu from '../components/ReasonMenu';
 import apiService from '../services/api';
-import { colors, fonts } from '../theme/colors';
+import { fonts } from '../theme/colors';
+import { useThemedStyles } from '../theme/ThemeContext';
 
 const TIPOS_PRODUTO = ['Perfumaria', 'Cuidados Diários', 'Rosto e Proteção', 'Outros'].map((t) => ({
   value: t,
@@ -42,6 +43,7 @@ const emptyForm = {
 // backend's /estoque/entrada endpoint actually requires — there's no simpler
 // "just set quantidade" path in this data model.
 const AddEditProductScreen = () => {
+  const { colors, styles } = useThemedStyles(createStyles);
   const route = useRoute();
   const navigate = useNavigate();
   const showToast = useToast();
@@ -299,16 +301,22 @@ const AddEditProductScreen = () => {
   );
 };
 
-const Field = ({ label, children, flex }) => (
-  <View style={[styles.field, flex && { flex: 1 }]}>
-    <Text style={styles.label}>{label}</Text>
-    {children}
-  </View>
-);
+const Field = ({ label, children, flex }) => {
+  const { styles } = useThemedStyles(createStyles);
+  return (
+    <View style={[styles.field, flex && { flex: 1 }]}>
+      <Text style={styles.label}>{label}</Text>
+      {children}
+    </View>
+  );
+};
 
-const FieldRow = ({ children }) => <View style={styles.fieldRow}>{children}</View>;
+const FieldRow = ({ children }) => {
+  const { styles } = useThemedStyles(createStyles);
+  return <View style={styles.fieldRow}>{children}</View>;
+};
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.surface },
   loading: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface },
   header: {

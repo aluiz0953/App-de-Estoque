@@ -1,18 +1,20 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, fonts } from '../theme/colors';
+import { fonts } from '../theme/colors';
+import { useTheme } from '../theme/ThemeContext';
 import { STOCK_STATE_LABEL } from '../utils/stock';
 
 const TONES = {
-  available: { bg: colors.successBg, ink: colors.successInk },
-  low: { bg: colors.warningBg, ink: colors.warningInk },
-  out: { bg: colors.neutralBg, ink: colors.neutralInk },
+  available: (c) => ({ bg: c.successBg, ink: c.successInk }),
+  low: (c) => ({ bg: c.warningBg, ink: c.warningInk }),
+  out: (c) => ({ bg: c.neutralBg, ink: c.neutralInk }),
 };
 
 // state: 'available' | 'low' | 'out' — always pairs a dot with a text label
 // (per the design spec: never communicate status with color alone).
 const StatusPill = ({ state, style }) => {
-  const tone = TONES[state] || TONES.available;
+  const { colors } = useTheme();
+  const tone = (TONES[state] || TONES.available)(colors);
   return (
     <View style={[styles.pill, { backgroundColor: tone.bg }, style]}>
       <View style={[styles.dot, { backgroundColor: tone.ink }]} />

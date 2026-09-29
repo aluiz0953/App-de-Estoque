@@ -161,3 +161,7 @@ Este projeto está licenciado sob a licença MIT - veja o arquivo LICENSE.md par
 
 ---
 *Sistema desenvolvido com foco em entregas iterativas rápidas, conforme especificado no escopo do projeto.*
+## Créditos de componentes de terceiros
+
+- **Fluid Orb** — [Rare UI](https://www.rareui.com) (Swami Malode), MIT com Commons Clause e atribuição obrigatória. Convertido para JSX em `frontend/web/src/components/FluidOrb.jsx`; não remova o crédito.
+- **Toggle** — animação do [transitions.dev](https://transitions.dev) (`.t-toggle` em `frontend/web/src/App.css`; versão nativa em `frontend/mobile/src/components/Toggle.js`).

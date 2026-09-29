@@ -4,33 +4,40 @@ import { Button, Title, Searchbar, Chip } from 'react-native-paper';
 import BottomSheet, { BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import useFetchProducts from '../hooks/useFetchProducts';
+import { useRoute } from '@react-navigation/native';
 import { useNavigate } from '../hooks/useNavigate';
 import SkeletonList from '../components/SkeletonList';
-import { colors, fonts, tabularNums } from '../theme/colors';
+import { fonts, tabularNums } from '../theme/colors';
+import { useThemedStyles } from '../theme/ThemeContext';
+import { useDockClearance } from '../components/BottomTabBar';
 import ProductRow from '../components/ProductRow';
 import RemoveStockModal from '../components/RemoveStockModal';
 import { useToast } from '../components/Toast';
 import { submitStockWithdrawal } from '../services/stockMutations';
-import { getStockState } from '../utils/stock';
+import { STOCK_FILTERS, filterStock } from '../utils/stock';
 import { LIST_PERF_PROPS } from '../utils/listPerf';
 
 const keyExtractor = (item) => item.id.toString();
 
-const STATUS_FILTERS = [
-  { value: 'Todos', label: 'Todos' },
-  { value: 'low', label: 'Baixo' },
-  { value: 'out', label: 'Sem estoque' },
-];
-
 // Tela 02 — Estoque. Search + status chips (Todos/Baixo/Sem estoque, per spec)
 // plus a secondary marca filter in a bottom sheet (existing pattern, kept).
 const InventoryScreen = () => {
+  const { colors, styles } = useThemedStyles(createStyles);
+  const dockClearance = useDockClearance();
   const [searchTerm, setSearchTerm] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const searchDebounce = useRef(null);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedMarca, setSelectedMarca] = useState(null);
   const [statusFilter, setStatusFilter] = useState('Todos');
+
+  // The cards on Hoje open this tab already filtered ({ status } param, a new object per tap).
+  const { params } = useRoute();
+  useEffect(() => {
+    if (!params?.status) return;
+    setStatusFilter(params.status);
+    setSelectedMarca(null);
+  }, [params]);
 
   // Every keystroke used to refetch immediately, wiping the whole screen with
   // a full-screen spinner each time (see useFetchProducts) - debounce so
@@ -50,10 +57,7 @@ const InventoryScreen = () => {
   const snapPoints = useMemo(() => ['40%'], []);
   const openFilters = useCallback(() => bottomSheetRef.current?.expand(), []);
   const closeFilters = useCallback(() => bottomSheetRef.current?.close(), []);
-  const renderBackdrop = useCallback(
-    (props) => <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} />,
-    []
-  );
+  const renderBackdrop = useCallback((p) => <BottomSheetBackdrop {...p} disappearsOnIndex={-1} appearsOnIndex={0} />, []);
 
   // Stable handlers + renderItem: with the memoized ProductRow, only rows whose
   // data changed re-render (not all of them on every keystroke or modal toggle).
@@ -73,14 +77,10 @@ const InventoryScreen = () => {
     return [...new Set(nomes)];
   }, [ativos]);
 
-  const produtosFiltrados = useMemo(() => {
-    return ativos.filter((p) => {
-      const matchesMarca = !selectedMarca || p.linha?.marca?.nome === selectedMarca;
-      const matchesStatus =
-        statusFilter === 'Todos' || getStockState(p.quantidadeTotal, p.estoqueMinimo) === statusFilter;
-      return matchesMarca && matchesStatus;
-    });
-  }, [ativos, selectedMarca, statusFilter]);
+  const produtosFiltrados = useMemo(
+    () => filterStock(ativos, { marca: selectedMarca, status: statusFilter }),
+    [ativos, selectedMarca, statusFilter]
+  );
 
   const handleRefresh = () => {
     setRefreshing(true);
@@ -128,7 +128,7 @@ const InventoryScreen = () => {
   if (error) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', padding: 20 }}>
-        <Text>{error.message}</Text>
+        <Text style={{ color: colors.text }}>{error.message}</Text>
         <Button mode="contained" onPress={handleRefresh}>
           Tentar Novamente
         </Button>
@@ -143,7 +143,7 @@ const InventoryScreen = () => {
         <View style={styles.topHeaderRow}>
           <Text style={styles.title}>Estoque</Text>
           <TouchableOpacity onPress={() => navigate('AddEditProduct')} style={styles.addBtn}>
-            <MaterialCommunityIcons name="plus" size={16} color={colors.primaryLight} />
+            <MaterialCommunityIcons name="plus" size={16} color={colors.headerInk} />
             <Text style={styles.addBtnText}>Adicionar</Text>
           </TouchableOpacity>
         </View>
@@ -163,7 +163,7 @@ const InventoryScreen = () => {
       </View>
 
       <View style={styles.chipsRow}>
-        {STATUS_FILTERS.map((f) => (
+        {STOCK_FILTERS.map((f) => (
           <TouchableOpacity
             key={f.value}
             onPress={() => setStatusFilter(f.value)}
@@ -186,6 +186,7 @@ const InventoryScreen = () => {
         data={produtosFiltrados}
         keyExtractor={keyExtractor}
         renderItem={renderItem}
+        contentContainerStyle={{ paddingBottom: dockClearance }}
         {...LIST_PERF_PROPS}
         ListEmptyComponent={
           <View style={{ padding: 40, alignItems: 'center' }}>
@@ -250,9 +251,9 @@ const InventoryScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   topHeader: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.headerBg,
     paddingVertical: 16,
     paddingHorizontal: 16,
   },
@@ -260,7 +261,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.mono,
     fontSize: 10,
     letterSpacing: 2,
-    color: colors.primaryLight,
+    color: colors.headerInk,
     opacity: 0.65,
   },
   topHeaderRow: {
@@ -271,7 +272,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontFamily: fonts.display,
-    color: colors.primaryLight,
+    color: colors.headerInk,
     fontSize: 22,
   },
   addBtn: {
@@ -279,7 +280,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 4,
     borderWidth: 1,
-    borderColor: 'rgba(248,242,234,0.3)',
+    borderColor: colors.headerLine,
     borderRadius: 999,
     paddingVertical: 6,
     paddingHorizontal: 12,
@@ -287,7 +288,7 @@ const styles = StyleSheet.create({
   addBtnText: {
     fontFamily: fonts.sansMedium,
     fontSize: 11,
-    color: colors.primaryLight,
+    color: colors.headerInk,
   },
   searchRow: {
     flexDirection: 'row',

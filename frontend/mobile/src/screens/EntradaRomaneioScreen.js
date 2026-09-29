@@ -6,8 +6,9 @@ import { useRoute } from '@react-navigation/native';
 import apiService from '../services/api';
 import { submitStockEntry } from '../services/stockMutations';
 import { useNavigate } from '../hooks/useNavigate';
-import { colors, tabularNums } from '../theme/colors';
-import { styles } from './EntradaRomaneioScreen.styles';
+import { tabularNums } from '../theme/colors';
+import { useThemedStyles } from '../theme/ThemeContext';
+import { createStyles } from './EntradaRomaneioScreen.styles';
 import ReasonMenu from '../components/ReasonMenu';
 import { MOTIVOS_ENTRADA, MOTIVO_LABEL } from '../utils/motivos';
 
@@ -18,6 +19,7 @@ import { MOTIVOS_ENTRADA, MOTIVO_LABEL } from '../utils/motivos';
  * totalizer at the bottom. "Finalizar" ends the session once every box item is logged.
  */
 const EntradaRomaneioScreen = () => {
+  const { colors, styles } = useThemedStyles(createStyles);
   const navigate = useNavigate();
   const route = useRoute();
 

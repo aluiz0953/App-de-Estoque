@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Modal, View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { colors, fonts, tabularNums } from '../theme/colors';
+import { fonts, tabularNums } from '../theme/colors';
+import { useThemedStyles } from '../theme/ThemeContext';
 import { MOTIVOS_SAIDA } from '../utils/motivos';
 
 // Lets the operator type or step to an exact quantity instead of tapping "-1"
 // repeatedly. Always requires a motivo (backend rejects withdrawals without one).
 const RemoveStockModal = ({ visible, product, onClose, onConfirm, busy }) => {
+  const { colors, styles } = useThemedStyles(createStyles);
   const [quantity, setQuantity] = useState('1');
   const [motivo, setMotivo] = useState(null);
 
@@ -91,10 +93,10 @@ const RemoveStockModal = ({ visible, product, onClose, onConfirm, busy }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   backdrop: {
     flex: 1,
-    backgroundColor: 'rgba(45,39,36,0.4)',
+    backgroundColor: colors.overlay,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 20,

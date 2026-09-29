@@ -5,8 +5,12 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigate } from '../hooks/useNavigate';
 import { logout, logoutUser } from '../store/slices/authSlice';
+import { setDarkMode } from '../store/slices/settingsSlice';
 import apiService from '../services/api';
-import { colors, fonts, tabularNums } from '../theme/colors';
+import { fonts, tabularNums } from '../theme/colors';
+import { useThemedStyles } from '../theme/ThemeContext';
+import { useDockClearance } from '../components/BottomTabBar';
+import Toggle from '../components/Toggle';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { useSyncQueue } from '../hooks/useSyncQueue';
 import { removeFromQueue, markPending } from '../services/offlineQueue';
@@ -19,9 +23,12 @@ const ALERT_THRESHOLD_KEY = 'settings:lowStockAlertThreshold';
 const ROLE_LABEL = { ADMIN: 'Administrador', MANAGER: 'Gerente', OPERATOR: 'Operador', AUDITOR: 'Auditor' };
 
 const SettingsScreen = () => {
+  const { colors, styles } = useThemedStyles(createStyles);
+  const dockClearance = useDockClearance();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const sessionUser = useSelector((state) => state.auth.user);
+  const darkMode = useSelector((state) => state.settings.darkMode);
 
   const [profile, setProfile] = useState(null);
   const [alertsEnabled, setAlertsEnabled] = useState(true);
@@ -72,7 +79,7 @@ const SettingsScreen = () => {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: 32 }}>
+    <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: dockClearance }}>
       <View style={styles.header}>
         <Text style={styles.eyebrow}>CONTA</Text>
         <Text style={styles.title}>Configurações</Text>
@@ -91,6 +98,20 @@ const SettingsScreen = () => {
             <Text style={[styles.profileMeta, tabularNums]}>
               {profile?.username || sessionUser?.user} · {ROLE_LABEL[profile?.role || sessionUser?.role] || profile?.role}
             </Text>
+          </View>
+        </View>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionLabel}>Aparência</Text>
+        <View style={styles.card}>
+          <View style={styles.row}>
+            <MaterialCommunityIcons name={darkMode ? 'weather-night' : 'white-balance-sunny'} size={20} color={colors.textMuted} style={{ marginRight: 12 }} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.rowTitle}>Tema escuro</Text>
+              <Text style={styles.rowSubtitle}>{darkMode ? 'Escuro' : 'Claro'} · preferência salva neste aparelho.</Text>
+            </View>
+            <Toggle value={darkMode} onValueChange={(value) => dispatch(setDarkMode(value))} accessibilityLabel="Tema escuro" />
           </View>
         </View>
       </View>
@@ -195,10 +216,10 @@ const SettingsScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   header: {
-    backgroundColor: colors.primary,
+    backgroundColor: colors.headerBg,
     paddingVertical: 20,
     paddingHorizontal: 16,
   },
@@ -206,13 +227,13 @@ const styles = StyleSheet.create({
     fontFamily: fonts.mono,
     fontSize: 10,
     letterSpacing: 2,
-    color: colors.primaryLight,
+    color: colors.headerInk,
     opacity: 0.65,
     marginBottom: 4,
   },
   title: {
     fontFamily: fonts.display,
-    color: colors.primaryLight,
+    color: colors.headerInk,
     fontSize: 22,
   },
   section: {

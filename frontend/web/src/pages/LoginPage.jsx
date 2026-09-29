@@ -5,6 +5,8 @@ import { login, clearError } from '../store/slices/authSlice';
 import apiService from '../services/api';
 import { useTheme } from '../contexts/ThemeContext';
 import { prefersReducedMotion, whenIdle } from '../utils/performance';
+import Toggle from '../components/Toggle';
+import FluidOrb from '../components/FluidOrb';
 
 const HeroGeometric = lazy(() => import('../components/HeroGeometric'));
 
@@ -88,9 +90,9 @@ const LoginPage = () => {
       )}
       <div className="relative z-10 w-full max-w-[400px] animate-rise rounded-2xl border border-border bg-surface p-8 shadow-[0_18px_55px_rgba(63,47,35,0.09)] md:p-10">
         <div className="mb-8 text-center">
-          <span className="mx-auto mb-4 grid h-11 w-11 place-items-center rounded-full border border-border">
-            <span className="h-2.5 w-2.5 rounded-full bg-secondary" />
-          </span>
+          <div className="mx-auto mb-4 w-fit" aria-hidden="true">
+            <FluidOrb size={56} color="#d5a0a2" />
+          </div>
           <p className="eyebrow">Perfumaria</p>
           <h1 className="font-display mt-2 text-[30px] tracking-[-0.02em]">Sistema de Estoque</h1>
         </div>
@@ -128,15 +130,10 @@ const LoginPage = () => {
               </div>
             </label>
 
-            <label className="inline-flex cursor-pointer items-center gap-2 text-[12px] text-muted">
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(e) => setRememberMe(e.target.checked)}
-                className="h-3.5 w-3.5 accent-primary"
-              />
-              Manter conectado
-            </label>
+            <div className="inline-flex items-center gap-2 text-[12px] text-muted">
+              <Toggle checked={rememberMe} onChange={setRememberMe} aria-labelledby="remember-me-label" />
+              <span id="remember-me-label">Manter conectado</span>
+            </div>
 
             {error && (
               <p className="text-[12px] text-danger">{typeof error === 'string' ? error : 'Usuário ou senha inválidos'}</p>

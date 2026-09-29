@@ -1,18 +1,22 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
-import { colors, fonts, tabularNums } from '../theme/colors';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { fonts, tabularNums } from '../theme/colors';
+import { useTheme } from '../theme/ThemeContext';
 
 const VARIANTS = {
-  dark: { bg: colors.primary, fg: colors.primaryLight, sub: 'rgba(248,242,234,0.6)' },
-  rose: { bg: '#ead8d1', fg: '#5c4540', sub: 'rgba(92,69,64,0.65)' },
-  neutral: { bg: colors.surface, fg: colors.text, sub: colors.textMutedLight, border: colors.border },
+  dark: (c) => ({ bg: c.headerBg, fg: c.headerInk, sub: c.headerSoft }),
+  rose: (c) => ({ bg: c.roseBg, fg: c.roseInk, sub: c.roseSoft }),
+  neutral: (c) => ({ bg: c.surface, fg: c.text, sub: c.textMutedLight, border: c.border }),
 };
 
 // label/value/detail per Tela 01 spec: mono label, big display value, short detail line.
-const MetricCard = ({ label, value, detail, icon, variant = 'neutral', style }) => {
-  const tone = VARIANTS[variant] || VARIANTS.neutral;
+const MetricCard = ({ label, value, detail, icon, variant = 'neutral', style, onPress }) => {
+  const { colors } = useTheme();
+  const tone = (VARIANTS[variant] || VARIANTS.neutral)(colors);
+  const Root = onPress ? TouchableOpacity : View;
   return (
-    <View
+    <Root
+      {...(onPress ? { onPress, activeOpacity: 0.8, accessibilityRole: 'button', accessibilityLabel: `${label}: ${value}` } : null)}
       style={[
         styles.card,
         { backgroundColor: tone.bg },
@@ -26,7 +30,7 @@ const MetricCard = ({ label, value, detail, icon, variant = 'neutral', style }) 
       </View>
       <Text style={[styles.value, tabularNums, { color: tone.fg }]}>{value}</Text>
       {detail ? <Text style={[styles.detail, { color: tone.sub }]}>{detail}</Text> : null}
-    </View>
+    </Root>
   );
 };
 

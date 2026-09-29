@@ -1,20 +1,24 @@
 import React from 'react';
 import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { colors, fonts } from '../theme/colors';
+import { fonts } from '../theme/colors';
+import { useThemedStyles } from '../theme/ThemeContext';
 
 // High-use action with icon + title + description, per Tela 01 spec.
-const QuickActionCard = ({ icon, title, description, onPress, style }) => (
-  <TouchableOpacity activeOpacity={0.75} onPress={onPress} style={[styles.card, style]}>
-    <View style={styles.iconWrap}>
-      <MaterialCommunityIcons name={icon} size={20} color={colors.secondaryDark} />
-    </View>
-    <Text style={styles.title}>{title}</Text>
-    <Text style={styles.description}>{description}</Text>
-  </TouchableOpacity>
-);
+const QuickActionCard = ({ icon, title, description, onPress, style }) => {
+  const { colors, styles } = useThemedStyles(createStyles);
+  return (
+    <TouchableOpacity activeOpacity={0.75} onPress={onPress} style={[styles.card, style]}>
+      <View style={styles.iconWrap}>
+        <MaterialCommunityIcons name={icon} size={20} color={colors.secondaryDark} />
+      </View>
+      <Text style={styles.title}>{title}</Text>
+      <Text style={styles.description}>{description}</Text>
+    </TouchableOpacity>
+  );
+};
 
-const styles = StyleSheet.create({
+const createStyles = (colors) => StyleSheet.create({
   card: {
     flex: 1,
     borderRadius: 12,
