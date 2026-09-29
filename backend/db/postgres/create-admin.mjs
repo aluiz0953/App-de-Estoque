@@ -27,7 +27,7 @@ try {
      VALUES ($1, $2, $3, $4, 'ADMIN', true, now(), now(), 0)`,
     [username, await bcrypt.hash(password, 12), email, fullName],
   )
-  console.log(`admin created: ${username}`)
+  console.log("admin created")
 } catch (error) {
   console.error(error.message)
   process.exitCode = 1
