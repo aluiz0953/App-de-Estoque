@@ -28,6 +28,7 @@ import org.springframework.security.web.authentication.rememberme.TokenBasedReme
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 import java.util.List;
 import java.util.UUID;
@@ -54,6 +55,12 @@ public class SecurityConfig {
 
     @Value("${COOKIE_SAME_SITE:lax}")
     private String cookieSameSite;
+
+    @Value("${rate-limit.per-minute}")
+    private int rateLimit;
+
+    @Value("${rate-limit.login-per-minute}")
+    private int loginRateLimit;
 
     private final UserDetailsService userDetailsService;
     private final AuditLogFilter auditLogFilter;
@@ -125,6 +132,10 @@ public class SecurityConfig {
             // HTTP Basic for API clients (optional)
             .httpBasic(basic -> basic.authenticationEntryPoint(unauthorized))
             .exceptionHandling(e -> e.authenticationEntryPoint(unauthorized))
+
+            // Throttle per client address. Right after CorsFilter so a 429 still carries the CORS
+            // headers (the browser can read it) and it is refused before authentication runs.
+            .addFilterAfter(new RateLimitFilter(rateLimit, loginRateLimit), CorsFilter.class)
 
             // Add custom audit filter to log access to sensitive operations
             .addFilterBefore(auditLogFilter, UsernamePasswordAuthenticationFilter.class);
