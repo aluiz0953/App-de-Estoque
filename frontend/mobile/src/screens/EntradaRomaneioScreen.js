@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, TextInput as RNTextInput, FlatList, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput as RNTextInput, FlatList, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
 import { Button, Title, Caption } from 'react-native-paper';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useRoute } from '@react-navigation/native';
 import apiService from '../services/api';
 import { useNavigate } from '../hooks/useNavigate';
 import { colors, tabularNums } from '../theme/colors';
+import { styles } from './EntradaRomaneioScreen.styles';
 
 /**
  * "Entrada de Romaneio (Sem Câmera)" — the mobile app's headline stock-entry flow:
@@ -284,82 +285,5 @@ const EntradaRomaneioScreen = () => {
     </KeyboardAvoidingView>
   );
 };
-
-const styles = StyleSheet.create({
-  header: {
-    backgroundColor: colors.primary,
-    paddingVertical: 20,
-    paddingHorizontal: 16,
-    elevation: 4,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  headerText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  label: {
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 6,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    backgroundColor: colors.surface,
-  },
-  quantityInput: {
-    fontSize: 24,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  resultRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderColor: colors.border,
-  },
-  selectedCard: {
-    marginTop: 12,
-    padding: 12,
-    borderRadius: 8,
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.border,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  error: {
-    color: colors.error,
-    marginTop: 12,
-  },
-  itemRow: {
-    flexDirection: 'row',
-    paddingVertical: 6,
-    borderBottomWidth: 1,
-    borderColor: colors.border,
-  },
-  footer: {
-    borderTopWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  totalText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-  },
-});
 
 export default EntradaRomaneioScreen;

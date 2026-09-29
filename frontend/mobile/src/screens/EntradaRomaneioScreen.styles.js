@@ -1,0 +1,79 @@
+import { StyleSheet } from 'react-native';
+import { colors } from '../theme/colors';
+
+export const styles = StyleSheet.create({
+  header: {
+    backgroundColor: colors.primary,
+    paddingVertical: 20,
+    paddingHorizontal: 16,
+    elevation: 4,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  headerText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  label: {
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: 6,
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: colors.surface,
+  },
+  quantityInput: {
+    fontSize: 24,
+    fontWeight: '700',
+    textAlign: 'center',
+  },
+  resultRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderColor: colors.border,
+  },
+  selectedCard: {
+    marginTop: 12,
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  error: {
+    color: colors.error,
+    marginTop: 12,
+  },
+  itemRow: {
+    flexDirection: 'row',
+    paddingVertical: 6,
+    borderBottomWidth: 1,
+    borderColor: colors.border,
+  },
+  footer: {
+    borderTopWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.surface,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  totalText: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.text,
+  },
+});
