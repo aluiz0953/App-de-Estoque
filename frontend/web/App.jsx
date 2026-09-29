@@ -28,6 +28,7 @@ const PedidosPage = lazy(() => import('./src/pages/PedidosPage'));
 const PedidoFormPage = lazy(() => import('./src/pages/PedidoFormPage'));
 const PedidoDetailPage = lazy(() => import('./src/pages/PedidoDetailPage'));
 const ReportsPage = lazy(() => import('./src/pages/ReportsPage.jsx'));
+const NotFoundPage = lazy(() => import('./src/pages/NotFoundPage'));
 
 const PageFallback = () => (
   <div className="animate-pulse space-y-4 p-6" aria-busy="true" aria-label="Carregando">
@@ -76,6 +77,7 @@ function App() {
                         <Route path="/pedidos" element={<PedidosPage />} />
                         <Route path="/pedidos/novo" element={<PedidoFormPage />} />
                         <Route path="/pedidos/:id" element={<PedidoDetailPage />} />
+                        <Route path="*" element={<NotFoundPage />} />
                       </Routes>
                       </Suspense>
                     </MainContent>
