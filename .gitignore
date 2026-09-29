@@ -24,3 +24,8 @@ graphify-out.graphify_root
 # Editor/OS
 .DS_Store
 Thumbs.db
+
+# environment files with real secrets (only the *.example templates are versioned)
+.env
+.env.*
+!.env.example
