@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl, StyleSheet } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, RefreshControl, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import apiService from '../services/api';
 import { useNavigate } from '../hooks/useNavigate';
+import { LIST_PERF_PROPS } from '../utils/listPerf';
+import SkeletonList from '../components/SkeletonList';
 import { colors, fonts, tabularNums } from '../theme/colors';
 
 const STATUS_TONE = {
@@ -22,6 +24,8 @@ const STATUS_FILTERS = [
 ];
 
 // Tela de Pedidos — mirrors InventoryScreen's search/status-chip/list pattern.
+const keyExtractor = (item) => item.id.toString();
+
 const OrdersScreen = () => {
   const navigate = useNavigate();
   const [status, setStatus] = useState(null);
@@ -85,7 +89,7 @@ const OrdersScreen = () => {
       </View>
 
       {isLoading ? (
-        <ActivityIndicator style={{ marginTop: 40 }} color={colors.primary} />
+        <SkeletonList rows={6} />
       ) : error ? (
         <View style={{ padding: 20, alignItems: 'center' }}>
           <Text style={{ color: colors.error }}>{error.message}</Text>
@@ -93,7 +97,8 @@ const OrdersScreen = () => {
       ) : (
         <FlatList
           data={pedidos}
-          keyExtractor={(item) => item.id.toString()}
+          keyExtractor={keyExtractor}
+          {...LIST_PERF_PROPS}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
           renderItem={({ item }) => {
             const tone = STATUS_TONE[item.status] || STATUS_TONE.PENDENTE;

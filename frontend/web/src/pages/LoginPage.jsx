@@ -1,9 +1,10 @@
-import React, { lazy, Suspense, useState } from 'react';
+import React, { lazy, Suspense, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { login, clearError } from '../store/slices/authSlice';
 import apiService from '../services/api';
 import { useTheme } from '../contexts/ThemeContext';
+import { canRunHeavyEffects, whenIdle } from '../utils/performance';
 
 const HeroGeometric = lazy(() => import('../components/HeroGeometric'));
 
@@ -22,6 +23,9 @@ const LoginPage = () => {
   const { isAuthenticating, error } = useSelector((state) => state.auth);
 
   const [mode, setMode] = useState('login'); // 'login' | 'register'
+  // Decorative WebGL background: capable desktops only, and only after first paint.
+  const [showHero, setShowHero] = useState(false);
+  useEffect(() => (canRunHeavyEffects() ? whenIdle(() => setShowHero(true)) : undefined), []);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -76,9 +80,11 @@ const LoginPage = () => {
 
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-brand-bg px-4 py-10 font-sans text-ink">
-      <Suspense fallback={null}>
-        <HeroGeometric {...BACKGROUND[theme]} speed={4} />
-      </Suspense>
+      {showHero && (
+        <Suspense fallback={null}>
+          <HeroGeometric {...BACKGROUND[theme]} speed={4} />
+        </Suspense>
+      )}
       <div className="relative z-10 w-full max-w-[400px] animate-rise rounded-2xl border border-border bg-surface p-8 shadow-[0_18px_55px_rgba(63,47,35,0.09)] md:p-10">
         <div className="mb-8 text-center">
           <span className="mx-auto mb-4 grid h-11 w-11 place-items-center rounded-full border border-border">

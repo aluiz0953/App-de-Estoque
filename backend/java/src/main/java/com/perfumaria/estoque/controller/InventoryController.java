@@ -189,7 +189,7 @@ public class InventoryController {
      */
     @GetMapping("/resumo")
     public ResponseEntity<Map<String, Object>> getResumoEstoque() {
-        List<Lote> lotesAtivos = loteRepository.findByStatus(Lote.StatusLote.ATIVO);
+        List<Lote> lotesAtivos = loteRepository.findAtivosComProduto();
 
         java.math.BigDecimal valorTotalEstoque = lotesAtivos.stream()
                 .map(Lote::getValorTotal)
