@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -28,6 +29,8 @@ import java.util.Map;
 @RequestMapping("/api/auth")
 public class AuthController {
 
+    private static final int MIN_PASSWORD_LENGTH = 8;
+
     @Autowired
     private AuthenticationManager authenticationManager;
 
@@ -36,6 +39,9 @@ public class AuthController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private LoginAttemptService loginAttempts;
 
     private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
 
@@ -53,9 +59,22 @@ public class AuthController {
         String username = credentials.get("username");
         String password = credentials.get("password");
 
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(username, password)
-        );
+        String attemptKey = LoginAttemptService.key(username, request.getRemoteAddr());
+        if (loginAttempts.isBlocked(attemptKey)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(Map.of("message", "Muitas tentativas. Tente novamente em alguns minutos."));
+        }
+
+        Authentication authentication;
+        try {
+            authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(username, password)
+            );
+        } catch (AuthenticationException ex) {
+            loginAttempts.recordFailure(attemptKey);
+            throw ex;
+        }
+        loginAttempts.recordSuccess(attemptKey);
 
         // Spring Security 6's SecurityContextHolderFilter does not persist a context set
         // mid-request on its own (unlike the old SecurityContextPersistenceFilter) — it
@@ -124,7 +143,13 @@ public class AuthController {
             return ResponseEntity.badRequest().body(Map.of("message", "E-mail já cadastrado"));
         }
 
-        usuario.setPasswordHash(passwordEncoder.encode(usuario.getPasswordHash()));
+        String rawPassword = usuario.getPasswordHash();
+        if (rawPassword == null || rawPassword.length() < MIN_PASSWORD_LENGTH) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "A senha deve ter pelo menos " + MIN_PASSWORD_LENGTH + " caracteres."));
+        }
+
+        usuario.setPasswordHash(passwordEncoder.encode(rawPassword));
         usuario.setRole(Usuario.Role.OPERATOR);
         usuario.setActive(false);
 
