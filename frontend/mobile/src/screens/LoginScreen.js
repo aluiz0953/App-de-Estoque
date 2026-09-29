@@ -107,7 +107,7 @@ const LoginScreen = () => {
                 <View style={styles.logoDotInner} />
               </View>
               <Text style={styles.eyebrow}>PERFUMARIA</Text>
-              <Text style={styles.title}>Sistema de Estoque</Text>
+              <Text style={styles.title} accessibilityRole="header">Sistema de Estoque</Text>
             </View>
 
             {mode === 'login' ? (
@@ -117,6 +117,9 @@ const LoginScreen = () => {
                   value={username}
                   onChangeText={setUsername}
                   placeholder="Digite seu usuário"
+                  accessibilityLabel="Usuário"
+                  autoComplete="username"
+                  textContentType="username"
                   placeholderTextColor={colors.textMutedLight}
                   autoCapitalize="none"
                   style={styles.input}
@@ -128,6 +131,9 @@ const LoginScreen = () => {
                     value={password}
                     onChangeText={setPassword}
                     placeholder="Digite sua senha"
+                    accessibilityLabel="Senha"
+                    autoComplete="current-password"
+                    textContentType="password"
                     placeholderTextColor={colors.textMutedLight}
                     secureTextEntry={!showPassword}
                     style={[styles.input, styles.passwordInput]}
@@ -135,7 +141,9 @@ const LoginScreen = () => {
                   <TouchableOpacity
                     onPress={() => setShowPassword((v) => !v)}
                     style={styles.showPasswordBtn}
-                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    hitSlop={{ top: 16, bottom: 16, left: 12, right: 12 }}
+                    accessibilityRole="button"
+                    accessibilityLabel={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
                   >
                     <Text style={styles.linkText}>{showPassword ? 'Ocultar' : 'Mostrar'}</Text>
                   </TouchableOpacity>
@@ -143,34 +151,38 @@ const LoginScreen = () => {
 
                 <View style={styles.rememberRow}>
                   <Toggle value={rememberMe} onValueChange={setRememberMe} accessibilityLabel="Manter conectado" />
-                  <Text style={styles.rememberText} onPress={() => setRememberMe((v) => !v)}>
+                  <Text style={styles.rememberText} onPress={() => setRememberMe((v) => !v)} importantForAccessibility="no">
                     Manter conectado
                   </Text>
                 </View>
 
-                {error && <Text style={styles.error}>{error}</Text>}
+                {error && <Text style={styles.error} accessibilityRole="alert" accessibilityLiveRegion="assertive">{error}</Text>}
 
                 <TouchableOpacity
                   onPress={handleLogin}
                   disabled={loginDisabled}
                   style={[styles.button, loginDisabled && styles.buttonDisabled]}
+                  accessibilityRole="button"
+                  accessibilityState={{ disabled: loginDisabled }}
                 >
                   <Text style={styles.buttonText}>Entrar</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity onPress={() => switchMode('register')} style={styles.switchLink}>
+                <TouchableOpacity onPress={() => switchMode('register')} style={styles.switchLink} accessibilityRole="button" hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
                   <Text style={styles.linkText}>Criar conta</Text>
                 </TouchableOpacity>
               </>
             ) : (
               <>
                 <Text style={styles.label}>NOME COMPLETO</Text>
-                <TextInput value={registerForm.fullName} onChangeText={updateRegister('fullName')} style={styles.input} />
+                <TextInput value={registerForm.fullName} onChangeText={updateRegister('fullName')} accessibilityLabel="Nome completo" autoComplete="name" style={styles.input} />
 
                 <Text style={[styles.label, styles.fieldGap]}>USUÁRIO</Text>
                 <TextInput
                   value={registerForm.username}
                   onChangeText={updateRegister('username')}
+                  accessibilityLabel="Usuário"
+                  autoComplete="username-new"
                   autoCapitalize="none"
                   style={styles.input}
                 />
@@ -181,6 +193,8 @@ const LoginScreen = () => {
                   onChangeText={updateRegister('email')}
                   autoCapitalize="none"
                   keyboardType="email-address"
+                  accessibilityLabel="E-mail"
+                  autoComplete="email"
                   style={styles.input}
                 />
 
@@ -189,23 +203,28 @@ const LoginScreen = () => {
                   value={registerForm.password}
                   onChangeText={updateRegister('password')}
                   secureTextEntry
+                  accessibilityLabel="Senha"
+                  autoComplete="new-password"
+                  textContentType="newPassword"
                   style={styles.input}
                 />
 
                 <Text style={styles.hint}>Sua conta fica pendente até um administrador liberar o acesso.</Text>
 
-                {registerError && <Text style={styles.error}>{registerError}</Text>}
-                {registerSuccess && <Text style={styles.success}>{registerSuccess}</Text>}
+                {registerError && <Text style={styles.error} accessibilityRole="alert" accessibilityLiveRegion="assertive">{registerError}</Text>}
+                {registerSuccess && <Text style={styles.success} accessibilityLiveRegion="polite">{registerSuccess}</Text>}
 
                 <TouchableOpacity
                   onPress={handleRegister}
                   disabled={registerDisabled}
                   style={[styles.button, registerDisabled && styles.buttonDisabled]}
+                  accessibilityRole="button"
+                  accessibilityState={{ disabled: registerDisabled, busy: isRegistering }}
                 >
                   <Text style={styles.buttonText}>{isRegistering ? 'Criando conta...' : 'Criar conta'}</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity onPress={() => switchMode('login')} style={styles.switchLink}>
+                <TouchableOpacity onPress={() => switchMode('login')} style={styles.switchLink} accessibilityRole="button" hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
                   <Text style={styles.linkText}>Já tenho conta</Text>
                 </TouchableOpacity>
               </>
@@ -252,7 +271,7 @@ const createStyles = (colors) => StyleSheet.create({
   label: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 1, color: colors.textMutedLight, marginBottom: 6 },
   fieldGap: { marginTop: 16 },
   input: {
-    height: 46,
+    minHeight: 48,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 10,
@@ -273,7 +292,7 @@ const createStyles = (colors) => StyleSheet.create({
   success: { fontFamily: fonts.sans, color: colors.success, marginTop: 12, fontSize: 13 },
   button: {
     marginTop: 24,
-    height: 48,
+    minHeight: 48,
     borderRadius: 24,
     backgroundColor: colors.primary,
     alignItems: 'center',

@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { fonts } from '../theme/colors';
 import { useThemedStyles } from '../theme/ThemeContext';
+import { useReduceMotion } from '../utils/a11y';
 
 // A floating dock: five icons in a pill. Press and slide a finger across it and the name of
 // the icon under the finger rises above it (lift to pick); the last icon does not open a
@@ -57,6 +58,7 @@ const BottomTabBar = ({ state, navigation }) => {
   const activeIndex =
     activeName === 'Configuracoes' ? ITEMS.length - 1 : Math.max(0, ITEMS.findIndex((item) => item.route === activeName));
 
+  const reduceMotion = useReduceMotion();
   const [hover, setHover] = useState(null);
   const [labelIndex, setLabelIndex] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -68,8 +70,9 @@ const BottomTabBar = ({ state, navigation }) => {
 
   // The active-tab bubble glides to the current tab.
   useEffect(() => {
-    Animated.spring(bubble, { toValue: activeIndex, damping: 16, stiffness: 190, mass: 0.7, useNativeDriver: true }).start();
-  }, [activeIndex, bubble]);
+    if (reduceMotion) bubble.setValue(activeIndex);
+    else Animated.spring(bubble, { toValue: activeIndex, damping: 16, stiffness: 190, mass: 0.7, useNativeDriver: true }).start();
+  }, [activeIndex, bubble, reduceMotion]);
 
   // The label follows the finger between icons and fades in/out.
   useEffect(() => {
@@ -86,10 +89,10 @@ const BottomTabBar = ({ state, navigation }) => {
 
   const openMenu = () => {
     setMenuOpen(true);
-    Animated.timing(menu, { toValue: 1, duration: 360, easing: EASE, useNativeDriver: false }).start();
+    Animated.timing(menu, { toValue: 1, duration: reduceMotion ? 0 : 360, easing: EASE, useNativeDriver: false }).start();
   };
   const closeMenu = (after) => {
-    Animated.timing(menu, { toValue: 0, duration: 220, easing: EASE, useNativeDriver: false }).start(() => {
+    Animated.timing(menu, { toValue: 0, duration: reduceMotion ? 0 : 220, easing: EASE, useNativeDriver: false }).start(() => {
       setMenuOpen(false);
       if (after) after();
     });
@@ -148,7 +151,7 @@ const BottomTabBar = ({ state, navigation }) => {
               key={item.key}
               style={styles.slot}
               accessible
-              accessibilityRole="button"
+              accessibilityRole={item.route ? 'tab' : 'button'}
               accessibilityLabel={item.label}
               accessibilityState={{ selected: focused }}
               onAccessibilityTap={() => activate(index)}

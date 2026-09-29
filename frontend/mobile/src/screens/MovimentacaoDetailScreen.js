@@ -7,6 +7,7 @@ import { useRoute } from '@react-navigation/native';
 import apiService from '../services/api';
 import { fonts, tabularNums } from '../theme/colors';
 import { useTheme } from '../theme/ThemeContext';
+import { decorative } from '../utils/a11y';
 import { MOTIVO_LABEL } from '../utils/motivos';
 
 const Row = ({ item }) => {
@@ -77,7 +78,7 @@ const MovimentacaoDetailScreen = () => {
       <View style={{ padding: 16, flex: 1 }}>
         <Card elevation={3} style={{ flex: 1 }}>
           <View style={{ padding: 16, flex: 1 }}>
-            <Title>Histórico de Movimentações</Title>
+            <Title accessibilityRole="header">Histórico de Movimentações</Title>
 
             {isLoading ? (
               <ActivityIndicator style={{ marginTop: 24 }} color={colors.primary} />
@@ -90,7 +91,7 @@ const MovimentacaoDetailScreen = () => {
                 renderItem={({ item }) => <Row item={item} />}
                 ListEmptyComponent={
                   <View style={{ padding: 40, alignItems: 'center' }}>
-                    <MaterialCommunityIcons name="history" size={48} color={colors.disabled} />
+                    <MaterialCommunityIcons name="history" size={48} color={colors.disabled} {...decorative} />
                     <Text style={{ marginTop: 16, color: colors.textMuted }}>Nenhuma movimentação encontrada</Text>
                   </View>
                 }

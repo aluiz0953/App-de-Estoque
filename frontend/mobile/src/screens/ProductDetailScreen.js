@@ -8,6 +8,7 @@ import { useNavigate } from '../hooks/useNavigate';
 import { useRoute } from '@react-navigation/native';
 import { fonts, tabularNums } from '../theme/colors';
 import { useThemedStyles } from '../theme/ThemeContext';
+import { decorative } from '../utils/a11y';
 import RemoveStockModal from '../components/RemoveStockModal';
 import { useToast } from '../components/Toast';
 import apiService from '../services/api';
@@ -128,7 +129,7 @@ const ProductDetailScreen = () => {
             <View style={{ padding: 16 }}>
               <Card elevation={3}>
                 <View style={{ padding: 16 }}>
-                  <Title>Informações do Produto</Title>
+                  <Title accessibilityRole="header">Informações do Produto</Title>
 
                   <View style={{ marginVertical: 12 }}>
                     <Paragraph>
@@ -167,7 +168,7 @@ const ProductDetailScreen = () => {
             </View>
 
             <View style={{ paddingHorizontal: 16 }}>
-              <Title>Lotes em Estoque</Title>
+              <Title accessibilityRole="header">Lotes em Estoque</Title>
             </View>
           </>
         }
@@ -209,7 +210,7 @@ const ProductDetailScreen = () => {
         )}
         ListEmptyComponent={
           <View style={{ padding: 40, alignItems: 'center' }}>
-            <MaterialCommunityIcons name="package-variant" size={48} color={colors.disabled} />
+            <MaterialCommunityIcons name="package-variant" size={48} color={colors.disabled} {...decorative} />
             <Text style={{ marginTop: 16, color: colors.textMuted }}>
               Nenhum lote encontrado
             </Text>
@@ -222,8 +223,10 @@ const ProductDetailScreen = () => {
           <TouchableOpacity
             onPress={() => navigate('EntradaRomaneio', { produtoId: produto.id })}
             style={styles.actionBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Receber estoque"
           >
-            <MaterialCommunityIcons name="package-down" size={16} color={colors.text} />
+            <MaterialCommunityIcons name="package-down" size={16} color={colors.text} {...decorative} />
             <Text style={styles.actionBtnText}>Receber</Text>
           </TouchableOpacity>
 
@@ -231,21 +234,32 @@ const ProductDetailScreen = () => {
             onPress={() => setShowRemoveModal(true)}
             disabled={(produto.quantidadeTotal ?? 0) <= 0}
             style={[styles.actionBtn, (produto.quantidadeTotal ?? 0) <= 0 && { opacity: 0.5 }]}
+            accessibilityRole="button"
+            accessibilityLabel="Remover estoque"
+            accessibilityState={{ disabled: (produto.quantidadeTotal ?? 0) <= 0 }}
           >
-            <MaterialCommunityIcons name="package-up" size={16} color={colors.text} />
+            <MaterialCommunityIcons name="package-up" size={16} color={colors.text} {...decorative} />
             <Text style={styles.actionBtnText}>Remover</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             onPress={() => navigate('AddEditProduct', { produtoId: produto.id })}
             style={styles.actionBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Editar produto"
           >
-            <MaterialCommunityIcons name="pencil-outline" size={16} color={colors.text} />
+            <MaterialCommunityIcons name="pencil-outline" size={16} color={colors.text} {...decorative} />
             <Text style={styles.actionBtnText}>Editar</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity onPress={handleArchive} style={styles.actionBtn}>
-            <MaterialCommunityIcons name="archive-outline" size={16} color={colors.error} />
+          <TouchableOpacity
+            onPress={handleArchive}
+            style={styles.actionBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Arquivar produto"
+            accessibilityHint="Tira o produto das listas; pede confirmação"
+          >
+            <MaterialCommunityIcons name="archive-outline" size={16} color={colors.error} {...decorative} />
             <Text style={[styles.actionBtnText, { color: colors.error }]}>Arquivar</Text>
           </TouchableOpacity>
         </View>

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { Animated, StyleSheet, View } from 'react-native';
 import { useThemedStyles } from '../theme/ThemeContext';
+import { useReduceMotion } from '../utils/a11y';
 
 // Placeholder rows shown while a list loads: the screen keeps its final shape
 // (no jump when data arrives) and feels faster than a centered spinner. One
@@ -8,8 +9,11 @@ import { useThemedStyles } from '../theme/ThemeContext';
 const SkeletonList = ({ rows = 8 }) => {
   const { styles } = useThemedStyles(createStyles);
   const pulse = useRef(new Animated.Value(0.45)).current;
+  const reduceMotion = useReduceMotion();
 
   useEffect(() => {
+    // With "reduce motion" the placeholders stay still instead of pulsing.
+    if (reduceMotion) return undefined;
     const loop = Animated.loop(
       Animated.sequence([
         Animated.timing(pulse, { toValue: 1, duration: 700, useNativeDriver: true }),
@@ -18,10 +22,10 @@ const SkeletonList = ({ rows = 8 }) => {
     );
     loop.start();
     return () => loop.stop();
-  }, [pulse]);
+  }, [pulse, reduceMotion]);
 
   return (
-    <View accessibilityLabel="Carregando" accessible>
+    <View accessibilityLabel="Carregando" accessibilityState={{ busy: true }} accessible>
       {Array.from({ length: rows }, (_, index) => (
         <View key={index} style={styles.row}>
           <Animated.View style={[styles.thumb, { opacity: pulse }]} />

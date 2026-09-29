@@ -16,6 +16,7 @@ import ReasonMenu from '../components/ReasonMenu';
 import apiService from '../services/api';
 import { fonts } from '../theme/colors';
 import { useThemedStyles } from '../theme/ThemeContext';
+import { decorative, slopFor } from '../utils/a11y';
 
 const TIPOS_PRODUTO = ['Perfumaria', 'Cuidados Diários', 'Rosto e Proteção', 'Outros'].map((t) => ({
   value: t,
@@ -173,10 +174,16 @@ const AddEditProductScreen = () => {
       <View style={styles.header}>
         <View>
           <Text style={styles.eyebrow}>{isEditMode ? 'Editar catálogo' : 'Novo item de catálogo'}</Text>
-          <Text style={styles.title}>{isEditMode ? 'Refine os detalhes.' : 'Adicionar um novo perfume.'}</Text>
+          <Text style={styles.title} accessibilityRole="header">{isEditMode ? 'Refine os detalhes.' : 'Adicionar um novo perfume.'}</Text>
         </View>
-        <TouchableOpacity onPress={() => navigate.goBack()} style={styles.closeBtn}>
-          <MaterialCommunityIcons name="close" size={18} color={colors.textMuted} />
+        <TouchableOpacity
+          onPress={() => navigate.goBack()}
+          style={styles.closeBtn}
+          hitSlop={slopFor(32)}
+          accessibilityRole="button"
+          accessibilityLabel="Fechar sem salvar"
+        >
+          <MaterialCommunityIcons name="close" size={18} color={colors.textMuted} {...decorative} />
         </TouchableOpacity>
       </View>
 
@@ -195,7 +202,13 @@ const AddEditProductScreen = () => {
               }}
             >
               {({ open }) => (
-                <TouchableOpacity onPress={open} style={styles.select}>
+                <TouchableOpacity
+                  onPress={open}
+                  style={styles.select}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Marca: ${form.marcaNome || 'não selecionada'}`}
+                  accessibilityHint="Toque duas vezes para escolher a marca"
+                >
                   <Text style={styles.selectText}>{form.marcaNome || 'Selecionar'}</Text>
                   <MaterialCommunityIcons name="chevron-down" size={16} color={colors.textMutedLight} />
                 </TouchableOpacity>
@@ -213,7 +226,15 @@ const AddEditProductScreen = () => {
               disabled={!form.marcaId}
             >
               {({ open }) => (
-                <TouchableOpacity onPress={open} disabled={!form.marcaId} style={[styles.select, !form.marcaId && styles.selectDisabled]}>
+                <TouchableOpacity
+                  onPress={open}
+                  disabled={!form.marcaId}
+                  style={[styles.select, !form.marcaId && styles.selectDisabled]}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Linha: ${form.linhaNome || 'não selecionada'}`}
+                  accessibilityHint={form.marcaId ? 'Toque duas vezes para escolher a linha' : 'Escolha a marca primeiro'}
+                  accessibilityState={{ disabled: !form.marcaId }}
+                >
                   <Text style={styles.selectText}>{form.linhaNome || (form.marcaId ? 'Selecionar' : 'Escolha a marca')}</Text>
                   <MaterialCommunityIcons name="chevron-down" size={16} color={colors.textMutedLight} />
                 </TouchableOpacity>
@@ -229,7 +250,13 @@ const AddEditProductScreen = () => {
           <Field label="Categoria" flex>
             <ReasonMenu options={TIPOS_PRODUTO} onSelect={set('tipoProduto')}>
               {({ open }) => (
-                <TouchableOpacity onPress={open} style={styles.select}>
+                <TouchableOpacity
+                  onPress={open}
+                  style={styles.select}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Tipo de produto: ${form.tipoProduto || 'não selecionado'}`}
+                  accessibilityHint="Toque duas vezes para escolher o tipo"
+                >
                   <Text style={styles.selectText}>{form.tipoProduto || 'Selecionar'}</Text>
                   <MaterialCommunityIcons name="chevron-down" size={16} color={colors.textMutedLight} />
                 </TouchableOpacity>
@@ -284,13 +311,15 @@ const AddEditProductScreen = () => {
       </ScrollView>
 
       <View style={styles.footer}>
-        <TouchableOpacity onPress={() => navigate.goBack()} style={styles.cancelBtn}>
+        <TouchableOpacity onPress={() => navigate.goBack()} style={styles.cancelBtn} accessibilityRole="button">
           <Text style={styles.cancelText}>Cancelar</Text>
         </TouchableOpacity>
         <TouchableOpacity
           onPress={handleSubmit}
           disabled={!isValid || saving}
           style={[styles.saveBtn, (!isValid || saving) && { opacity: 0.5 }]}
+          accessibilityRole="button"
+          accessibilityState={{ disabled: !isValid || saving, busy: saving }}
         >
           <Text style={styles.saveText}>
             {saving ? 'Salvando...' : isEditMode ? 'Salvar alterações' : 'Adicionar produto'}
@@ -301,12 +330,19 @@ const AddEditProductScreen = () => {
   );
 };
 
+// The visible label also becomes the accessibility label of the text field inside (a screen reader
+// would otherwise announce an unnamed "edit box").
 const Field = ({ label, children, flex }) => {
   const { styles } = useThemedStyles(createStyles);
+  const labelled = React.Children.map(children, (child) =>
+    React.isValidElement(child) && child.type === TextInput && !child.props.accessibilityLabel
+      ? React.cloneElement(child, { accessibilityLabel: label })
+      : child
+  );
   return (
     <View style={[styles.field, flex && { flex: 1 }]}>
-      <Text style={styles.label}>{label}</Text>
-      {children}
+      <Text style={styles.label} importantForAccessibility="no">{label}</Text>
+      {labelled}
     </View>
   );
 };
@@ -361,7 +397,7 @@ const createStyles = (colors) => StyleSheet.create({
     color: colors.textMutedLight,
   },
   input: {
-    height: 42,
+    minHeight: 44,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: colors.border,
@@ -372,7 +408,7 @@ const createStyles = (colors) => StyleSheet.create({
     color: colors.text,
   },
   select: {
-    height: 42,
+    minHeight: 44,
     borderRadius: 10,
     borderWidth: 1,
     borderColor: colors.border,
@@ -405,7 +441,7 @@ const createStyles = (colors) => StyleSheet.create({
   },
   cancelBtn: {
     flex: 1,
-    height: 46,
+    minHeight: 48,
     borderRadius: 999,
     borderWidth: 1,
     borderColor: colors.border,
@@ -419,7 +455,7 @@ const createStyles = (colors) => StyleSheet.create({
   },
   saveBtn: {
     flex: 2,
-    height: 46,
+    minHeight: 48,
     borderRadius: 999,
     backgroundColor: colors.primary,
     alignItems: 'center',

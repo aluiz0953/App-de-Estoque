@@ -3,6 +3,7 @@ import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { fonts } from '../theme/colors';
 import { useThemedStyles } from '../theme/ThemeContext';
+import { decorative, slopFor } from '../utils/a11y';
 
 // status: 'synced' | 'syncing' | 'stale' | 'offline'
 const STATUS = {
@@ -17,11 +18,18 @@ const SyncIndicator = ({ status = 'synced', label, onRetry, style }) => {
   const tone = STATUS[status] || STATUS.synced;
   return (
     <View style={[styles.wrap, style]}>
-      <View style={[styles.dot, { backgroundColor: colors[tone.dot] }]} />
-      <Text style={styles.label}>{label || tone.label}</Text>
+      <View style={styles.status} accessible accessibilityLabel={label || tone.label}>
+        <View style={[styles.dot, { backgroundColor: colors[tone.dot] }]} {...decorative} />
+        <Text style={styles.label}>{label || tone.label}</Text>
+      </View>
       {(status === 'stale' || status === 'offline') && onRetry ? (
-        <TouchableOpacity onPress={onRetry} hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}>
-          <MaterialCommunityIcons name="refresh" size={13} color={colors.textMuted} />
+        <TouchableOpacity
+          onPress={onRetry}
+          hitSlop={slopFor(20)}
+          accessibilityRole="button"
+          accessibilityLabel="Tentar sincronizar novamente"
+        >
+          <MaterialCommunityIcons name="refresh" size={13} color={colors.textMuted} {...decorative} />
         </TouchableOpacity>
       ) : null}
     </View>
@@ -29,6 +37,7 @@ const SyncIndicator = ({ status = 'synced', label, onRetry, style }) => {
 };
 
 const createStyles = (colors) => StyleSheet.create({
+  status: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   wrap: {
     flexDirection: 'row',
     alignItems: 'center',

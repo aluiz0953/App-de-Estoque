@@ -8,6 +8,7 @@ import SkeletonList from '../components/SkeletonList';
 import { fonts, tabularNums } from '../theme/colors';
 import { useThemedStyles } from '../theme/ThemeContext';
 import { useDockClearance } from '../components/BottomTabBar';
+import { decorative, slopFor } from '../utils/a11y';
 
 // tone = which StatusPill palette (see theme/colors.js: <tone>Bg / <tone>Ink)
 const STATUS_TONE = {
@@ -73,9 +74,15 @@ const OrdersScreen = () => {
       <View style={styles.topHeader}>
         <Text style={styles.eyebrow}>PEDIDOS</Text>
         <View style={styles.topHeaderRow}>
-          <Text style={styles.title}>Pedidos</Text>
-          <TouchableOpacity onPress={() => navigate('AddEditPedido')} style={styles.addBtn}>
-            <MaterialCommunityIcons name="plus" size={16} color={colors.headerInk} />
+          <Text style={styles.title} accessibilityRole="header">Pedidos</Text>
+          <TouchableOpacity
+            onPress={() => navigate('AddEditPedido')}
+            style={styles.addBtn}
+            hitSlop={slopFor(32)}
+            accessibilityRole="button"
+            accessibilityLabel="Novo pedido"
+          >
+            <MaterialCommunityIcons name="plus" size={16} color={colors.headerInk} {...decorative} />
             <Text style={styles.addBtnText}>Novo pedido</Text>
           </TouchableOpacity>
         </View>
@@ -87,6 +94,9 @@ const OrdersScreen = () => {
             key={f.label}
             onPress={() => setStatus(f.value)}
             style={[styles.statusChip, status === f.value && styles.statusChipActive]}
+            accessibilityRole="button"
+            accessibilityLabel={`Mostrar pedidos: ${f.label}`}
+            accessibilityState={{ selected: status === f.value }}
           >
             <Text style={[styles.statusChipText, status === f.value && styles.statusChipTextActive]}>{f.label}</Text>
           </TouchableOpacity>
@@ -109,7 +119,13 @@ const OrdersScreen = () => {
           renderItem={({ item }) => {
             const status = STATUS_TONE[item.status] || STATUS_TONE.PENDENTE;
             return (
-              <TouchableOpacity style={styles.row} onPress={() => navigate('PedidoDetail', { pedidoId: item.id })}>
+              <TouchableOpacity
+                style={styles.row}
+                onPress={() => navigate('PedidoDetail', { pedidoId: item.id })}
+                accessibilityRole="button"
+                accessibilityLabel={`${item.cliente?.nome ?? 'Cliente'}, ${status.label}, ${item.itens?.length || 0} itens, R$ ${(item.valorTotal ?? 0).toFixed(2)}${item.dataCriacao ? `, ${new Date(item.dataCriacao).toLocaleDateString('pt-BR')}` : ''}`}
+                accessibilityHint="Toque duas vezes para abrir o pedido"
+              >
                 <View style={{ flex: 1 }}>
                   <Text style={styles.clienteName}>{item.cliente?.nome}</Text>
                   <Text style={[styles.meta, tabularNums]}>
@@ -122,13 +138,13 @@ const OrdersScreen = () => {
                 <View style={[styles.statusPill, { backgroundColor: colors[`${status.tone}Bg`] }]}>
                   <Text style={[styles.statusPillText, { color: colors[`${status.tone}Ink`] }]}>{status.label}</Text>
                 </View>
-                <MaterialCommunityIcons name="chevron-right" size={20} color={colors.disabled} />
+                <MaterialCommunityIcons name="chevron-right" size={20} color={colors.disabled} {...decorative} />
               </TouchableOpacity>
             );
           }}
           ListEmptyComponent={
             <View style={{ padding: 40, alignItems: 'center' }}>
-              <MaterialCommunityIcons name="clipboard-text-outline" size={48} color={colors.disabled} />
+              <MaterialCommunityIcons name="clipboard-text-outline" size={48} color={colors.disabled} {...decorative} />
               <Text style={{ marginTop: 16, color: colors.textMuted, textAlign: 'center' }}>
                 Nenhum pedido encontrado
               </Text>
