@@ -15,6 +15,7 @@ import { login } from '../store/slices/authSlice';
 import { flushQueue } from '../services/syncManager';
 import apiService from '../services/api';
 import LoginBackground from '../components/LoginBackground';
+import Toggle from '../components/Toggle';
 import { colors, fonts } from '../theme/colors';
 
 const emptyRegisterForm = { fullName: '', username: '', email: '', password: '' };
@@ -138,18 +139,12 @@ const LoginScreen = () => {
                   </TouchableOpacity>
                 </View>
 
-                <TouchableOpacity
-                  onPress={() => setRememberMe((v) => !v)}
-                  style={styles.rememberRow}
-                  accessibilityRole="checkbox"
-                  accessibilityState={{ checked: rememberMe }}
-                  hitSlop={{ top: 6, bottom: 6 }}
-                >
-                  <View style={[styles.checkbox, rememberMe && styles.checkboxOn]}>
-                    {rememberMe && <View style={styles.checkboxMark} />}
-                  </View>
-                  <Text style={styles.rememberText}>Manter conectado</Text>
-                </TouchableOpacity>
+                <View style={styles.rememberRow}>
+                  <Toggle value={rememberMe} onValueChange={setRememberMe} accessibilityLabel="Manter conectado" />
+                  <Text style={styles.rememberText} onPress={() => setRememberMe((v) => !v)}>
+                    Manter conectado
+                  </Text>
+                </View>
 
                 {error && <Text style={styles.error}>{error}</Text>}
 
@@ -270,20 +265,7 @@ const styles = StyleSheet.create({
   showPasswordBtn: { position: 'absolute', right: 14 },
   linkText: { fontFamily: fonts.sansMedium, fontSize: 13, color: colors.secondaryDark },
   rememberRow: { flexDirection: 'row', alignItems: 'center', marginTop: 16, alignSelf: 'flex-start' },
-  checkbox: {
-    width: 18,
-    height: 18,
-    borderRadius: 5,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 8,
-  },
-  checkboxOn: { backgroundColor: colors.primary, borderColor: colors.primary },
-  checkboxMark: { width: 8, height: 8, borderRadius: 2, backgroundColor: colors.primaryLight },
-  rememberText: { fontFamily: fonts.sans, fontSize: 13, color: colors.textMuted },
+  rememberText: { fontFamily: fonts.sans, fontSize: 13, color: colors.textMuted, marginLeft: 10 },
   hint: { fontFamily: fonts.sans, fontSize: 12, color: colors.textMutedLight, marginTop: 14 },
   error: { fontFamily: fonts.sans, color: colors.error, marginTop: 12, fontSize: 13 },
   success: { fontFamily: fonts.sans, color: colors.success, marginTop: 12, fontSize: 13 },
