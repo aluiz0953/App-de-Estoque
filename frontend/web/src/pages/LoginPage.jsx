@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { login, clearError } from '../store/slices/authSlice';
 import apiService from '../services/api';
 import { useTheme } from '../contexts/ThemeContext';
-import { canRunHeavyEffects, whenIdle } from '../utils/performance';
+import { prefersReducedMotion, whenIdle } from '../utils/performance';
 
 const HeroGeometric = lazy(() => import('../components/HeroGeometric'));
 
@@ -23,9 +23,10 @@ const LoginPage = () => {
   const { isAuthenticating, error } = useSelector((state) => state.auth);
 
   const [mode, setMode] = useState('login'); // 'login' | 'register'
-  // Decorative WebGL background: capable desktops only, and only after first paint.
+  // Animated shader background on every device, mounted after first paint so the form
+  // is usable immediately. With "reduce motion" it stays as a still frame.
   const [showHero, setShowHero] = useState(false);
-  useEffect(() => (canRunHeavyEffects() ? whenIdle(() => setShowHero(true)) : undefined), []);
+  useEffect(() => whenIdle(() => setShowHero(true)), []);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -82,7 +83,7 @@ const LoginPage = () => {
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-brand-bg px-4 py-10 font-sans text-ink">
       {showHero && (
         <Suspense fallback={null}>
-          <HeroGeometric {...BACKGROUND[theme]} speed={4} />
+          <HeroGeometric {...BACKGROUND[theme]} speed={prefersReducedMotion() ? 0 : 4} />
         </Suspense>
       )}
       <div className="relative z-10 w-full max-w-[400px] animate-rise rounded-2xl border border-border bg-surface p-8 shadow-[0_18px_55px_rgba(63,47,35,0.09)] md:p-10">

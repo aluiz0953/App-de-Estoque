@@ -1,59 +1,61 @@
-import React, { useEffect, useRef } from 'react';
-import { Animated, Dimensions, Easing, StyleSheet, View } from 'react-native';
-import { colors } from '../theme/colors';
+import React, { useEffect, useRef, useState } from 'react';
+import { AccessibilityInfo, Animated, Easing, StyleSheet, View } from 'react-native';
 
-// Mobile counterpart of the web login's animated shader (HeroGeometric):
-// soft rose shapes drifting slowly over the cream background. Built on the
-// core Animated API (native driver), so no extra native dependency.
-const { width, height } = Dimensions.get('window');
+// Mobile counterpart of the web login's shader (HeroGeometric): the same noise-driven,
+// dithered rose/cream gradient, without any circles. React Native cannot run the WebGL
+// shader without a native library, so three frames of the shader are pre-rendered
+// (scripts/generate-login-background.py) and cross-faded slowly with a gentle zoom
+// drift. Only opacity/transform are animated, both on the native driver.
+const FRAME_A = require('../assets/login-bg-a.webp');
+const FRAME_B = require('../assets/login-bg-b.webp');
+const FRAME_C = require('../assets/login-bg-c.webp');
 
-const BLOBS = [
-  { size: width * 1.1, color: colors.secondary, opacity: 0.35, top: -width * 0.45, left: -width * 0.35, dx: 40, dy: 60, duration: 9000 },
-  { size: width * 0.9, color: colors.secondaryDark, opacity: 0.18, top: height * 0.55, left: width * 0.35, dx: -50, dy: -40, duration: 11000 },
-  { size: width * 0.7, color: colors.secondary, opacity: 0.22, top: height * 0.3, left: -width * 0.4, dx: 60, dy: 30, duration: 13000 },
-];
+const fill = StyleSheet.absoluteFillObject;
 
-function Blob({ size, color, opacity, top, left, dx, dy, duration }) {
-  const progress = useRef(new Animated.Value(0)).current;
+const LoginBackground = () => {
+  const frameB = useRef(new Animated.Value(0)).current;
+  const frameC = useRef(new Animated.Value(0)).current;
+  const drift = useRef(new Animated.Value(0)).current;
+  const [reduceMotion, setReduceMotion] = useState(false);
 
   useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(progress, { toValue: 1, duration, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-        Animated.timing(progress, { toValue: 0, duration, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
-      ]),
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [progress, duration]);
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion).catch(() => {});
+  }, []);
 
-  const translateX = progress.interpolate({ inputRange: [0, 1], outputRange: [0, dx] });
-  const translateY = progress.interpolate({ inputRange: [0, 1], outputRange: [0, dy] });
-  const scale = progress.interpolate({ inputRange: [0, 1], outputRange: [1, 1.12] });
+  useEffect(() => {
+    // "Reduce motion" keeps the still frame: the look stays, the movement goes.
+    if (reduceMotion) return undefined;
+
+    const fade = (value, duration, delay = 0) =>
+      Animated.loop(
+        Animated.sequence([
+          Animated.delay(delay),
+          Animated.timing(value, { toValue: 1, duration, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+          Animated.timing(value, { toValue: 0, duration, easing: Easing.inOut(Easing.sin), useNativeDriver: true }),
+        ]),
+      );
+
+    // Different periods so the three frames never line up: the pattern keeps changing.
+    const animations = [
+      fade(frameB, 9000),
+      fade(frameC, 13000, 6000),
+      fade(drift, 16000),
+    ];
+    animations.forEach((animation) => animation.start());
+    return () => animations.forEach((animation) => animation.stop());
+  }, [reduceMotion, frameB, frameC, drift]);
+
+  const scale = drift.interpolate({ inputRange: [0, 1], outputRange: [1, 1.08] });
 
   return (
-    <Animated.View
-      style={{
-        position: 'absolute',
-        top,
-        left,
-        width: size,
-        height: size,
-        borderRadius: size / 2,
-        backgroundColor: color,
-        opacity,
-        transform: [{ translateX }, { translateY }, { scale }],
-      }}
-    />
+    <View pointerEvents="none" style={fill}>
+      <Animated.View style={[fill, { transform: [{ scale }] }]}>
+        <Animated.Image source={FRAME_A} style={fill} resizeMode="cover" fadeDuration={0} />
+        <Animated.Image source={FRAME_B} style={[fill, { opacity: frameB }]} resizeMode="cover" fadeDuration={0} />
+        <Animated.Image source={FRAME_C} style={[fill, { opacity: frameC }]} resizeMode="cover" fadeDuration={0} />
+      </Animated.View>
+    </View>
   );
-}
-
-const LoginBackground = () => (
-  <View pointerEvents="none" style={StyleSheet.absoluteFill}>
-    {BLOBS.map((blob, i) => (
-      <Blob key={i} {...blob} />
-    ))}
-  </View>
-);
+};
 
 export default LoginBackground;
