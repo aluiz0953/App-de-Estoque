@@ -30,7 +30,8 @@ export default defineConfig([
       "react/jsx-uses-react": "error",
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
-      "quality/max-lines": ["error", { max: 350 }],
+      // Known offenders inherited from master; split them, then delete the entry.
+      "quality/max-lines": ["error", { max: 350, ignore: ["src/pages/ReportsPage.jsx"] }],
       // Baseline 14 (mostly unused reducer args and catch bindings) -> "error" at 0.
       "no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
       // Baseline 2 (NotificationsPage) -> "error" once a logger exists and the count is 0.

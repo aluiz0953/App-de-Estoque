@@ -29,7 +29,19 @@ export default defineConfig([
       "react/jsx-uses-react": "error",
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn",
-      "quality/max-lines": ["error", { max: 350 }],
+      // Known offenders inherited from master; split them, then delete the entry.
+      "quality/max-lines": [
+        "error",
+        {
+          max: 350,
+          ignore: [
+            "src/screens/AddEditPedidoScreen.js",
+            "src/screens/AddEditProductScreen.js",
+            "src/screens/HistoryScreen.js",
+            "src/screens/SettingsScreen.js",
+          ],
+        },
+      ],
       // Baseline 3 -> "error" at 0.
       "no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
       "quality/no-direct-console": ["error", { logger: "a logger module" }],

@@ -3,8 +3,12 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { Provider, useSelector } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { store, persistor } from './src/store';
+import { logoutUser } from './src/store/slices/authSlice';
+import { onUnauthorized } from './src/services/request';
 import { ThemeProvider } from './src/contexts/ThemeContext';
 import './src/App.css';
+
+onUnauthorized(() => store.dispatch(logoutUser()));
 
 // Components
 import Sidebar from './src/components/Sidebar';
@@ -18,6 +22,9 @@ import ProductFormPage from './src/pages/ProductFormPage';
 import NotificationsPage from './src/pages/NotificationsPage';
 import ReportsPage from './src/pages/ReportsPage.jsx';
 import UsersPage from './src/pages/UsersPage';
+import PedidosPage from './src/pages/PedidosPage';
+import PedidoFormPage from './src/pages/PedidoFormPage';
+import PedidoDetailPage from './src/pages/PedidoDetailPage';
 
 // Unauthenticated visitors must land on /login, not a dashboard shell that just
 // fails every request with 401 - the routes below never even check auth state.
@@ -53,6 +60,9 @@ function App() {
                         <Route path="/notificacoes" element={<NotificationsPage />} />
                         <Route path="/relatorios" element={<ReportsPage />} />
                         <Route path="/usuarios" element={<UsersPage />} />
+                        <Route path="/pedidos" element={<PedidosPage />} />
+                        <Route path="/pedidos/novo" element={<PedidoFormPage />} />
+                        <Route path="/pedidos/:id" element={<PedidoDetailPage />} />
                       </Routes>
                     </MainContent>
                   </div>

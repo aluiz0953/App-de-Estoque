@@ -1,31 +1,62 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import apiService from '../services/api';
 
-const useFetchHistory = (filter = 'all') => {
-  const [data, setData] = useState(null);
+const PAGE_SIZE = 20;
+
+// filters: { tipo, produtoId, usuarioId, motivo, dataInicio, dataFim }
+const useFetchHistory = (filters = {}) => {
+  const filterKey = JSON.stringify(filters);
+  const [data, setData] = useState([]);
+  const [page, setPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
-    const fetchHistory = async () => {
-      setIsLoading(true);
+  const load = useCallback(
+    async (targetPage, append) => {
+      if (append) setIsLoadingMore(true);
+      else setIsLoading(true);
       try {
-        // Em uma implementação real, você teria um endpoint específico para histórico
-        // Por enquanto, vamos simular com dados vazios ou de um endpoint genérico
-        setData([]); // Placeholder - implementar conforme sua API
+        const result = await apiService.getMovimentacoesHistorico({
+          ...filters,
+          page: targetPage,
+          size: PAGE_SIZE,
+        });
+        setData((prev) => (append ? [...prev, ...(result.content || [])] : result.content || []));
+        setTotalPages(result.totalPages ?? 1);
+        setPage(targetPage);
         setError(null);
       } catch (err) {
         setError(err);
-        setData(null);
+        if (!append) setData([]);
       } finally {
         setIsLoading(false);
+        setIsLoadingMore(false);
       }
-    };
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [filterKey]
+  );
 
-    fetchHistory();
-  }, [filter]);
+  useEffect(() => {
+    load(0, false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterKey]);
 
-  return { data, isLoading, error };
+  const loadMore = () => {
+    if (!isLoading && !isLoadingMore && page + 1 < totalPages) load(page + 1, true);
+  };
+
+  return {
+    data,
+    isLoading,
+    isLoadingMore,
+    error,
+    loadMore,
+    hasMore: page + 1 < totalPages,
+    refetch: () => load(0, false),
+  };
 };
 
 export default useFetchHistory;

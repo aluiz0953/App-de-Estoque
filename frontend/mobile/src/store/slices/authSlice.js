@@ -4,9 +4,9 @@ import apiService from '../../services/api';
 // Thunk para login
 export const login = createAsyncThunk(
   'auth/login',
-  async ({ username, password }, { rejectWithValue }) => {
+  async ({ username, password, rememberMe }, { rejectWithValue }) => {
     try {
-      const response = await apiService.login({ username, password });
+      const response = await apiService.login({ username, password, rememberMe });
       // Em uma implementação real, você salvaria o token de forma segura
       // Por enquanto, vamos apenas retornar os dados do usuário
       return response;
@@ -37,6 +37,8 @@ const authSlice = createSlice({
     isAuthenticating: false,
     isAuthenticated: false,
     error: null,
+    // "Manter conectado": when false, the saved session is dropped on the next launch (see store/index.js).
+    rememberMe: true,
   },
   reducers: {
     // Limpar erro
@@ -66,6 +68,7 @@ const authSlice = createSlice({
         state.isAuthenticated = true;
         state.user = action.payload;
         state.error = null;
+        state.rememberMe = action.meta.arg.rememberMe !== false;
       })
       .addCase(login.rejected, (state, action) => {
         state.isAuthenticating = false;

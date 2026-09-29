@@ -26,10 +26,8 @@ public class LinhaController {
 
     @GetMapping
     public List<Linha> getAllLinhas(@RequestParam(required = false) Long marcaId) {
-        if (marcaId != null) {
-            return linhaRepository.findByMarcaId(marcaId);
-        }
-        return linhaRepository.findAll();
+        List<Linha> linhas = (marcaId != null) ? linhaRepository.findByMarcaId(marcaId) : linhaRepository.findAll();
+        return linhas.stream().filter(Linha::isActive).toList();
     }
 
     @GetMapping("/{id}")

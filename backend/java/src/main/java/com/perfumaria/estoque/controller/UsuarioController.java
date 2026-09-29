@@ -4,9 +4,11 @@ import com.perfumaria.estoque.model.Usuario;
 import com.perfumaria.estoque.repository.UsuarioRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Admin-only user management (see SecurityConfig: /api/usuarios/** is ROLE_ADMIN only)
@@ -45,6 +47,31 @@ public class UsuarioController {
         return usuarioRepository.findById(id)
                 .map(usuario -> {
                     usuario.setActive(false);
+                    return ResponseEntity.ok(usuarioRepository.save(usuario));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    public static class RoleRequest {
+        public Usuario.Role role;
+    }
+
+    /**
+     * Changes an existing user's role - the only way to create a second ADMIN,
+     * since public self-registration always forces OPERATOR (see
+     * AuthController#register) to close the privilege-escalation hole. An admin
+     * can't change their own role here, so they can't accidentally lock
+     * themselves out.
+     */
+    @PutMapping("/{id}/role")
+    public ResponseEntity<?> updateRole(@PathVariable Long id, @RequestBody RoleRequest request) {
+        String actingUsername = SecurityContextHolder.getContext().getAuthentication().getName();
+        return usuarioRepository.findById(id)
+                .<ResponseEntity<?>>map(usuario -> {
+                    if (usuario.getUsername().equals(actingUsername)) {
+                        return ResponseEntity.badRequest().body(Map.of("message", "Não é possível alterar seu próprio papel."));
+                    }
+                    usuario.setRole(request.role);
                     return ResponseEntity.ok(usuarioRepository.save(usuario));
                 })
                 .orElse(ResponseEntity.notFound().build());

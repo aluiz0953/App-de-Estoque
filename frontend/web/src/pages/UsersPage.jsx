@@ -31,9 +31,18 @@ const UsersPage = () => {
 
   useEffect(loadUsers, [sessionUser?.role]);
 
+  const [roleError, setRoleError] = useState(null);
+
   const handleActivate = (id) => apiService.activateUsuario(id).then(loadUsers);
   const handleDeactivate = (id) => apiService.deactivateUsuario(id).then(loadUsers);
   const handleReject = (id) => apiService.rejectUsuario(id).then(loadUsers);
+  const handleRoleChange = (id, role) => {
+    setRoleError(null);
+    apiService
+      .updateUsuarioRole(id, role)
+      .then(loadUsers)
+      .catch((err) => setRoleError(err?.body?.message || err.message));
+  };
 
   return (
     <main className="p-5 md:p-9">
@@ -92,6 +101,7 @@ const UsersPage = () => {
             <h3 className="font-display text-[22px]">Equipe</h3>
             <p className="mt-1 text-[12px] text-muted-light">Todos os usuários com acesso ao sistema.</p>
           </div>
+          {roleError && <p className="border-b border-border px-5 py-3 text-[12px] text-danger">{roleError}</p>}
           {usersError ? (
             <p className="p-5 text-[13px] text-danger">Erro ao carregar usuários: {usersError.message}</p>
           ) : !users ? (
@@ -107,9 +117,21 @@ const UsersPage = () => {
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="rounded-full bg-[#efe9e2] px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.08em] text-[#5b4842]">
-                      {ROLE_LABEL[u.role] || u.role}
-                    </span>
+                    {u.username === sessionUser?.user ? (
+                      <span className="rounded-full bg-[#efe9e2] px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.08em] text-[#5b4842]">
+                        {ROLE_LABEL[u.role] || u.role}
+                      </span>
+                    ) : (
+                      <select
+                        value={u.role}
+                        onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                        className="rounded-full border border-border bg-[#efe9e2] px-2 py-1 font-mono text-[9px] uppercase tracking-[0.08em] text-[#5b4842] outline-none"
+                      >
+                        {Object.entries(ROLE_LABEL).map(([value, label]) => (
+                          <option key={value} value={value}>{label}</option>
+                        ))}
+                      </select>
+                    )}
                     <span
                       className={`rounded-full px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.08em] ${
                         u.active ? 'bg-[#dce6d8] text-[#5f7658]' : 'bg-[#f0d6c5] text-[#94634d]'

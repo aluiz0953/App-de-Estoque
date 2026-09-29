@@ -5,6 +5,7 @@ import com.perfumaria.estoque.model.Lote;
 import com.perfumaria.estoque.model.Lote.StatusLote;
 import com.perfumaria.estoque.model.MovimentacaoEstoque;
 import com.perfumaria.estoque.model.MovimentacaoEstoque.TipoMovimentacao;
+import com.perfumaria.estoque.model.MovimentacaoEstoque.MotivoMovimentacao;
 import com.perfumaria.estoque.model.Produto;
 import com.perfumaria.estoque.repository.FornecedorRepository;
 import com.perfumaria.estoque.repository.LoteRepository;
@@ -55,6 +56,7 @@ public class InventoryService {
     public Lote adicionarEstoque(Long produtoId, String numeroLote, int quantidade,
                                 LocalDate dataValidade, double precoCusto,
                                 Long fornecedorId, String localizacaoArquivo,
+                                MotivoMovimentacao motivo,
                                 com.perfumaria.estoque.model.Usuario usuario) {
         Produto produto = produtoRepository.findById(produtoId)
                 .orElseThrow(() -> new IllegalArgumentException("Produto não encontrado: " + produtoId));
@@ -77,7 +79,7 @@ public class InventoryService {
 
         Lote salvo = loteRepository.save(novoLote);
         movimentacaoEstoqueRepository.save(
-                new MovimentacaoEstoque(produto, TipoMovimentacao.ENTRADA, quantidade, null, usuario));
+                new MovimentacaoEstoque(produto, TipoMovimentacao.ENTRADA, quantidade, null, motivo, usuario));
         return salvo;
     }
 
@@ -91,11 +93,11 @@ public class InventoryService {
      * @return True if sufficient stock was available and removed
      */
     @Transactional
-    public boolean retirarEstoqueFIFO(Long produtoId, int quantidade,
+    public boolean retirarEstoqueFIFO(Long produtoId, int quantidade, MotivoMovimentacao motivo,
                                      com.perfumaria.estoque.model.Usuario usuario) {
         // True FIFO: oldest receipt date (criadoEm) first
         List<Lote> lotesAtivos = loteRepository.findActiveLotesByProdutoOrderByReceiptAsc(produtoId);
-        return registrarSaida(produtoId, quantidade, "FIFO", usuario, consumirLotes(lotesAtivos, quantidade));
+        return registrarSaida(produtoId, quantidade, "FIFO", motivo, usuario, consumirLotes(lotesAtivos, quantidade));
     }
 
     /**
@@ -108,10 +110,10 @@ public class InventoryService {
      * @return True if sufficient stock was available and removed
      */
     @Transactional
-    public boolean retirarEstoqueLIFO(Long produtoId, int quantidade,
+    public boolean retirarEstoqueLIFO(Long produtoId, int quantidade, MotivoMovimentacao motivo,
                                      com.perfumaria.estoque.model.Usuario usuario) {
         List<Lote> lotesAtivos = loteRepository.findActiveLotesByProdutoOrderByReceiptDesc(produtoId);
-        return registrarSaida(produtoId, quantidade, "LIFO", usuario, consumirLotes(lotesAtivos, quantidade));
+        return registrarSaida(produtoId, quantidade, "LIFO", motivo, usuario, consumirLotes(lotesAtivos, quantidade));
     }
 
     /**
@@ -124,23 +126,23 @@ public class InventoryService {
      * @return True if sufficient stock was available and removed
      */
     @Transactional
-    public boolean retirarEstoqueFEFO(Long produtoId, int quantidade,
+    public boolean retirarEstoqueFEFO(Long produtoId, int quantidade, MotivoMovimentacao motivo,
                                      com.perfumaria.estoque.model.Usuario usuario) {
         List<Lote> lotesAtivos = loteRepository.findActiveLotesByProdutoOrderByExpiration(produtoId);
-        return registrarSaida(produtoId, quantidade, "FEFO", usuario, consumirLotes(lotesAtivos, quantidade));
+        return registrarSaida(produtoId, quantidade, "FEFO", motivo, usuario, consumirLotes(lotesAtivos, quantidade));
     }
 
     /**
      * Logs a SAIDA movement only when the withdrawal actually succeeded — a failed
      * withdrawal (insufficient stock) must not appear in the movement history/chart.
      */
-    private boolean registrarSaida(Long produtoId, int quantidade, String estrategia,
+    private boolean registrarSaida(Long produtoId, int quantidade, String estrategia, MotivoMovimentacao motivo,
                                     com.perfumaria.estoque.model.Usuario usuario, boolean sucesso) {
         if (sucesso) {
             Produto produto = produtoRepository.findById(produtoId)
                     .orElseThrow(() -> new IllegalArgumentException("Produto não encontrado: " + produtoId));
             movimentacaoEstoqueRepository.save(
-                    new MovimentacaoEstoque(produto, TipoMovimentacao.SAIDA, quantidade, estrategia, usuario));
+                    new MovimentacaoEstoque(produto, TipoMovimentacao.SAIDA, quantidade, estrategia, motivo, usuario));
         }
         return sucesso;
     }
@@ -184,10 +186,42 @@ public class InventoryService {
      * @param produtoId The product ID
      * @return Object containing availability information
      */
-    public com.perfumaria.estoque.service.InventoryService.AvailabilityInfo verificarDisponibilidade(Long produtoId) {
-        // In a real implementation, we would query the database
-        // This is a simplified version showing the concept
-        return new AvailabilityInfo();
+    public AvailabilityInfo verificarDisponibilidade(Long produtoId) {
+        AvailabilityInfo info = new AvailabilityInfo();
+        java.math.BigDecimal valorTotalCusto = java.math.BigDecimal.ZERO;
+        java.math.BigDecimal valorTotalVenda = java.math.BigDecimal.ZERO;
+
+        for (Lote lote : loteRepository.findByProdutoId(produtoId)) {
+            int quantidade = lote.getQuantidade();
+            info.setQuantidadeTotal(info.getQuantidadeTotal() + quantidade);
+
+            if (lote.getStatus() == StatusLote.RESERVADO) {
+                info.setQuantidadeReservada(info.getQuantidadeReservada() + quantidade);
+            }
+
+            if (lote.isExpired()) {
+                info.setQuantidadeVencida(info.getQuantidadeVencida() + quantidade);
+            } else if (lote.isExpiringSoon()) {
+                info.setQuantidadeVencendoProximos30Dias(info.getQuantidadeVencendoProximos30Dias() + quantidade);
+            }
+
+            // Only stock that is actually sellable right now (active status, not
+            // past its expiration date yet) counts as "disponível" and feeds the
+            // potential value totals — reserved/expired/blocked lots don't.
+            if (lote.getStatus() == StatusLote.ATIVO && !lote.isExpired()) {
+                info.setQuantidadeDisponivel(info.getQuantidadeDisponivel() + quantidade);
+                // preco_custo_lote is nullable in schema.sql - a lot without a
+                // recorded cost just doesn't contribute to the cost total.
+                if (lote.getPrecoCustoLote() != null) {
+                    valorTotalCusto = valorTotalCusto.add(lote.getValorTotal());
+                }
+                valorTotalVenda = valorTotalVenda.add(lote.getValorVendaPotencial());
+            }
+        }
+
+        info.setValorTotalCusto(valorTotalCusto);
+        info.setValorTotalVenda(valorTotalVenda);
+        return info;
     }
 
     /**
@@ -199,14 +233,15 @@ public class InventoryService {
     @Transactional
     public int processarVencimentos() {
         LocalDate hoje = LocalDate.now();
-        // In a real implementation:
-        // List<Lote> lotesVencidos = loteRepository.findByDataValidadeLessThanEqualAndStatus(hoje, StatusLote.ATIVO);
-        // for (Lote lote : lotesVencidos) {
-        //     lote.setStatusLote(StatusLote.VENCIDO);
-        //     loteRepository.save(lote);
-        // }
-        // return lotesVencidos.size();
-        return 0; // Placeholder
+        // Excludes lots already VENCIDO so re-running this (it's meant to run daily)
+        // doesn't keep re-touching the same rows; every other status (ATIVO,
+        // RESERVADO, BLOQUEADO) still flips once its expiration date has passed.
+        List<Lote> lotesVencidos = loteRepository.findByDataValidadeLessThanEqualAndStatusNot(hoje, StatusLote.VENCIDO);
+        for (Lote lote : lotesVencidos) {
+            lote.setStatus(StatusLote.VENCIDO);
+            loteRepository.save(lote);
+        }
+        return lotesVencidos.size();
     }
 
     /**

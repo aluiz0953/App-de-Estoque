@@ -1,19 +1,31 @@
-import React, { useState } from 'react';
+import React, { lazy, Suspense, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { login, clearError } from '../store/slices/authSlice';
 import apiService from '../services/api';
+import { useTheme } from '../contexts/ThemeContext';
+
+const HeroGeometric = lazy(() => import('../components/HeroGeometric'));
+
+// Rose accent (secondary / secondary-dark) blending into the page background (brand-bg).
+const BACKGROUND = {
+  light: { color1: '#d5a0a2', color2: '#f4efe8' },
+  dark: { color1: '#a96d6e', color2: '#1c1815' },
+};
 
 const emptyRegisterForm = { username: '', email: '', fullName: '', password: '' };
 
 const LoginPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { theme } = useTheme();
   const { isAuthenticating, error } = useSelector((state) => state.auth);
 
   const [mode, setMode] = useState('login'); // 'login' | 'register'
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
 
   const [registerForm, setRegisterForm] = useState(emptyRegisterForm);
   const [isRegistering, setIsRegistering] = useState(false);
@@ -24,7 +36,7 @@ const LoginPage = () => {
     e.preventDefault();
     dispatch(clearError());
     try {
-      await dispatch(login({ username, password })).unwrap();
+      await dispatch(login({ username, password, rememberMe })).unwrap();
       navigate('/dashboard');
     } catch (err) {
       // error is already reflected in state.auth.error
@@ -63,8 +75,11 @@ const LoginPage = () => {
     isRegistering || !registerForm.username || !registerForm.email || !registerForm.fullName || !registerForm.password;
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-brand-bg px-4 py-10 font-sans text-ink">
-      <div className="w-full max-w-[400px] animate-rise rounded-2xl border border-border bg-surface p-8 shadow-[0_18px_55px_rgba(63,47,35,0.09)] md:p-10">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-brand-bg px-4 py-10 font-sans text-ink">
+      <Suspense fallback={null}>
+        <HeroGeometric {...BACKGROUND[theme]} speed={4} />
+      </Suspense>
+      <div className="relative z-10 w-full max-w-[400px] animate-rise rounded-2xl border border-border bg-surface p-8 shadow-[0_18px_55px_rgba(63,47,35,0.09)] md:p-10">
         <div className="mb-8 text-center">
           <span className="mx-auto mb-4 grid h-11 w-11 place-items-center rounded-full border border-border">
             <span className="h-2.5 w-2.5 rounded-full bg-secondary" />
@@ -88,13 +103,32 @@ const LoginPage = () => {
 
             <label className="grid gap-2">
               <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted-light">Senha</span>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Digite sua senha"
+                  className="h-11 w-full rounded-lg border border-border bg-brand-bg px-3 pr-16 text-[13px] outline-none placeholder:text-muted-light focus:border-secondary-dark"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[11px] font-medium text-secondary-dark hover:text-primary"
+                >
+                  {showPassword ? 'Ocultar' : 'Mostrar'}
+                </button>
+              </div>
+            </label>
+
+            <label className="inline-flex cursor-pointer items-center gap-2 text-[12px] text-muted">
               <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Digite sua senha"
-                className="h-11 w-full rounded-lg border border-border bg-brand-bg px-3 text-[13px] outline-none placeholder:text-muted-light focus:border-secondary-dark"
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="h-3.5 w-3.5 accent-primary"
               />
+              Manter conectado
             </label>
 
             {error && (

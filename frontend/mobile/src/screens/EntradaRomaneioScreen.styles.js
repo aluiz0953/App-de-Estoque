@@ -34,6 +34,17 @@ export const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'center',
   },
+  motivoInput: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  motivoText: {
+    color: colors.text,
+  },
+  motivoPlaceholder: {
+    color: colors.textMutedLight,
+  },
   resultRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -54,6 +65,10 @@ export const styles = StyleSheet.create({
   error: {
     color: colors.error,
     marginTop: 12,
+  },
+  queuedTag: {
+    fontSize: 11,
+    color: colors.warning,
   },
   itemRow: {
     flexDirection: 'row',

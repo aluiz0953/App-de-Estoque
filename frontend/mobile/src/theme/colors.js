@@ -16,6 +16,15 @@ export const colors = {
   success: '#7a966e',
   warning: '#c98a52',
   disabled: '#c9beb4',
+
+  // StatusPill badge pairs (bg/ink) — same tones UsersPage.jsx uses on the web app,
+  // so "Available"/"Low stock"/"Out of stock" read consistently across platforms.
+  successBg: '#dce6d8',
+  successInk: '#5f7658',
+  warningBg: '#f0d6c5',
+  warningInk: '#94634d',
+  neutralBg: '#ded7d4',
+  neutralInk: '#716562',
 };
 
 export const fonts = {

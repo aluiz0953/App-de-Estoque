@@ -70,7 +70,7 @@ class InventoryServiceTest {
         // Act
         Lote resultado = inventoryService.adicionarEstoque(
                 1L, numeroLote, quantidade, dataValidade, precoCusto,
-                null, "Prateleira A1", usuario);
+                null, "Prateleira A1", MovimentacaoEstoque.MotivoMovimentacao.COMPRA_RECEBIDA, usuario);
 
         // Assert - Since we mocked the repository, we verify the method was called
         // In a real test with actual repository, we'd assert on the returned lot
@@ -103,7 +103,7 @@ class InventoryServiceTest {
                 .thenReturn(Arrays.asList(lote1, lote2));
 
         // Act
-        boolean resultado = inventoryService.retirarEstoqueFIFO(1L, 12, usuario);
+        boolean resultado = inventoryService.retirarEstoqueFIFO(1L, 12, MovimentacaoEstoque.MotivoMovimentacao.VENDA, usuario);
 
         // Assert
         assertTrue(resultado); // Should succeed
@@ -128,7 +128,7 @@ class InventoryServiceTest {
                 .thenReturn(Arrays.asList(lote1));
 
         // Act
-        boolean resultado = inventoryService.retirarEstoqueFIFO(1L, 10, usuario);
+        boolean resultado = inventoryService.retirarEstoqueFIFO(1L, 10, MovimentacaoEstoque.MotivoMovimentacao.VENDA, usuario);
 
         // Assert
         assertFalse(resultado); // Should fail due to insufficient stock
@@ -151,7 +151,7 @@ class InventoryServiceTest {
                 .thenReturn(Arrays.asList(lote1));
 
         // Act
-        boolean resultado = inventoryService.retirarEstoqueFIFO(1L, 5, usuario);
+        boolean resultado = inventoryService.retirarEstoqueFIFO(1L, 5, MovimentacaoEstoque.MotivoMovimentacao.VENDA, usuario);
 
         // Assert
         assertTrue(resultado); // Should succeed with exact amount
@@ -218,5 +218,104 @@ class InventoryServiceTest {
 
         // Assert
         assertEquals(new BigDecimal("500.00"), valor);
+    }
+
+    private Lote criarLote(int quantidade, Lote.StatusLote status, LocalDate dataValidade, BigDecimal precoCustoLote) {
+        Lote lote = new Lote();
+        lote.setProduto(produto);
+        lote.setQuantidade(quantidade);
+        lote.setStatus(status);
+        lote.setDataValidade(dataValidade);
+        lote.setPrecoCustoLote(precoCustoLote);
+        return lote;
+    }
+
+    @Test
+    void testVerificarDisponibilidade_MistoDeLotes() {
+        // Arrange: one sellable lot, one reserved, one already expired, one
+        // active-but-expiring-soon lot.
+        Lote disponivel = criarLote(10, Lote.StatusLote.ATIVO, LocalDate.now().plusDays(365), new BigDecimal("50.00"));
+        Lote reservado = criarLote(4, Lote.StatusLote.RESERVADO, LocalDate.now().plusDays(365), new BigDecimal("50.00"));
+        Lote vencido = criarLote(3, Lote.StatusLote.ATIVO, LocalDate.now().minusDays(1), new BigDecimal("50.00"));
+        Lote vencendoEmBreve = criarLote(6, Lote.StatusLote.ATIVO, LocalDate.now().plusDays(10), new BigDecimal("50.00"));
+
+        when(loteRepository.findByProdutoId(1L))
+                .thenReturn(Arrays.asList(disponivel, reservado, vencido, vencendoEmBreve));
+
+        // Act
+        InventoryService.AvailabilityInfo info = inventoryService.verificarDisponibilidade(1L);
+
+        // Assert
+        assertEquals(23, info.getQuantidadeTotal()); // 10+4+3+6
+        assertEquals(4, info.getQuantidadeReservada());
+        assertEquals(3, info.getQuantidadeVencida());
+        assertEquals(6, info.getQuantidadeVencendoProximos30Dias());
+        // "Disponível" = ATIVO and not yet expired: disponivel (10) + vencendoEmBreve (6)
+        assertEquals(16, info.getQuantidadeDisponivel());
+        assertEquals(new BigDecimal("800.00"), info.getValorTotalCusto()); // 16 * 50.00
+        assertEquals(new BigDecimal("1600.00"), info.getValorTotalVenda()); // 16 * 100.00 (produto.precoVenda)
+    }
+
+    @Test
+    void testVerificarDisponibilidade_LoteSemPrecoCustoNaoQuebra() {
+        // Arrange: a lot with no recorded cost must not NPE, and just doesn't
+        // contribute to the cost total.
+        Lote semCusto = criarLote(5, Lote.StatusLote.ATIVO, LocalDate.now().plusDays(30), null);
+        when(loteRepository.findByProdutoId(1L)).thenReturn(Arrays.asList(semCusto));
+
+        // Act
+        InventoryService.AvailabilityInfo info = inventoryService.verificarDisponibilidade(1L);
+
+        // Assert
+        assertEquals(5, info.getQuantidadeDisponivel());
+        assertEquals(BigDecimal.ZERO, info.getValorTotalCusto());
+        assertEquals(new BigDecimal("500.00"), info.getValorTotalVenda());
+    }
+
+    @Test
+    void testVerificarDisponibilidade_SemLotes() {
+        // Arrange
+        when(loteRepository.findByProdutoId(1L)).thenReturn(Arrays.asList());
+
+        // Act
+        InventoryService.AvailabilityInfo info = inventoryService.verificarDisponibilidade(1L);
+
+        // Assert
+        assertEquals(0, info.getQuantidadeTotal());
+        assertEquals(0, info.getQuantidadeDisponivel());
+        assertEquals(BigDecimal.ZERO, info.getValorTotalCusto());
+        assertEquals(BigDecimal.ZERO, info.getValorTotalVenda());
+    }
+
+    @Test
+    void testProcessarVencimentos_MarcaLotesVencidosComoTal() {
+        // Arrange
+        Lote lote1 = criarLote(5, Lote.StatusLote.ATIVO, LocalDate.now().minusDays(1), new BigDecimal("10.00"));
+        Lote lote2 = criarLote(2, Lote.StatusLote.RESERVADO, LocalDate.now().minusDays(5), new BigDecimal("10.00"));
+        when(loteRepository.findByDataValidadeLessThanEqualAndStatusNot(any(LocalDate.class), eq(Lote.StatusLote.VENCIDO)))
+                .thenReturn(Arrays.asList(lote1, lote2));
+
+        // Act
+        int processados = inventoryService.processarVencimentos();
+
+        // Assert
+        assertEquals(2, processados);
+        assertEquals(Lote.StatusLote.VENCIDO, lote1.getStatus());
+        assertEquals(Lote.StatusLote.VENCIDO, lote2.getStatus());
+        verify(loteRepository, times(2)).save(any(Lote.class));
+    }
+
+    @Test
+    void testProcessarVencimentos_NenhumLoteVencido() {
+        // Arrange
+        when(loteRepository.findByDataValidadeLessThanEqualAndStatusNot(any(LocalDate.class), eq(Lote.StatusLote.VENCIDO)))
+                .thenReturn(Arrays.asList());
+
+        // Act
+        int processados = inventoryService.processarVencimentos();
+
+        // Assert
+        assertEquals(0, processados);
+        verify(loteRepository, never()).save(any(Lote.class));
     }
 }

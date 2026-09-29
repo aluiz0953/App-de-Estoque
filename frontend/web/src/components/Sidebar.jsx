@@ -37,6 +37,7 @@ const Sidebar = () => {
   const menuItems = [
     { name: 'Dashboard', icon: 'home', to: '/', auth: true },
     { name: 'Estoque', icon: 'package-variant', to: '/estoque', auth: true },
+    { name: 'Pedidos', icon: 'format-list-bulleted', to: '/pedidos', auth: ['ADMIN', 'MANAGER', 'OPERATOR'] },
     { name: 'Produtos', icon: 'package', to: '/produtos', auth: ['ADMIN', 'MANAGER'] },
     { name: 'Notificações', icon: 'bell', to: '/notificacoes', auth: ['ADMIN', 'MANAGER', 'AUDITOR'] },
     { name: 'Relatórios', icon: 'chart-bar', to: '/relatorios', auth: ['ADMIN', 'MANAGER'] },

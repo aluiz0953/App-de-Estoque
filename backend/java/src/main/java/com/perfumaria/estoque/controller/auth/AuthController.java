@@ -14,6 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
@@ -43,6 +44,9 @@ public class AuthController {
     @Autowired
     private LoginAttemptService loginAttempts;
 
+    @Autowired
+    private RememberMeServices rememberMeServices;
+
     private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
 
     /**
@@ -53,11 +57,15 @@ public class AuthController {
      * @return Authentication success response
      */
     @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> credentials,
+    public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, Object> credentials,
                                                        HttpServletRequest request,
                                                        HttpServletResponse response) {
-        String username = credentials.get("username");
-        String password = credentials.get("password");
+        String username = (String) credentials.get("username");
+        String password = (String) credentials.get("password");
+        // "Manter conectado" defaults to on when the client doesn't say - an older
+        // client that never sends the flag still gets a login that survives redeploys.
+        Object rememberFlag = credentials.get("rememberMe");
+        boolean rememberMe = rememberFlag == null || Boolean.parseBoolean(String.valueOf(rememberFlag));
 
         String attemptKey = LoginAttemptService.key(username, request.getRemoteAddr());
         if (loginAttempts.isBlocked(attemptKey)) {
@@ -83,14 +91,22 @@ public class AuthController {
         context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
         securityContextRepository.saveContext(context, request, response);
+        if (rememberMe) {
+            rememberMeServices.loginSuccess(request, response, authentication);
+        }
 
-        Usuario usuario = usuarioRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado após autenticação"));
+        // authenticate() already loaded the Usuario once (UserDetailsServiceImpl) and its
+        // role is right there in the granted authorities - re-querying it here was a second
+        // round trip to the DB for data already in hand, doubling login latency for nothing.
+        String role = authentication.getAuthorities().stream()
+                .findFirst()
+                .map(a -> a.getAuthority().replaceFirst("^ROLE_", ""))
+                .orElseThrow(() -> new RuntimeException("Usuário sem papel definido"));
 
         Map<String, Object> body = new HashMap<>();
         body.put("authenticated", true);
-        body.put("user", usuario.getUsername());
-        body.put("role", usuario.getRole().toString());
+        body.put("user", authentication.getName());
+        body.put("role", role);
         body.put("message", "Login realizado com sucesso");
 
         return ResponseEntity.ok(body);

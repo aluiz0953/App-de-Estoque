@@ -1,170 +1,145 @@
-import React, { useState } from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, StyleSheet } from 'react-native';
-import { Card, Title, Paragraph, Caption } from 'react-native-paper';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import useFetchProducts from '../hooks/useFetchProducts';
-import useFetchEstoqueResumo from '../hooks/useFetchEstoqueResumo';
 import { useNavigate } from '../hooks/useNavigate';
 import { colors, fonts, tabularNums } from '../theme/colors';
+import MetricCard from '../components/MetricCard';
+import QuickActionCard from '../components/QuickActionCard';
+import SyncIndicator from '../components/SyncIndicator';
+import StatusPill from '../components/StatusPill';
+import { getStockState } from '../utils/stock';
+import { useNetworkStatus } from '../hooks/useNetworkStatus';
+import { useSyncQueue } from '../hooks/useSyncQueue';
 
+const formatDate = () =>
+  new Intl.DateTimeFormat('pt-BR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })
+    .format(new Date());
+
+// Tela 01 — Hoje. Answers "how much is available, what needs attention, what's
+// the next action" in one screen (spec §2 "Clareza antes de completude").
 const HomeScreen = () => {
-  const [tab, setTab] = useState('fisico'); // 'fisico' or 'financeiro'
-  const { data: produtos, isLoading, error } = useFetchProducts();
-  const { data: resumo, isLoading: isLoadingResumo } = useFetchEstoqueResumo();
+  const { data: produtos, isLoading, error, refetch } = useFetchProducts();
   const navigate = useNavigate();
+  const isOnline = useNetworkStatus();
+  const { pending, conflicts, syncing } = useSyncQueue();
 
-  const renderFisicoTab = () => {
-    if (isLoading) return <ActivityIndicator style={{ margin: 20 }} />;
-    if (error) return <Text>{error.message}</Text>;
+  const ativos = useMemo(() => (produtos || []).filter((p) => p.active !== false), [produtos]);
 
-    // Products with low stock or expiring soon (rupturas e vencimentos)
-    const produtosCriticos = produtos?.filter(item =>
-      item.quantidadeTotal < item.estoqueMinimo ||
-      item.quantidadeVencendoProximos30Dias > 0 ||
-      item.quantidadeVencida > 0
-    ) || [];
+  const stats = useMemo(() => {
+    const unidades = ativos.reduce((sum, p) => sum + (p.quantidadeTotal || 0), 0);
+    const baixo = ativos.filter((p) => getStockState(p.quantidadeTotal, p.estoqueMinimo) === 'low').length;
+    const sem = ativos.filter((p) => getStockState(p.quantidadeTotal, p.estoqueMinimo) === 'out').length;
+    return { unidades, ativos: ativos.length, baixo, sem };
+  }, [ativos]);
 
-    return (
-      <FlatList
-        style={{ flex: 1 }}
-        contentContainerStyle={{ padding: 16 }}
-        ListHeaderComponent={<Title style={styles.sectionTitle}>Estoque Crítico e Vencimentos</Title>}
-        data={produtosCriticos}
-        keyExtractor={item => item.id.toString()}
-        renderItem={({ item }) => (
-          <Card style={styles.card} elevation={3}>
-            <View style={{ padding: 16 }}>
-              <Title>{item.nome}</Title>
-              <Caption style={tabularNums}>{item.sku}</Caption>
-
-              <View style={{ marginVertical: 8, flexDirection: 'row', justifyContent: 'space-between' }}>
-                <View>
-                  <Paragraph>
-                    <Text style={styles.bold}>Estoque Atual: </Text>
-                    <Text style={tabularNums}>{item.quantidadeTotal}</Text>
-                  </Paragraph>
-                  <Paragraph>
-                    <Text style={styles.bold}>Estoque Mínimo: </Text>
-                    <Text style={tabularNums}>{item.estoqueMinimo}</Text>
-                  </Paragraph>
-                </View>
-                <View>
-                  {item.quantidadeVencida > 0 && (
-                    <Paragraph style={{ color: colors.error }}>
-                      <Text style={styles.bold}>Vencido: </Text>
-                      <Text style={tabularNums}>{item.quantidadeVencida}</Text>
-                    </Paragraph>
-                  )}
-                  {item.quantidadeVencendoProximos30Dias > 0 && (
-                    <Paragraph style={{ color: colors.warning }}>
-                      <Text style={styles.bold}>Vencendo (30d): </Text>
-                      <Text style={tabularNums}>{item.quantidadeVencendoProximos30Dias}</Text>
-                    </Paragraph>
-                  )}
-                </View>
-              </View>
-
-              {item.quantidadeTotal < item.estoqueMinimo && (
-                <Paragraph style={{ color: colors.error, marginTop: 8, fontWeight: '700' }}>
-                  ESTOQUE CRÍTICO
-                </Paragraph>
-              )}
-            </View>
-          </Card>
-        )}
-        ListEmptyComponent={
-          <Paragraph>Não há produtos com estoque crítico ou vencimentos próximos.</Paragraph>
-        }
-      />
-    );
-  };
-
-  const renderFinanceiroTab = () => {
-    if (isLoadingResumo) return <ActivityIndicator style={{ margin: 20 }} />;
-
-    return (
-      <View style={{ padding: 16, flex: 1 }}>
-        <Title style={styles.sectionTitle}>Capital Empatado no Estoque</Title>
-
-        {resumo ? (
-          <View>
-            <Card style={styles.card} elevation={3}>
-              <View style={{ padding: 16 }}>
-                <Title>Resumo Financeiro</Title>
-                <Paragraph>
-                  <Text style={styles.bold}>Valor Total em Estoque: </Text>
-                  <Text style={tabularNums}>R$ {resumo.valorTotalEstoque?.toFixed(2) ?? '0,00'}</Text>
-                </Paragraph>
-                <Paragraph>
-                  <Text style={styles.bold}>Lucro Potencial: </Text>
-                  <Text style={tabularNums}>R$ {resumo.lucroPotencial?.toFixed(2) ?? '0,00'}</Text>
-                </Paragraph>
-                <Paragraph>
-                  <Text style={styles.bold}>Número de Produtos: </Text>
-                  <Text style={tabularNums}>{resumo.totalProdutos ?? 0}</Text>
-                </Paragraph>
-                <Paragraph>
-                  <Text style={styles.bold}>Número de Lotes Ativos: </Text>
-                  <Text style={tabularNums}>{resumo.totalLotesAtivos ?? 0}</Text>
-                </Paragraph>
-              </View>
-            </Card>
-
-            {/* Full charts are a possible future iteration; the numeric summary above already
-                surfaces the same data the spec asks the financial view to show. */}
-            <Paragraph>Próximamente: Gráficos de distribuição por marca/linha e evolução do capital investido.</Paragraph>
-          </View>
-        ) : (
-          <Paragraph>Carregando dados financeiros...</Paragraph>
-        )}
-      </View>
-    );
-  };
+  const atencao = useMemo(
+    () => ativos.filter((p) => getStockState(p.quantidadeTotal, p.estoqueMinimo) !== 'available'),
+    [ativos]
+  );
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      {/* Header */}
       <View style={styles.header}>
         <Text style={styles.eyebrow}>ESTOQUE</Text>
-        <Text style={styles.headerText}>Dashboard de Estoque</Text>
+        <Text style={styles.headerText}>Dashboard</Text>
       </View>
 
-      {/* Físico vs. Financeiro segmented control */}
-      <View style={styles.segmentedControl}>
-        <TouchableOpacity
-          style={[styles.segment, tab === 'fisico' && styles.segmentActive]}
-          onPress={() => setTab('fisico')}
-        >
-          <Text style={[styles.segmentText, tab === 'fisico' && styles.segmentTextActive]}>
-            Físico
-          </Text>
-        </TouchableOpacity>
+      <FlatList
+        contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+        ListHeaderComponent={
+          <View>
+            <View style={styles.greetingRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.dateLabel}>{formatDate()}</Text>
+                <Text style={styles.greeting}>
+                  Visão geral <Text style={styles.greetingAccent}>de hoje.</Text>
+                </Text>
+              </View>
+            </View>
+            <SyncIndicator
+              status={
+                !isOnline
+                  ? 'offline'
+                  : conflicts.length > 0
+                  ? 'stale'
+                  : syncing || (isOnline && pending.length > 0)
+                  ? 'syncing'
+                  : error
+                  ? 'stale'
+                  : isLoading
+                  ? 'syncing'
+                  : 'synced'
+              }
+              label={
+                conflicts.length > 0
+                  ? `${conflicts.length} conflito${conflicts.length === 1 ? '' : 's'} de sincronização`
+                  : !isOnline && pending.length > 0
+                  ? `Sem conexão · ${pending.length} pendente${pending.length === 1 ? '' : 's'}`
+                  : undefined
+              }
+              onRetry={refetch}
+              style={{ marginTop: 12 }}
+            />
 
-        <TouchableOpacity
-          style={[styles.segment, tab === 'financeiro' && styles.segmentActive]}
-          onPress={() => setTab('financeiro')}
-        >
-          <Text style={[styles.segmentText, tab === 'financeiro' && styles.segmentTextActive]}>
-            Financeiro
-          </Text>
-        </TouchableOpacity>
-      </View>
+            {isLoading ? (
+              <ActivityIndicator style={{ marginTop: 40 }} color={colors.primary} />
+            ) : error ? (
+              <Text style={styles.errorText}>{error.message}</Text>
+            ) : (
+              <>
+                <View style={styles.metricsGrid}>
+                  <MetricCard label="Unidades disponíveis" value={stats.unidades} variant="dark" icon={<MaterialCommunityIcons name="cube-outline" size={16} color="rgba(248,242,234,0.65)" />} />
+                  <MetricCard label="Produtos ativos" value={stats.ativos} icon={<MaterialCommunityIcons name="bottle-tonic-outline" size={16} color={colors.textMutedLight} />} />
+                  <MetricCard label="Estoque baixo" value={stats.baixo} variant="rose" icon={<MaterialCommunityIcons name="arrow-down-thin" size={16} color="rgba(92,69,64,0.65)" />} />
+                  <MetricCard label="Sem estoque" value={stats.sem} icon={<MaterialCommunityIcons name="archive-outline" size={16} color={colors.textMutedLight} />} />
+                </View>
 
-      {/* Tab Content */}
-      <View style={{ flex: 1 }}>
-        {tab === 'fisico' ? renderFisicoTab() : renderFinanceiroTab()}
-      </View>
+                <View style={styles.actionsRow}>
+                  <QuickActionCard
+                    icon="plus-circle-outline"
+                    title="Adicionar produto"
+                    description="Cadastrar um novo item no catálogo"
+                    onPress={() => navigate('AddEditProduct')}
+                  />
+                  <QuickActionCard
+                    icon="package-down"
+                    title="Receber estoque"
+                    description="Entrada de romaneio"
+                    onPress={() => navigate('EntradaRomaneio')}
+                  />
+                </View>
 
-      {/* Centralized FAB — triggers "Entrada de Romaneio" (stock entry by box) */}
-      <View style={styles.fabContainer} pointerEvents="box-none">
-        <TouchableOpacity
-          style={styles.fab}
-          onPress={() => navigate('EntradaRomaneio')}
-          accessibilityLabel="Entrada de romaneio"
-        >
-          <MaterialCommunityIcons name="plus" size={28} color="white" />
-        </TouchableOpacity>
-      </View>
+                <Text style={styles.sectionTitle}>Itens que exigem atenção</Text>
+              </>
+            )}
+          </View>
+        }
+        data={isLoading || error ? [] : atencao}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => {
+          const state = getStockState(item.quantidadeTotal, item.estoqueMinimo);
+          return (
+            <TouchableOpacity style={styles.attentionRow} onPress={() => navigate('ProductDetail', { productId: item.id })}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.itemName}>{item.nome}</Text>
+                <Text style={[styles.itemMeta, tabularNums]}>
+                  {item.sku} · <Text style={tabularNums}>{item.quantidadeTotal ?? 0}</Text> un.
+                </Text>
+              </View>
+              <StatusPill state={state} />
+            </TouchableOpacity>
+          );
+        }}
+        ListEmptyComponent={
+          !isLoading && !error ? (
+            <View style={styles.empty}>
+              <MaterialCommunityIcons name="check-circle-outline" size={28} color={colors.success} />
+              <Text style={styles.emptyText}>Tudo em ordem. Nenhum produto precisa de atenção agora.</Text>
+            </View>
+          ) : null
+        }
+      />
     </View>
   );
 };
@@ -189,56 +164,82 @@ const styles = StyleSheet.create({
     color: colors.primaryLight,
     fontSize: 22,
   },
+  greetingRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    marginTop: 4,
+  },
+  dateLabel: {
+    fontFamily: fonts.mono,
+    fontSize: 9,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    color: colors.textMutedLight,
+  },
+  greeting: {
+    fontFamily: fonts.display,
+    fontSize: 26,
+    color: colors.text,
+    marginTop: 6,
+  },
+  greetingAccent: {
+    color: colors.secondaryDark,
+    fontStyle: 'italic',
+  },
+  metricsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    marginTop: 20,
+  },
+  actionsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 18,
+  },
   sectionTitle: {
     fontFamily: fonts.display,
+    fontSize: 19,
     color: colors.text,
-    marginBottom: 16,
+    marginTop: 26,
+    marginBottom: 4,
   },
-  segmentedControl: {
+  attentionRow: {
     flexDirection: 'row',
-    backgroundColor: colors.surface,
-    paddingVertical: 8,
-    borderTopWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 12,
+    borderBottomWidth: 1,
     borderColor: colors.border,
   },
-  segment: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-    backgroundColor: 'transparent',
-  },
-  segmentActive: {
-    backgroundColor: colors.secondary,
-  },
-  segmentText: {
+  itemName: {
     fontFamily: fonts.sansMedium,
+    fontSize: 13,
     color: colors.text,
   },
-  segmentTextActive: {
-    color: colors.primary,
+  itemMeta: {
+    fontFamily: fonts.mono,
+    fontSize: 10,
+    color: colors.textMutedLight,
+    marginTop: 2,
   },
-  card: {
-    marginBottom: 12,
-    backgroundColor: colors.surface,
-  },
-  bold: {
-    fontFamily: fonts.sansMedium,
-  },
-  fabContainer: {
-    position: 'absolute',
-    bottom: 24,
-    left: 0,
-    right: 0,
+  empty: {
     alignItems: 'center',
+    paddingVertical: 28,
+    gap: 10,
   },
-  fab: {
-    backgroundColor: colors.primary,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    justifyContent: 'center',
-    alignItems: 'center',
-    elevation: 6,
+  emptyText: {
+    fontFamily: fonts.sans,
+    fontSize: 12,
+    color: colors.textMutedLight,
+    textAlign: 'center',
+    maxWidth: 240,
+  },
+  errorText: {
+    fontFamily: fonts.sans,
+    color: colors.error,
+    marginTop: 20,
+    textAlign: 'center',
   },
 });
 
