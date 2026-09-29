@@ -11,12 +11,14 @@ import { getStockState } from '../utils/stock';
 // all: receiving stock requires a lot number, expiration date and unit cost
 // (see /api/estoque/entrada), so it hands off to Entrada de Romaneio
 // pre-filled for this product instead of pretending to be a one-tap action.
+// Memoized: a screen re-render (typing, modal state) must not re-render every row.
+// Callbacks receive the item, so the parent can pass stable handlers.
 const ProductRow = ({ item, onPress, onReceive, onRequestRemove }) => {
   const quantidade = item.quantidadeTotal ?? 0;
   const state = getStockState(quantidade, item.estoqueMinimo);
 
   return (
-    <TouchableOpacity onPress={onPress} style={styles.row} activeOpacity={0.7}>
+    <TouchableOpacity onPress={() => onPress?.(item)} style={styles.row} activeOpacity={0.7}>
       <View style={styles.thumb}>
         <MaterialCommunityIcons name="bottle-tonic-outline" size={20} color={colors.textMutedLight} />
       </View>
@@ -106,4 +108,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ProductRow;
+export default React.memo(ProductRow);

@@ -1,16 +1,20 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, ActivityIndicator, RefreshControl, StyleSheet } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, RefreshControl, StyleSheet } from 'react-native';
 import { Button, Title, Searchbar, Chip } from 'react-native-paper';
 import BottomSheet, { BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import useFetchProducts from '../hooks/useFetchProducts';
 import { useNavigate } from '../hooks/useNavigate';
+import SkeletonList from '../components/SkeletonList';
 import { colors, fonts, tabularNums } from '../theme/colors';
 import ProductRow from '../components/ProductRow';
 import RemoveStockModal from '../components/RemoveStockModal';
 import { useToast } from '../components/Toast';
 import { submitStockWithdrawal } from '../services/stockMutations';
 import { getStockState } from '../utils/stock';
+import { LIST_PERF_PROPS } from '../utils/listPerf';
+
+const keyExtractor = (item) => item.id.toString();
 
 const STATUS_FILTERS = [
   { value: 'Todos', label: 'Todos' },
@@ -37,11 +41,10 @@ const InventoryScreen = () => {
     return () => clearTimeout(searchDebounce.current);
   }, [searchTerm]);
 
-  const { data: produtos, isLoading, error, refetch } = useFetchProducts({ search: debouncedSearch });
+  const { data: produtos, isLoading, error, refetch, mutate } = useFetchProducts({ search: debouncedSearch });
   const navigate = useNavigate();
   const showToast = useToast();
   const [removingProduct, setRemovingProduct] = useState(null);
-  const [removing, setRemoving] = useState(false);
 
   const bottomSheetRef = useRef(null);
   const snapPoints = useMemo(() => ['40%'], []);
@@ -50,6 +53,17 @@ const InventoryScreen = () => {
   const renderBackdrop = useCallback(
     (props) => <BottomSheetBackdrop {...props} disappearsOnIndex={-1} appearsOnIndex={0} />,
     []
+  );
+
+  // Stable handlers + renderItem: with the memoized ProductRow, only rows whose
+  // data changed re-render (not all of them on every keystroke or modal toggle).
+  const openProduct = useCallback((p) => navigate('ProductDetail', { productId: p.id }), [navigate]);
+  const receiveProduct = useCallback((p) => navigate('EntradaRomaneio', { produtoId: p.id }), [navigate]);
+  const renderItem = useCallback(
+    ({ item }) => (
+      <ProductRow item={item} onPress={openProduct} onReceive={receiveProduct} onRequestRemove={setRemovingProduct} />
+    ),
+    [openProduct, receiveProduct]
   );
 
   const ativos = useMemo(() => (produtos || []).filter((p) => p.active !== false), [produtos]);
@@ -73,35 +87,40 @@ const InventoryScreen = () => {
     refetch().finally(() => setRefreshing(false));
   };
 
+  // Optimistic: the list shows the new quantity and the modal closes right away
+  // (the server round trip is ~300ms+); if the server refuses or the call fails,
+  // the previous list is restored and the reason is shown.
   const handleConfirmRemove = async (quantidade, motivo) => {
     if (!removingProduct) return;
-    setRemoving(true);
+    const product = removingProduct;
+    const previous = produtos;
+    mutate((list) =>
+      list?.map((p) =>
+        p.id === product.id ? { ...p, quantidadeTotal: Math.max(0, (p.quantidadeTotal ?? 0) - quantidade) } : p
+      )
+    );
+    setRemovingProduct(null);
     try {
-      const outcome = await submitStockWithdrawal(
-        { produtoId: removingProduct.id, quantidade, motivo },
-        removingProduct
-      );
+      const outcome = await submitStockWithdrawal({ produtoId: product.id, quantidade, motivo }, product);
       if (outcome.queued) {
-        showToast(`Sem conexão — ${removingProduct.nome} será sincronizado ao reconectar`);
-        setRemovingProduct(null);
+        showToast(`Sem conexão — ${product.nome} será sincronizado ao reconectar`);
       } else if (outcome.result.sucesso) {
-        showToast(`${removingProduct.nome} · -${quantidade} unidade${quantidade === 1 ? '' : 's'}`);
-        setRemovingProduct(null);
-        refetch();
+        showToast(`${product.nome} · -${quantidade} unidade${quantidade === 1 ? '' : 's'}`);
+        refetch(); // background revalidation with the real numbers
       } else {
+        mutate(() => previous);
         showToast(outcome.result.mensagem || 'Estoque insuficiente');
       }
     } catch (e) {
+      mutate(() => previous);
       showToast(e.message || 'Erro ao remover estoque');
-    } finally {
-      setRemoving(false);
     }
   };
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color={colors.primary} />
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
+        <SkeletonList rows={9} />
       </View>
     );
   }
@@ -165,15 +184,9 @@ const InventoryScreen = () => {
 
       <FlatList
         data={produtosFiltrados}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => (
-          <ProductRow
-            item={item}
-            onPress={() => navigate('ProductDetail', { productId: item.id })}
-            onReceive={(p) => navigate('EntradaRomaneio', { produtoId: p.id })}
-            onRequestRemove={setRemovingProduct}
-          />
-        )}
+        keyExtractor={keyExtractor}
+        renderItem={renderItem}
+        {...LIST_PERF_PROPS}
         ListEmptyComponent={
           <View style={{ padding: 40, alignItems: 'center' }}>
             <MaterialCommunityIcons name="package-variant" size={48} color={colors.disabled} />
@@ -231,7 +244,7 @@ const InventoryScreen = () => {
         product={removingProduct}
         onClose={() => setRemovingProduct(null)}
         onConfirm={handleConfirmRemove}
-        busy={removing}
+        busy={false}
       />
     </View>
   );

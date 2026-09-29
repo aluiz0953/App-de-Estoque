@@ -54,6 +54,9 @@ react {
 /**
  * Set this to true to Run Proguard on Release builds to minify the Java bytecode.
  */
+// R8 shrinks the release APK, but a minified build breaks at runtime if a keep rule is
+// missing. The reanimated keep rules are already in proguard-rules.pro; flip this to true
+// only after running the release APK on a device (assembleRelease + a smoke test).
 def enableProguardInReleaseBuilds = false
 
 /**
@@ -99,6 +102,7 @@ android {
             // see https://reactnative.dev/docs/signed-apk-android.
             signingConfig signingConfigs.debug
             minifyEnabled enableProguardInReleaseBuilds
+            shrinkResources enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }

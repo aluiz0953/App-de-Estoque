@@ -12,6 +12,8 @@ import { Caption, Paragraph } from 'react-native-paper';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import useFetchHistory from '../hooks/useFetchHistory';
 import { useNavigate } from '../hooks/useNavigate';
+import { LIST_PERF_PROPS } from '../utils/listPerf';
+import SkeletonList from '../components/SkeletonList';
 import { colors, fonts, tabularNums } from '../theme/colors';
 import ReasonMenu from '../components/ReasonMenu';
 import apiService from '../services/api';
@@ -192,7 +194,7 @@ const HistoryScreen = () => {
       </View>
 
       {isLoading ? (
-        <ActivityIndicator style={{ marginTop: 40 }} color={colors.primary} />
+        <SkeletonList rows={8} />
       ) : error ? (
         <View style={{ padding: 20, alignItems: 'center' }}>
           <Text style={{ color: colors.error }}>{error.message}</Text>
@@ -202,6 +204,7 @@ const HistoryScreen = () => {
           data={movimentacoes || []}
           keyExtractor={(item) => item.id.toString()}
           renderItem={renderItem}
+          {...LIST_PERF_PROPS}
           onEndReachedThreshold={0.4}
           onEndReached={loadMore}
           ListFooterComponent={isLoadingMore ? <ActivityIndicator style={{ margin: 16 }} color={colors.primary} /> : null}

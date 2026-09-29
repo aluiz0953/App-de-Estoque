@@ -30,8 +30,8 @@ module.exports = {
         warning: '#c98a52',
       },
       fontFamily: {
-        sans: ['DM Sans', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        display: ['Playfair Display', 'Georgia', 'serif'],
+        sans: ['DM Sans Variable', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['Playfair Display Variable', 'Georgia', 'serif'],
         mono: ['DM Mono', 'ui-monospace', 'monospace'],
       },
     },

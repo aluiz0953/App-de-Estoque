@@ -53,6 +53,11 @@ public interface LoteRepository extends JpaRepository<Lote, Long> {
     // Count lots by status (dashboard summary)
     long countByStatus(Lote.StatusLote status);
 
+    // Dashboard summary: valorVendaPotencial reads produto.precoVenda, which is a lazy
+    // association - without the JOIN FETCH that is one extra query per lote (N+1).
+    @Query("SELECT l FROM Lote l JOIN FETCH l.produto WHERE l.status = 'ATIVO'")
+    List<Lote> findAtivosComProduto();
+
     // All lots with a given status (dashboard summary totals)
     List<Lote> findByStatus(Lote.StatusLote status);
 
