@@ -44,7 +44,7 @@ public class AuditLogFilter implements Filter {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
         String path = request.getRequestURI();
         String method = request.getMethod();
-        String ipAddress = getClientIpAddress(request);
+        String ipAddress = clientIp(request);
         String userAgent = request.getHeader("User-Agent");
 
         // Check if this path should be audited
@@ -89,10 +89,10 @@ public class AuditLogFilter implements Filter {
     /**
      * Extracts the client IP address from the request, considering proxies and load balancers.
      */
-    private String getClientIpAddress(HttpServletRequest request) {
+    public static String clientIp(HttpServletRequest request) {
         String xfHeader = request.getHeader("X-Forwarded-For");
         if (xfHeader != null && !xfHeader.isBlank()) {
-            return xfHeader.split(",")[0];
+            return xfHeader.split(",")[0].trim();
         }
         return request.getRemoteAddr();
     }
