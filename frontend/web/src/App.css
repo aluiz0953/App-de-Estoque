@@ -3,21 +3,21 @@
 @tailwind utilities;
 
 :root {
-  --color-brand-bg: #f4efe8;
-  --color-surface: #fbf8f3;
-  --color-ink: #2d2724;
-  --color-muted: #766e68;
-  --color-muted-light: #998b82;
-  --color-border: #ded3c8;
+  --color-brand-bg: #f7f9f7;
+  --color-surface: #ffffff;
+  --color-ink: #17201b;
+  --color-muted: #6f7872;
+  --color-muted-light: #8b938e;
+  --color-border: #e7ebe8;
 }
 
 :root.dark {
-  --color-brand-bg: #1c1815;
-  --color-surface: #262019;
-  --color-ink: #f2ece4;
-  --color-muted: #b8ab9f;
-  --color-muted-light: #8f8177;
-  --color-border: #3d332c;
+  --color-brand-bg: #0f1411;
+  --color-surface: #171e19;
+  --color-ink: #eaf0ec;
+  --color-muted: #a3aea7;
+  --color-muted-light: #7d8a82;
+  --color-border: #27312b;
 }
 
 body {
@@ -30,7 +30,7 @@ body {
 }
 
 .font-display {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Playfair Display Variable', Georgia, serif;
 }
 
 .eyebrow {
@@ -59,6 +59,58 @@ body {
   .animate-rise { animation-duration: 1ms; }
 }
 
+/* Page/tab switch - snappier and shorter than rise-in, which is only for the
+   one-off login card entrance. This fires on every nav, so it stays quick. */
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-page {
+  animation: page-in 180ms cubic-bezier(0.23, 1, 0.32, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-page { animation-duration: 1ms; }
+}
+
 ::-webkit-scrollbar { width: 10px; }
-::-webkit-scrollbar-track { background: #eee7df; }
-::-webkit-scrollbar-thumb { background: #c9b6a8; border-radius: 999px; border: 3px solid #eee7df; }
+::-webkit-scrollbar-track { background: #edf0ed; }
+::-webkit-scrollbar-thumb { background: #c5cdc8; border-radius: 999px; border: 3px solid #edf0ed; }
+/* Transitions.dev - Toggle: the thumb slides with a double bounce (overshoot past the end,
+   swing back, settle); the track colour cross-fades. Toggle `data-on`; add `.is-init` on the
+   first interaction so the keyframes do not play on load. */
+:root {
+  --toggle-dur: 350ms;
+  --toggle-travel: 16px; /* track 38px - 2 x 3px padding - 16px thumb */
+  --toggle-ov1: 1px;
+  --toggle-ov2: 0px;
+  --toggle-track: 0ms;
+  --toggle-ease: cubic-bezier(0.34, 1.35, 0.64, 1);
+}
+.t-toggle { transition: background var(--toggle-track) var(--toggle-ease); }
+.t-toggle-thumb { translate: 0 0; will-change: translate; }
+.t-toggle[data-on="true"] .t-toggle-thumb { translate: var(--toggle-travel) 0; }
+.t-toggle.is-init[data-on="true"] .t-toggle-thumb { animation: t-toggle-on var(--toggle-dur) var(--toggle-ease) both; }
+.t-toggle.is-init[data-on="false"] .t-toggle-thumb { animation: t-toggle-off var(--toggle-dur) var(--toggle-ease) both; }
+@keyframes t-toggle-on {
+  0% { translate: 0 0; }
+  55% { translate: calc(var(--toggle-travel) + var(--toggle-ov1)) 0; }
+  80% { translate: calc(var(--toggle-travel) - var(--toggle-ov2)) 0; }
+  100% { translate: var(--toggle-travel) 0; }
+}
+@keyframes t-toggle-off {
+  0% { translate: var(--toggle-travel) 0; }
+  55% { translate: calc(0px - var(--toggle-ov1)) 0; }
+  80% { translate: var(--toggle-ov2) 0; }
+  100% { translate: 0 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .t-toggle-thumb { animation: none !important; }
+}
+
+/* Figma dashboard: perfume bottle placeholder in the product rows (color = text color of the tile). */
+.bottle { position: relative; width: 16px; height: 22px; border-radius: 4px 4px 6px 6px; border: 1.5px solid currentColor; background: color-mix(in srgb, currentColor 12%, white); }
+.bottle::before { content: ''; position: absolute; top: -5px; left: 4px; width: 6px; height: 5px; border-radius: 1px 1px 0 0; background: currentColor; }
+.bottle::after { content: ''; position: absolute; inset: 6px 3px 4px; border: 1px solid currentColor; border-radius: 50%; opacity: 0.6; }
+.bottle.tall { width: 13px; height: 24px; border-radius: 3px; }
+.bottle.wide { width: 21px; height: 18px; border-radius: 7px 7px 4px 4px; }
+.bottle.wide::before { left: 7px; }

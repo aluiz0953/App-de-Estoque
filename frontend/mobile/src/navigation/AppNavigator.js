@@ -1,64 +1,81 @@
 import React from 'react';
+import { useSelector } from 'react-redux';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
-import { colors, fonts } from '../theme/colors';
+import BottomTabBar from '../components/BottomTabBar';
 
 // Screens
 import HomeScreen from '../screens/HomeScreen';
 import InventoryScreen from '../screens/InventoryScreen';
+import OrdersScreen from '../screens/OrdersScreen';
+import SettingsScreen from '../screens/SettingsScreen';
 import HistoryScreen from '../screens/HistoryScreen';
 import LoginScreen from '../screens/LoginScreen';
 import ProductDetailScreen from '../screens/ProductDetailScreen';
+import AddEditProductScreen from '../screens/AddEditProductScreen';
 import MovimentacaoDetailScreen from '../screens/MovimentacaoDetailScreen';
 import EntradaRomaneioScreen from '../screens/EntradaRomaneioScreen';
+import AddEditPedidoScreen from '../screens/AddEditPedidoScreen';
+import PedidoDetailScreen from '../screens/PedidoDetailScreen';
+import RevistasScreen from '../screens/RevistasScreen';
+import RevistaViewerScreen from '../screens/RevistaViewerScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
-const TAB_ICONS = {
-  Início: 'home',
-  Inventário: 'package-variant',
-  Histórico: 'history',
-};
-
-// Bottom Tabs: Início, Inventário, Histórico (per the mobile design system spec).
+// Bottom Tabs: Hoje, Estoque, [+ central], Pedidos, Configurações — per the
+// AromaStock mobile design spec. Histórico is not a tab (spec doesn't ask for
+// one); it stays reachable from Detalhe do Produto and from Configurações.
 function MainTabs() {
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-        headerShown: false,
-        tabBarActiveTintColor: colors.secondaryDark,
-        tabBarInactiveTintColor: colors.textMutedLight,
-        tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopColor: colors.border,
-        },
-        tabBarLabelStyle: { fontFamily: fonts.sansMedium, fontSize: 11 },
-        tabBarIcon: ({ color, size }) => (
-          <MaterialCommunityIcons name={TAB_ICONS[route.name]} color={color} size={size} />
-        ),
-      })}
+      screenOptions={{ headerShown: false }}
+      tabBar={(props) => <BottomTabBar {...props} />}
     >
-      <Tab.Screen name="Início" component={HomeScreen} />
-      <Tab.Screen name="Inventário" component={InventoryScreen} />
-      <Tab.Screen name="Histórico" component={HistoryScreen} />
+      <Tab.Screen name="Hoje" component={HomeScreen} />
+      <Tab.Screen name="Estoque" component={InventoryScreen} />
+      <Tab.Screen name="Pedidos" component={OrdersScreen} />
+      <Tab.Screen name="Configuracoes" component={SettingsScreen} />
     </Tab.Navigator>
   );
 }
 
 export default function AppNavigator() {
+  // authSlice is redux-persist'd (AsyncStorage), so isAuthenticated survives
+  // an app restart. Conditionally rendering the screen set (not just an
+  // initialRouteName, which only applies once at mount) also means a logout
+  // that happens mid-session - e.g. api.js's onUnauthorized firing because the
+  // backend's in-memory session got wiped by a redeploy - actually navigates
+  // back to Login instead of leaving the user stranded on a screen that just
+  // 401s on every request.
+  const { isAuthenticated } = useSelector((state) => state.auth);
+
   return (
-    <Stack.Navigator
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
-      <Stack.Screen name="Login" component={LoginScreen} />
-      <Stack.Screen name="Home" component={MainTabs} />
-      <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
-      <Stack.Screen name="MovimentacaoDetail" component={MovimentacaoDetailScreen} />
-      <Stack.Screen name="EntradaRomaneio" component={EntradaRomaneioScreen} />
+    <Stack.Navigator screenOptions={{ headerShown: false }}>
+      {isAuthenticated ? (
+        <>
+          <Stack.Screen name="Home" component={MainTabs} />
+          <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
+          <Stack.Screen
+            name="AddEditProduct"
+            component={AddEditProductScreen}
+            options={{ presentation: 'modal' }}
+          />
+          <Stack.Screen name="Histórico" component={HistoryScreen} />
+          <Stack.Screen name="MovimentacaoDetail" component={MovimentacaoDetailScreen} />
+          <Stack.Screen name="EntradaRomaneio" component={EntradaRomaneioScreen} />
+          <Stack.Screen name="PedidoDetail" component={PedidoDetailScreen} />
+          <Stack.Screen name="Revistas" component={RevistasScreen} />
+          <Stack.Screen name="RevistaViewer" component={RevistaViewerScreen} />
+          <Stack.Screen
+            name="AddEditPedido"
+            component={AddEditPedidoScreen}
+            options={{ presentation: 'modal' }}
+          />
+        </>
+      ) : (
+        <Stack.Screen name="Login" component={LoginScreen} />
+      )}
     </Stack.Navigator>
   );
 }

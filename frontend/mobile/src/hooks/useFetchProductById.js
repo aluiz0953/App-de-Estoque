@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import apiService from '../services/api';
 
 const useFetchProductById = (productId) => {
@@ -6,31 +6,30 @@ const useFetchProductById = (productId) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  useEffect(() => {
+  const fetchProduct = useCallback(async () => {
     if (!productId) {
       setData(null);
       setIsLoading(false);
       return;
     }
-
-    const fetchProduct = async () => {
-      setIsLoading(true);
-      try {
-        const result = await apiService.getProductById(productId);
-        setData(result);
-        setError(null);
-      } catch (err) {
-        setError(err);
-        setData(null);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchProduct();
+    setIsLoading(true);
+    try {
+      const result = await apiService.getProductById(productId);
+      setData(result);
+      setError(null);
+    } catch (err) {
+      setError(err);
+      setData(null);
+    } finally {
+      setIsLoading(false);
+    }
   }, [productId]);
 
-  return { data, isLoading, error };
+  useEffect(() => {
+    fetchProduct();
+  }, [fetchProduct]);
+
+  return { data, isLoading, error, refetch: fetchProduct };
 };
 
 export default useFetchProductById;

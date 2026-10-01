@@ -1,7 +1,9 @@
-import { get, post, put, del } from './request';
+import { get, post, put, del, postForm, getBlob } from './request';
 
 // URL base da API - em produção, isso viria de variáveis de ambiente
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+
+const imageCache = new Map();
 
 const apiService = {
   // Métodos auxiliares para requisições
@@ -25,8 +27,23 @@ const apiService = {
   getProfile: () =>
     apiService.request.get('/auth/profile'),
 
+  register: (data) =>
+    apiService.request.post('/auth/register', data),
+
   getUsuarios: () =>
     apiService.request.get('/usuarios'),
+
+  activateUsuario: (id) =>
+    apiService.request.put(`/usuarios/${id}/activate`),
+
+  deactivateUsuario: (id) =>
+    apiService.request.put(`/usuarios/${id}/deactivate`),
+
+  rejectUsuario: (id) =>
+    apiService.request.delete(`/usuarios/${id}`),
+
+  updateUsuarioRole: (id, role) =>
+    apiService.request.put(`/usuarios/${id}/role`, { role }),
 
   // Produtos
   getProducts: (params = {}) =>
@@ -63,11 +80,46 @@ const apiService = {
   createMarca: (marcaData) =>
     apiService.request.post('/marcas', marcaData),
 
+  deleteMarca: (id) =>
+    apiService.request.delete(`/marcas/${id}`),
+
   getLinhas: (marcaId) =>
     apiService.request.get('/linhas', marcaId ? { marcaId } : {}),
 
   createLinha: (linhaData) =>
     apiService.request.post('/linhas', linhaData),
+
+  // Clientes
+  getClientes: (params = {}) =>
+    apiService.request.get('/clientes', params),
+
+  getClienteById: (id) =>
+    apiService.request.get(`/clientes/${id}`),
+
+  createCliente: (data) =>
+    apiService.request.post('/clientes', data),
+
+  updateCliente: (id, data) =>
+    apiService.request.put(`/clientes/${id}`, data),
+
+  // Pedidos
+  getPedidos: (params = {}) =>
+    apiService.request.get('/pedidos', params),
+
+  getPedidoById: (id) =>
+    apiService.request.get(`/pedidos/${id}`),
+
+  createPedido: (data) =>
+    apiService.request.post('/pedidos', data),
+
+  confirmPedido: (id) =>
+    apiService.request.put(`/pedidos/${id}/confirmar`),
+
+  cancelPedido: (id) =>
+    apiService.request.put(`/pedidos/${id}/cancelar`),
+
+  updatePedidoStatus: (id, status) =>
+    apiService.request.put(`/pedidos/${id}/status`, { status }),
 
   // Estoque
   createStockEntry: (stockData) =>
@@ -93,6 +145,34 @@ const apiService = {
 
   getMovimentacoes: (params = {}) =>
     apiService.request.get('/estoque/movimentacoes', params),
+
+  getMovimentacoesHistorico: (params = {}) =>
+    apiService.request.get('/estoque/movimentacoes/historico', params),
+
+  // Revistas (PDF de cada marca, guardada como uma imagem por página)
+  getRevistas: () =>
+    apiService.request.get('/revistas'),
+
+  uploadRevista: ({ marcaId, titulo, arquivo }) => {
+    const form = new FormData();
+    form.append('marcaId', marcaId);
+    form.append('titulo', titulo);
+    form.append('arquivo', arquivo);
+    return postForm(`${API_BASE_URL}/revistas`, form);
+  },
+
+  deleteRevista: (id) =>
+    apiService.request.delete(`/revistas/${id}`),
+
+  // Same image, same URL, forever: keep the object URL instead of downloading it again.
+  getRevistaImagem: (path) => {
+    if (!imageCache.has(path)) {
+      const request = getBlob(`${API_BASE_URL}/revistas/${path}`).then((blob) => URL.createObjectURL(blob));
+      request.catch(() => imageCache.delete(path));
+      imageCache.set(path, request);
+    }
+    return imageCache.get(path);
+  },
 
   // Notificações
   getNotifications: (params = {}) =>

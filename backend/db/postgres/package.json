@@ -1,0 +1,11 @@
+{
+  "name": "estoque-db-tools",
+  "private": true,
+  "type": "module",
+  "description": "Scripts to set up, harden and fill the hosted PostgreSQL (Supabase) database of the Estoque backend",
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "mysql2": "^3.11.0",
+    "pg": "^8.12.0"
+  }
+}

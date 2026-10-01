@@ -23,11 +23,26 @@ const UsersPage = () => {
     apiService.getProfile().then(setProfile).catch(setProfileError);
   }, []);
 
-  useEffect(() => {
+  const loadUsers = () => {
     if (sessionUser?.role === 'ADMIN') {
       apiService.getUsuarios().then(setUsers).catch(setUsersError);
     }
-  }, [sessionUser?.role]);
+  };
+
+  useEffect(loadUsers, [sessionUser?.role]);
+
+  const [roleError, setRoleError] = useState(null);
+
+  const handleActivate = (id) => apiService.activateUsuario(id).then(loadUsers);
+  const handleDeactivate = (id) => apiService.deactivateUsuario(id).then(loadUsers);
+  const handleReject = (id) => apiService.rejectUsuario(id).then(loadUsers);
+  const handleRoleChange = (id, role) => {
+    setRoleError(null);
+    apiService
+      .updateUsuarioRole(id, role)
+      .then(loadUsers)
+      .catch((err) => setRoleError(err?.body?.message || err.message));
+  };
 
   return (
     <main className="p-5 md:p-9">
@@ -43,7 +58,7 @@ const UsersPage = () => {
             <p className="text-[13px] text-muted-light">Carregando...</p>
           ) : (
             <div className="flex items-start gap-4">
-              <div className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-secondary font-display text-[20px] text-[#2d2724]">
+              <div className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-secondary font-display text-[20px] text-white">
                 {profile.fullName?.slice(0, 2).toUpperCase() || profile.username?.slice(0, 2).toUpperCase()}
               </div>
               <dl className="grid flex-1 gap-2 text-[13px]">
@@ -81,11 +96,12 @@ const UsersPage = () => {
       </div>
 
       {sessionUser?.role === 'ADMIN' && (
-        <section className="mt-6 overflow-hidden rounded-xl border border-border bg-surface shadow-[0_12px_35px_rgba(63,47,35,0.04)]">
+        <section className="mt-6 overflow-hidden rounded-xl border border-border bg-surface shadow-[0_12px_35px_rgba(32,61,43,0.04)]">
           <div className="border-b border-border p-5">
             <h3 className="font-display text-[22px]">Equipe</h3>
             <p className="mt-1 text-[12px] text-muted-light">Todos os usuários com acesso ao sistema.</p>
           </div>
+          {roleError && <p className="border-b border-border px-5 py-3 text-[12px] text-danger">{roleError}</p>}
           {usersError ? (
             <p className="p-5 text-[13px] text-danger">Erro ao carregar usuários: {usersError.message}</p>
           ) : !users ? (
@@ -101,16 +117,53 @@ const UsersPage = () => {
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="rounded-full bg-[#efe9e2] px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.08em] text-[#5b4842]">
-                      {ROLE_LABEL[u.role] || u.role}
-                    </span>
+                    {u.username === sessionUser?.user ? (
+                      <span className="rounded-full bg-[#f1f5f2] px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.08em] text-[#3f4a43] dark:bg-white/10 dark:text-muted">
+                        {ROLE_LABEL[u.role] || u.role}
+                      </span>
+                    ) : (
+                      <select
+                        value={u.role}
+                        onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                        className="rounded-full border border-border bg-[#f1f5f2] px-2 py-1 font-mono text-[9px] uppercase tracking-[0.08em] text-[#3f4a43] outline-none dark:bg-white/10 dark:text-muted"
+                      >
+                        {Object.entries(ROLE_LABEL).map(([value, label]) => (
+                          <option key={value} value={value}>{label}</option>
+                        ))}
+                      </select>
+                    )}
                     <span
                       className={`rounded-full px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.08em] ${
-                        u.active ? 'bg-[#dce6d8] text-[#5f7658]' : 'bg-[#ded7d4] text-[#716562]'
+                        u.active ? 'bg-[#eaf7ee] text-[#147a37] dark:bg-primary/20 dark:text-primary' : 'bg-[#fdf0d9] text-[#8a5a12] dark:bg-warning/20 dark:text-warning'
                       }`}
                     >
-                      {u.active ? 'Ativo' : 'Inativo'}
+                      {u.active ? 'Ativo' : 'Pendente'}
                     </span>
+                    {u.active ? (
+                      u.username !== sessionUser?.user && (
+                        <button
+                          onClick={() => handleDeactivate(u.id)}
+                          className="text-[11px] font-medium text-muted hover:text-danger"
+                        >
+                          Desativar
+                        </button>
+                      )
+                    ) : (
+                      <>
+                        <button
+                          onClick={() => handleActivate(u.id)}
+                          className="text-[11px] font-medium text-secondary-dark hover:text-primary"
+                        >
+                          Aprovar
+                        </button>
+                        <button
+                          onClick={() => handleReject(u.id)}
+                          className="text-[11px] font-medium text-muted hover:text-danger"
+                        >
+                          Recusar
+                        </button>
+                      </>
+                    )}
                   </div>
                 </div>
               ))}
@@ -126,7 +179,7 @@ const ThemeOption = ({ label, icon, active, onClick }) => (
   <button
     onClick={onClick}
     className={`pressable flex flex-1 flex-col items-center gap-2 rounded-lg border px-4 py-5 transition ${
-      active ? 'border-secondary-dark bg-[#efe9e2] text-[#2d2724]' : 'border-border text-muted hover:bg-brand-bg'
+      active ? 'border-secondary bg-secondary/10 text-ink' : 'border-border text-muted hover:bg-brand-bg'
     }`}
   >
     <span className={`mdi mdi-${icon} text-[22px]`} />

@@ -24,17 +24,20 @@ public class ProdutoController {
     private ProfitMarginService profitMarginService;
 
     /**
-     * Get all products, optionally filtered by a quick-search term across
+     * Get all active products, optionally filtered by a quick-search term across
      * nome/SKU/linha/marca (web search box, mobile "Entrada de Romaneio" autocomplete).
+     * Archived products (see #archiveProduto) are excluded - restore them via
+     * their own id first if they need to reappear here.
      * @param search Optional search term
      * @return List of matching products
      */
     @GetMapping
     public List<Produto> getAllProdutos(@RequestParam(required = false) String search) {
         if (search != null && !search.isBlank()) {
-            return produtoRepository.search(search.trim());
+            return produtoRepository.search(search.trim()).stream().filter(Produto::isActive).toList();
         }
-        return produtoRepository.findAll();
+        // Already active-only and JOIN FETCHed (see #findAllActiveWithLinhaAndMarca) - no extra filter needed.
+        return produtoRepository.findAllActiveWithLinhaAndMarca();
     }
 
     /**
@@ -115,6 +118,38 @@ public class ProdutoController {
         }
         produtoRepository.deleteById(id);
         return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Archives a product (soft delete): keeps the row and its lote/movimentacao
+     * history intact, just marks it inactive so it drops out of active-inventory
+     * views. Use this instead of DELETE for the normal "remove from catalog" flow.
+     * @param id Product ID
+     * @return Updated product
+     */
+    @PutMapping("/{id}/archive")
+    public ResponseEntity<Produto> archiveProduto(@PathVariable Long id) {
+        return produtoRepository.findById(id)
+                .map(produto -> {
+                    produto.setActive(false);
+                    return ResponseEntity.ok(produtoRepository.save(produto));
+                })
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    /**
+     * Restores a previously archived product back to active inventory.
+     * @param id Product ID
+     * @return Updated product
+     */
+    @PutMapping("/{id}/restore")
+    public ResponseEntity<Produto> restoreProduto(@PathVariable Long id) {
+        return produtoRepository.findById(id)
+                .map(produto -> {
+                    produto.setActive(true);
+                    return ResponseEntity.ok(produtoRepository.save(produto));
+                })
+                .orElse(ResponseEntity.notFound().build());
     }
 
     /**
@@ -356,3 +391,4 @@ public class ProdutoController {
                 linhaNome, fragrancia);
     }
 }
+

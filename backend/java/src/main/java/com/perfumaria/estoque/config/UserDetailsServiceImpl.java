@@ -30,7 +30,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         return new User(
                 usuario.getUsername(),
                 usuario.getPasswordHash(),
-                true, // enabled
+                usuario.isActive(), // enabled - blocks login for deactivated accounts and
+                                     // accounts still pending admin approval (self-registered)
                 true, // accountNotExpired
                 true, // credentialsNotExpired
                 true, // accountNotLocked

@@ -1,5 +1,6 @@
 package com.perfumaria.estoque.controller.auth;
 
+import com.perfumaria.estoque.config.AuditLogFilter;
 import com.perfumaria.estoque.model.Usuario;
 import com.perfumaria.estoque.repository.UsuarioRepository;
 import jakarta.servlet.http.HttpServletRequest;
@@ -9,10 +10,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.context.HttpSessionSecurityContextRepository;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.web.bind.annotation.*;
@@ -28,6 +31,8 @@ import java.util.Map;
 @RequestMapping("/api/auth")
 public class AuthController {
 
+    private static final int MIN_PASSWORD_LENGTH = 8;
+
     @Autowired
     private AuthenticationManager authenticationManager;
 
@@ -36,6 +41,12 @@ public class AuthController {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private LoginAttemptService loginAttempts;
+
+    @Autowired
+    private RememberMeServices rememberMeServices;
 
     private final SecurityContextRepository securityContextRepository = new HttpSessionSecurityContextRepository();
 
@@ -47,15 +58,32 @@ public class AuthController {
      * @return Authentication success response
      */
     @PostMapping("/login")
-    public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, String> credentials,
+    public ResponseEntity<Map<String, Object>> login(@RequestBody Map<String, Object> credentials,
                                                        HttpServletRequest request,
                                                        HttpServletResponse response) {
-        String username = credentials.get("username");
-        String password = credentials.get("password");
+        String username = (String) credentials.get("username");
+        String password = (String) credentials.get("password");
+        // "Manter conectado" defaults to on when the client doesn't say - an older
+        // client that never sends the flag still gets a login that survives redeploys.
+        Object rememberFlag = credentials.get("rememberMe");
+        boolean rememberMe = rememberFlag == null || Boolean.parseBoolean(String.valueOf(rememberFlag));
 
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(username, password)
-        );
+        String attemptKey = LoginAttemptService.key(username, AuditLogFilter.clientIp(request));
+        if (loginAttempts.isBlocked(attemptKey)) {
+            return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
+                    .body(Map.of("message", "Muitas tentativas. Tente novamente em alguns minutos."));
+        }
+
+        Authentication authentication;
+        try {
+            authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(username, password)
+            );
+        } catch (AuthenticationException ex) {
+            loginAttempts.recordFailure(attemptKey);
+            throw ex;
+        }
+        loginAttempts.recordSuccess(attemptKey);
 
         // Spring Security 6's SecurityContextHolderFilter does not persist a context set
         // mid-request on its own (unlike the old SecurityContextPersistenceFilter) — it
@@ -64,14 +92,22 @@ public class AuthController {
         context.setAuthentication(authentication);
         SecurityContextHolder.setContext(context);
         securityContextRepository.saveContext(context, request, response);
+        if (rememberMe) {
+            rememberMeServices.loginSuccess(request, response, authentication);
+        }
 
-        Usuario usuario = usuarioRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado após autenticação"));
+        // authenticate() already loaded the Usuario once (UserDetailsServiceImpl) and its
+        // role is right there in the granted authorities - re-querying it here was a second
+        // round trip to the DB for data already in hand, doubling login latency for nothing.
+        String role = authentication.getAuthorities().stream()
+                .findFirst()
+                .map(a -> a.getAuthority().replaceFirst("^ROLE_", ""))
+                .orElseThrow(() -> new RuntimeException("Usuário sem papel definido"));
 
         Map<String, Object> body = new HashMap<>();
         body.put("authenticated", true);
-        body.put("user", usuario.getUsername());
-        body.put("role", usuario.getRole().toString());
+        body.put("user", authentication.getName());
+        body.put("role", role);
         body.put("message", "Login realizado com sucesso");
 
         return ResponseEntity.ok(body);
@@ -107,24 +143,35 @@ public class AuthController {
     }
 
     /**
-     * Register a new user (admin function).
-     * In a real application, this would be more restricted.
+     * Public self-registration. The account is created inactive - an ADMIN must
+     * approve it (see UsuarioController#activate) before it can log in. Role and
+     * active are never taken from the request body: an anonymous caller must not
+     * be able to hand themselves ADMIN or a pre-approved account.
      *
      * @param usuario User data to register
-     * @return Registered user
+     * @return Success message (no account details - the caller isn't authenticated yet)
      */
     @PostMapping("/register")
-    public ResponseEntity<Usuario> register(@RequestBody Usuario usuario) {
-        // Check if user already exists
+    public ResponseEntity<Map<String, String>> register(@RequestBody Usuario usuario) {
         if (usuarioRepository.findByUsername(usuario.getUsername()).isPresent()) {
-            return ResponseEntity.badRequest().body(null);
+            return ResponseEntity.badRequest().body(Map.of("message", "Usuário já existe"));
+        }
+        if (usuarioRepository.findByEmail(usuario.getEmail()).isPresent()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "E-mail já cadastrado"));
         }
 
-        // Encode password
-        usuario.setPasswordHash(passwordEncoder.encode(usuario.getPasswordHash()));
-        usuario.setRole(usuario.getRole() != null ? usuario.getRole() : Usuario.Role.OPERATOR);
+        String rawPassword = usuario.getPasswordHash();
+        if (rawPassword == null || rawPassword.length() < MIN_PASSWORD_LENGTH) {
+            return ResponseEntity.badRequest()
+                    .body(Map.of("message", "A senha deve ter pelo menos " + MIN_PASSWORD_LENGTH + " caracteres."));
+        }
 
-        Usuario savedUser = usuarioRepository.save(usuario);
-        return ResponseEntity.status(HttpStatus.CREATED).body(savedUser);
+        usuario.setPasswordHash(passwordEncoder.encode(rawPassword));
+        usuario.setRole(Usuario.Role.OPERATOR);
+        usuario.setActive(false);
+
+        usuarioRepository.save(usuario);
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(Map.of("message", "Conta criada. Aguarde um administrador liberar seu acesso."));
     }
 }

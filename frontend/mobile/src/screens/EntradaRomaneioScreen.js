@@ -1,11 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, TextInput as RNTextInput, FlatList, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput as RNTextInput, FlatList, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
 import { Button, Title, Caption } from 'react-native-paper';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useRoute } from '@react-navigation/native';
 import apiService from '../services/api';
+import { submitStockEntry } from '../services/stockMutations';
 import { useNavigate } from '../hooks/useNavigate';
-import { colors, tabularNums } from '../theme/colors';
+import { tabularNums } from '../theme/colors';
+import { useThemedStyles } from '../theme/ThemeContext';
+import { createStyles } from './EntradaRomaneioScreen.styles';
+import { decorative, slopFor } from '../utils/a11y';
+import ReasonMenu from '../components/ReasonMenu';
+import { MOTIVOS_ENTRADA, MOTIVO_LABEL } from '../utils/motivos';
 
 /**
  * "Entrada de Romaneio (Sem Câmera)" — the mobile app's headline stock-entry flow:
@@ -14,6 +20,7 @@ import { colors, tabularNums } from '../theme/colors';
  * totalizer at the bottom. "Finalizar" ends the session once every box item is logged.
  */
 const EntradaRomaneioScreen = () => {
+  const { colors, styles } = useThemedStyles(createStyles);
   const navigate = useNavigate();
   const route = useRoute();
 
@@ -25,6 +32,7 @@ const EntradaRomaneioScreen = () => {
   const [quantidade, setQuantidade] = useState('');
   const [dataValidade, setDataValidade] = useState('');
   const [precoCusto, setPrecoCusto] = useState('');
+  const [motivo, setMotivo] = useState(null);
   const [itensLidos, setItensLidos] = useState([]);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
@@ -75,6 +83,7 @@ const EntradaRomaneioScreen = () => {
     setQuantidade('');
     setDataValidade('');
     setPrecoCusto('');
+    setMotivo(null);
   };
 
   const adicionarItem = async () => {
@@ -102,16 +111,24 @@ const EntradaRomaneioScreen = () => {
       setErrorMsg('Digite um preço de custo válido.');
       return;
     }
+    if (!motivo) {
+      setErrorMsg('Selecione o motivo da entrada.');
+      return;
+    }
 
     setSubmitting(true);
     try {
-      await apiService.createStockEntry({
-        produtoId: produtoSelecionado.id,
-        numeroLote: numeroLote.trim(),
-        quantidade: quantidadeNum,
-        dataValidade,
-        precoCusto: precoCustoNum,
-      });
+      const outcome = await submitStockEntry(
+        {
+          produtoId: produtoSelecionado.id,
+          numeroLote: numeroLote.trim(),
+          quantidade: quantidadeNum,
+          dataValidade,
+          precoCusto: precoCustoNum,
+          motivo,
+        },
+        produtoSelecionado
+      );
 
       setItensLidos((prev) => [
         ...prev,
@@ -120,6 +137,7 @@ const EntradaRomaneioScreen = () => {
           produtoNome: produtoSelecionado.nome,
           sku: produtoSelecionado.sku,
           quantidade: quantidadeNum,
+          queued: outcome.queued,
         },
       ]);
       limparItemAtual();
@@ -131,7 +149,7 @@ const EntradaRomaneioScreen = () => {
   };
 
   const finalizar = () => {
-    navigate('Home', { screen: 'Inventário' });
+    navigate('Home', { screen: 'Estoque' });
   };
 
   return (
@@ -140,10 +158,15 @@ const EntradaRomaneioScreen = () => {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigate.goBack()} accessibilityLabel="Voltar">
-          <MaterialCommunityIcons name="arrow-left" size={24} color="white" />
+        <TouchableOpacity
+          onPress={() => navigate.goBack()}
+          hitSlop={slopFor(24)}
+          accessibilityRole="button"
+          accessibilityLabel="Voltar"
+        >
+          <MaterialCommunityIcons name="arrow-left" size={24} color="white" {...decorative} />
         </TouchableOpacity>
-        <Text style={styles.headerText}>Entrada de Romaneio</Text>
+        <Text style={styles.headerText} accessibilityRole="header">Entrada de Romaneio</Text>
         <View style={{ width: 24 }} />
       </View>
 
@@ -160,6 +183,7 @@ const EntradaRomaneioScreen = () => {
               value={numeroLote}
               onChangeText={setNumeroLote}
               placeholder="Ex: LOTE-2026-0142"
+              accessibilityLabel="Número do lote da caixa"
               style={styles.input}
               autoCapitalize="characters"
             />
@@ -172,6 +196,7 @@ const EntradaRomaneioScreen = () => {
                   value={searchTerm}
                   onChangeText={setSearchTerm}
                   placeholder="Digite para buscar..."
+                  accessibilityLabel="Buscar produto por nome, SKU, marca ou linha"
                   style={styles.input}
                 />
                 {isSearching && <Caption>Buscando...</Caption>}
@@ -180,6 +205,8 @@ const EntradaRomaneioScreen = () => {
                     key={produto.id}
                     style={styles.resultRow}
                     onPress={() => selecionarProduto(produto)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Selecionar ${produto.nome}, SKU ${produto.sku}`}
                   >
                     <View style={{ flex: 1 }}>
                       <Text style={{ fontWeight: '600' }}>{produto.nome}</Text>
@@ -187,7 +214,7 @@ const EntradaRomaneioScreen = () => {
                         {produto.sku} · {produto.linha?.marca?.nome} · {produto.linha?.nome}
                       </Caption>
                     </View>
-                    <MaterialCommunityIcons name="chevron-right" size={20} color={colors.disabled} />
+                    <MaterialCommunityIcons name="chevron-right" size={20} color={colors.disabled} {...decorative} />
                   </TouchableOpacity>
                 ))}
               </>
@@ -200,8 +227,13 @@ const EntradaRomaneioScreen = () => {
                   <Text style={{ fontWeight: '700' }}>{produtoSelecionado.nome}</Text>
                   <Caption style={tabularNums}>{produtoSelecionado.sku}</Caption>
                 </View>
-                <TouchableOpacity onPress={limparItemAtual} accessibilityLabel="Trocar produto">
-                  <MaterialCommunityIcons name="close-circle" size={22} color={colors.textMuted} />
+                <TouchableOpacity
+                  onPress={limparItemAtual}
+                  hitSlop={slopFor(22)}
+                  accessibilityRole="button"
+                  accessibilityLabel="Trocar produto"
+                >
+                  <MaterialCommunityIcons name="close-circle" size={22} color={colors.textMuted} {...decorative} />
                 </TouchableOpacity>
               </View>
             )}
@@ -214,6 +246,7 @@ const EntradaRomaneioScreen = () => {
                   onChangeText={(text) => setQuantidade(text.replace(/[^0-9]/g, ''))}
                   keyboardType="number-pad"
                   placeholder="0"
+                  accessibilityLabel="Quantidade"
                   style={[styles.input, styles.quantityInput, tabularNums]}
                 />
 
@@ -223,6 +256,7 @@ const EntradaRomaneioScreen = () => {
                   onChangeText={setDataValidade}
                   keyboardType="numbers-and-punctuation"
                   placeholder="2027-12-31"
+                  accessibilityLabel="Data de validade, ano, mês e dia"
                   style={[styles.input, tabularNums]}
                   maxLength={10}
                 />
@@ -233,8 +267,27 @@ const EntradaRomaneioScreen = () => {
                   onChangeText={(text) => setPrecoCusto(text.replace(/[^0-9.]/g, ''))}
                   keyboardType="decimal-pad"
                   placeholder="0.00"
+                  accessibilityLabel="Preço de custo em reais"
                   style={[styles.input, tabularNums]}
                 />
+
+                <Text style={[styles.label, { marginTop: 16 }]}>Motivo</Text>
+                <ReasonMenu options={MOTIVOS_ENTRADA} onSelect={setMotivo}>
+                  {({ open }) => (
+                    <TouchableOpacity
+                      onPress={open}
+                      style={[styles.input, styles.motivoInput]}
+                      accessibilityRole="button"
+                      accessibilityLabel={`Motivo: ${motivo ? MOTIVO_LABEL[motivo] : 'não selecionado'}`}
+                      accessibilityHint="Toque duas vezes para escolher o motivo"
+                    >
+                      <Text style={motivo ? styles.motivoText : styles.motivoPlaceholder}>
+                        {motivo ? MOTIVO_LABEL[motivo] : 'Selecionar motivo'}
+                      </Text>
+                      <MaterialCommunityIcons name="chevron-down" size={18} color={colors.textMuted} {...decorative} />
+                    </TouchableOpacity>
+                  )}
+                </ReasonMenu>
 
                 {errorMsg && <Text style={styles.error}>{errorMsg}</Text>}
 
@@ -256,10 +309,13 @@ const EntradaRomaneioScreen = () => {
             {/* Session so far */}
             {itensLidos.length > 0 && (
               <View style={{ marginTop: 24 }}>
-                <Title>Itens desta caixa</Title>
+                <Title accessibilityRole="header">Itens desta caixa</Title>
                 {itensLidos.map((item) => (
                   <View key={item.key} style={styles.itemRow}>
-                    <Text style={{ flex: 1 }}>{item.produtoNome}</Text>
+                    <Text style={{ flex: 1 }}>
+                      {item.produtoNome}
+                      {item.queued ? <Text style={styles.queuedTag}>  · pendente de sincronização</Text> : null}
+                    </Text>
                     <Text style={tabularNums}>{item.quantidade}</Text>
                   </View>
                 ))}
@@ -284,82 +340,5 @@ const EntradaRomaneioScreen = () => {
     </KeyboardAvoidingView>
   );
 };
-
-const styles = StyleSheet.create({
-  header: {
-    backgroundColor: colors.primary,
-    paddingVertical: 20,
-    paddingHorizontal: 16,
-    elevation: 4,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  headerText: {
-    color: 'white',
-    fontSize: 18,
-    fontWeight: '600',
-  },
-  label: {
-    fontWeight: '600',
-    color: colors.text,
-    marginBottom: 6,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    backgroundColor: colors.surface,
-  },
-  quantityInput: {
-    fontSize: 24,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  resultRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderColor: colors.border,
-  },
-  selectedCard: {
-    marginTop: 12,
-    padding: 12,
-    borderRadius: 8,
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.border,
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  error: {
-    color: colors.error,
-    marginTop: 12,
-  },
-  itemRow: {
-    flexDirection: 'row',
-    paddingVertical: 6,
-    borderBottomWidth: 1,
-    borderColor: colors.border,
-  },
-  footer: {
-    borderTopWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.surface,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  totalText: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: colors.text,
-  },
-});
 
 export default EntradaRomaneioScreen;

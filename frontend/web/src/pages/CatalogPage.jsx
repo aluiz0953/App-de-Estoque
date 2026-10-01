@@ -20,6 +20,7 @@ const CatalogPage = () => {
   const [form, setForm] = useState({ nome: '', descricao: '' });
   const [salvando, setSalvando] = useState(false);
   const [erroSalvar, setErroSalvar] = useState(null);
+  const [excluindoId, setExcluindoId] = useState(null);
 
   const carregarEstrutura = () => {
     setLoadingEstrutura(true);
@@ -74,6 +75,22 @@ const CatalogPage = () => {
     setModal({ tipo: 'linha', marcaId });
   };
   const fecharModal = () => setModal(null);
+
+  const handleExcluirMarca = async (marca) => {
+    if (!window.confirm(`Excluir a marca "${marca.nome}"? Linhas e produtos associados também serão removidos ou arquivados, caso já tenham histórico de movimentação ou pedido.`)) {
+      return;
+    }
+    setExcluindoId(marca.id);
+    try {
+      await apiService.deleteMarca(marca.id);
+      carregarEstrutura();
+      dispatch(fetchProducts());
+    } catch (err) {
+      window.alert(err?.message || 'Erro ao excluir marca');
+    } finally {
+      setExcluindoId(null);
+    }
+  };
 
   const salvar = async (e) => {
     e.preventDefault();
@@ -138,7 +155,7 @@ const CatalogPage = () => {
               <section key={marca.id} className="overflow-hidden rounded-xl border border-border bg-surface">
                 <div className="flex items-center justify-between gap-3 p-5">
                   <button onClick={() => toggleMarca(marca.id)} className="flex flex-1 items-center gap-3 text-left">
-                    <span className="grid h-9 w-9 place-items-center rounded-full bg-primary-50 font-display text-[14px] text-[#2d2724]">
+                    <span className="grid h-9 w-9 place-items-center rounded-full bg-primary-50 font-display text-[14px] text-primary-dark">
                       {marca.nome.slice(0, 2).toUpperCase()}
                     </span>
                     <div>
@@ -154,6 +171,13 @@ const CatalogPage = () => {
                     className="shrink-0 rounded-full border border-border px-3 py-1.5 text-[11px] text-muted hover:bg-brand-bg"
                   >
                     <span className="mdi mdi-plus mr-1" /> Linha
+                  </button>
+                  <button
+                    onClick={() => handleExcluirMarca(marca)}
+                    disabled={excluindoId === marca.id}
+                    className="shrink-0 rounded-full border border-border px-3 py-1.5 text-[11px] font-medium text-danger hover:bg-danger/10 disabled:opacity-40"
+                  >
+                    {excluindoId === marca.id ? 'Excluindo...' : 'Excluir'}
                   </button>
                   <button onClick={() => toggleMarca(marca.id)} aria-label="Expandir">
                     <span className={`mdi mdi-chevron-down text-[20px] text-muted transition ${isOpen ? 'rotate-180' : ''}`} />
