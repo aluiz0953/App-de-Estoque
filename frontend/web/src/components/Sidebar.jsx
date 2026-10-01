@@ -67,7 +67,10 @@ const Sidebar = () => {
         <p className="px-3 font-mono text-[9px] uppercase tracking-[0.16em] text-muted-light">Menu</p>
         <nav className="mt-4 space-y-1">
           {menuItems.map((item) => {
-            const active = location.pathname === item.to;
+            // "/" and "/dashboard" are the same page; sub-routes (/pedidos/12) keep their tab lit.
+            const active =
+              location.pathname === item.to ||
+              (item.to === '/' ? location.pathname === '/dashboard' : location.pathname.startsWith(`${item.to}/`));
             return (
               <Link
                 key={item.to}

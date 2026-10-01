@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { fetchProducts } from '../store/slices/inventorySlice';
 
 const money = (value) => `R$ ${(value ?? 0).toFixed(2).replace('.', ',')}`;
@@ -23,7 +23,8 @@ const InventoryPage = () => {
 
   const { products, isLoading, error } = useSelector((state) => state.inventory);
 
-  const [filters, setFilters] = useState({ tipoProduto: '', linha: '', fragrancia: '', searchTerm: '' });
+  const [searchParams] = useSearchParams(); // the top bar search lands here as ?busca=
+  const [filters, setFilters] = useState({ tipoProduto: '', linha: '', fragrancia: '', searchTerm: searchParams.get('busca') || '' });
   const [activeTab, setActiveTab] = useState('Todas');
   const [stockFilter, setStockFilter] = useState('Todos');
   const [brands, setBrands] = useState([]);
