@@ -71,6 +71,36 @@ const apiFetch = async (endpoint, options = {}) => {
   return null;
 };
 
+// Magazine pages are JPEGs behind the session cookie. fetch -> blob -> data URI works the same
+// everywhere (an <Image uri> would depend on the native image loader sharing the cookie jar).
+// Pages never change once rendered, so keep the last few instead of downloading them again.
+/* global FileReader */
+const imageCache = new Map();
+const IMAGE_CACHE_MAX = 40;
+
+const fetchImageDataUri = async (path) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS * 2);
+  try {
+    const response = await fetch(`${BASE_URL}/revistas/${path}`, { headers: { Accept: 'image/jpeg' }, signal: controller.signal });
+    if (!response.ok) {
+      const err = new Error(`HTTP ${response.status}`);
+      err.status = response.status;
+      if (response.status === 401) unauthorizedListeners.forEach((fn) => fn());
+      throw err;
+    }
+    const blob = await response.blob();
+    return await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(blob);
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+};
+
 // API service methods
 export const apiService = {
   // Auth
@@ -148,6 +178,20 @@ export const apiService = {
 
   updatePedidoStatus: (id, status) =>
     apiFetch(`/pedidos/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }),
+
+  // Revistas (PDF de cada marca, uma imagem por página). Envio do PDF é feito na versão web.
+  getRevistas: () => apiFetch('/revistas'),
+
+  // path: "12/capa" or "12/paginas/3"
+  getRevistaImagem: (path) => {
+    if (!imageCache.has(path)) {
+      if (imageCache.size >= IMAGE_CACHE_MAX) imageCache.delete(imageCache.keys().next().value);
+      const request = fetchImageDataUri(path);
+      request.catch(() => imageCache.delete(path));
+      imageCache.set(path, request);
+    }
+    return imageCache.get(path);
+  },
 
   // Inventory
   createStockEntry: (stockData) => {

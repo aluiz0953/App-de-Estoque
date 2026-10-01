@@ -32,6 +32,7 @@ const ITEMS = [
 ];
 
 const MORE_ITEMS = [
+  { icon: 'book-open-page-variant-outline', label: 'Revistas', go: 'Revistas' },
   { icon: 'history', label: 'Histórico', go: 'Histórico' },
   { icon: 'package-down', label: 'Entrada de romaneio', go: 'EntradaRomaneio' },
   { icon: 'cog-outline', label: 'Ajustes', go: 'Configuracoes' },
