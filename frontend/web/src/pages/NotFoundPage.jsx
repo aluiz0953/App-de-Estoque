@@ -25,7 +25,7 @@ const NotFoundPage = () => {
 
       <p aria-hidden="true" className="font-display mt-4 flex items-center gap-2 text-[8rem] leading-none tracking-[-0.04em] text-ink">
         <span>4</span>
-        {still ? <span>0</span> : <span className="translate-y-[0.2em]"><FluidOrb size={92} color="#d5a0a2" /></span>}
+        {still ? <span>0</span> : <span className="translate-y-[0.2em]"><FluidOrb size={92} color="#dd6383" /></span>}
         <span>4</span>
       </p>
 

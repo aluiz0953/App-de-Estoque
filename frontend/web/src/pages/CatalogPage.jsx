@@ -155,7 +155,7 @@ const CatalogPage = () => {
               <section key={marca.id} className="overflow-hidden rounded-xl border border-border bg-surface">
                 <div className="flex items-center justify-between gap-3 p-5">
                   <button onClick={() => toggleMarca(marca.id)} className="flex flex-1 items-center gap-3 text-left">
-                    <span className="grid h-9 w-9 place-items-center rounded-full bg-primary-50 font-display text-[14px] text-[#2d2724]">
+                    <span className="grid h-9 w-9 place-items-center rounded-full bg-primary-50 font-display text-[14px] text-primary-dark">
                       {marca.nome.slice(0, 2).toUpperCase()}
                     </span>
                     <div>

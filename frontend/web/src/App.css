@@ -3,21 +3,21 @@
 @tailwind utilities;
 
 :root {
-  --color-brand-bg: #f4efe8;
-  --color-surface: #fbf8f3;
-  --color-ink: #2d2724;
-  --color-muted: #766e68;
-  --color-muted-light: #998b82;
-  --color-border: #ded3c8;
+  --color-brand-bg: #f7f9f7;
+  --color-surface: #ffffff;
+  --color-ink: #17201b;
+  --color-muted: #6f7872;
+  --color-muted-light: #8b938e;
+  --color-border: #e7ebe8;
 }
 
 :root.dark {
-  --color-brand-bg: #1c1815;
-  --color-surface: #262019;
-  --color-ink: #f2ece4;
-  --color-muted: #b8ab9f;
-  --color-muted-light: #8f8177;
-  --color-border: #3d332c;
+  --color-brand-bg: #0f1411;
+  --color-surface: #171e19;
+  --color-ink: #eaf0ec;
+  --color-muted: #a3aea7;
+  --color-muted-light: #7d8a82;
+  --color-border: #27312b;
 }
 
 body {
@@ -73,8 +73,8 @@ body {
 }
 
 ::-webkit-scrollbar { width: 10px; }
-::-webkit-scrollbar-track { background: #eee7df; }
-::-webkit-scrollbar-thumb { background: #c9b6a8; border-radius: 999px; border: 3px solid #eee7df; }
+::-webkit-scrollbar-track { background: #edf0ed; }
+::-webkit-scrollbar-thumb { background: #c5cdc8; border-radius: 999px; border: 3px solid #edf0ed; }
 /* Transitions.dev - Toggle: the thumb slides with a double bounce (overshoot past the end,
    swing back, settle); the track colour cross-fades. Toggle `data-on`; add `.is-init` on the
    first interaction so the keyframes do not play on load. */

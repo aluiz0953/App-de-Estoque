@@ -21,7 +21,7 @@ const LABEL_ROOM = 34;
 const ROW_H = 52;
 const CANCEL_DY = 60; // sliding this far off the dock cancels the pick
 const EASE = Easing.bezier(0.22, 1, 0.36, 1);
-const ADD_INK = '#2d2724'; // the rose "+" dot keeps the same ink in both themes
+const ADD_INK = '#17201b'; // the rose "+" dot keeps the same ink in both themes
 
 const ITEMS = [
   { key: 'Hoje', icon: 'sun-compass', label: 'Hoje', route: 'Hoje' },

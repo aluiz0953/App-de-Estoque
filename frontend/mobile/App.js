@@ -15,7 +15,7 @@ import { onUnauthorized } from './src/services/api';
 import { fonts } from './src/theme/colors';
 import { ThemeProvider, useTheme } from './src/theme/ThemeContext';
 
-// Mirrors frontend/web's boutique palette + type system inside react-native-paper's
+// Mirrors frontend/web's Tico e Tica palette + type system inside react-native-paper's
 // MD3 theme, so Paper components (Button, TextInput, Card...) pick it up everywhere
 // without needing per-screen overrides.
 const paperFonts = configureFonts({ config: { fontFamily: fonts.sans } });
@@ -29,7 +29,7 @@ const buildPaperTheme = (colors, isDark) => {
       primary: colors.primary,
       onPrimary: colors.primaryLight,
       secondary: colors.secondary,
-      onSecondary: '#2d2724',
+      onSecondary: '#ffffff',
       background: colors.background,
       surface: colors.surface,
       onSurface: colors.text,

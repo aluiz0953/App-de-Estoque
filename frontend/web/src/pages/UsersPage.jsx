@@ -58,7 +58,7 @@ const UsersPage = () => {
             <p className="text-[13px] text-muted-light">Carregando...</p>
           ) : (
             <div className="flex items-start gap-4">
-              <div className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-secondary font-display text-[20px] text-[#2d2724]">
+              <div className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-secondary font-display text-[20px] text-white">
                 {profile.fullName?.slice(0, 2).toUpperCase() || profile.username?.slice(0, 2).toUpperCase()}
               </div>
               <dl className="grid flex-1 gap-2 text-[13px]">
@@ -96,7 +96,7 @@ const UsersPage = () => {
       </div>
 
       {sessionUser?.role === 'ADMIN' && (
-        <section className="mt-6 overflow-hidden rounded-xl border border-border bg-surface shadow-[0_12px_35px_rgba(63,47,35,0.04)]">
+        <section className="mt-6 overflow-hidden rounded-xl border border-border bg-surface shadow-[0_12px_35px_rgba(32,61,43,0.04)]">
           <div className="border-b border-border p-5">
             <h3 className="font-display text-[22px]">Equipe</h3>
             <p className="mt-1 text-[12px] text-muted-light">Todos os usuários com acesso ao sistema.</p>
@@ -118,14 +118,14 @@ const UsersPage = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     {u.username === sessionUser?.user ? (
-                      <span className="rounded-full bg-[#efe9e2] px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.08em] text-[#5b4842]">
+                      <span className="rounded-full bg-[#f1f5f2] px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.08em] text-[#3f4a43]">
                         {ROLE_LABEL[u.role] || u.role}
                       </span>
                     ) : (
                       <select
                         value={u.role}
                         onChange={(e) => handleRoleChange(u.id, e.target.value)}
-                        className="rounded-full border border-border bg-[#efe9e2] px-2 py-1 font-mono text-[9px] uppercase tracking-[0.08em] text-[#5b4842] outline-none"
+                        className="rounded-full border border-border bg-[#f1f5f2] px-2 py-1 font-mono text-[9px] uppercase tracking-[0.08em] text-[#3f4a43] outline-none"
                       >
                         {Object.entries(ROLE_LABEL).map(([value, label]) => (
                           <option key={value} value={value}>{label}</option>
@@ -134,7 +134,7 @@ const UsersPage = () => {
                     )}
                     <span
                       className={`rounded-full px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.08em] ${
-                        u.active ? 'bg-[#dce6d8] text-[#5f7658]' : 'bg-[#f0d6c5] text-[#94634d]'
+                        u.active ? 'bg-[#eaf7ee] text-[#147a37]' : 'bg-[#fdf0d9] text-[#8a5a12]'
                       }`}
                     >
                       {u.active ? 'Ativo' : 'Pendente'}
@@ -179,7 +179,7 @@ const ThemeOption = ({ label, icon, active, onClick }) => (
   <button
     onClick={onClick}
     className={`pressable flex flex-1 flex-col items-center gap-2 rounded-lg border px-4 py-5 transition ${
-      active ? 'border-secondary-dark bg-[#efe9e2] text-[#2d2724]' : 'border-border text-muted hover:bg-brand-bg'
+      active ? 'border-secondary-dark bg-[#f1f5f2] text-ink' : 'border-border text-muted hover:bg-brand-bg'
     }`}
   >
     <span className={`mdi mdi-${icon} text-[22px]`} />

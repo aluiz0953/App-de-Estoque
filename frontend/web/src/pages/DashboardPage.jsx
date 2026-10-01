@@ -8,7 +8,7 @@ import { useFetchMovimentacoes } from '../hooks/useFetchMovimentacoes';
 
 const money = (value) => `R$ ${(value ?? 0).toFixed(2).replace('.', ',')}`;
 
-const MARCA_CORES = ['#a96d6e', '#7a966e', '#c98a52', '#6b7fa8', '#8f6fa8', '#c1666b'];
+const MARCA_CORES = ['#239e4b', '#dd6383', '#8a68aa', '#e0a43a', '#4d87c7', '#c95b55'];
 
 function agruparSaidaPorSemanaEMarca(movimentacoes) {
   if (!movimentacoes?.length) return { semanas: [], marcas: [] };
@@ -152,7 +152,7 @@ const DashboardPage = () => {
           ) : estoqueBaixo.length === 0 ? (
             <p className="py-8 text-center text-[12px] text-muted-light">Nenhum produto com estoque crítico.</p>
           ) : (
-            <div className="divide-y divide-[#eee7df]">
+            <div className="divide-y divide-[#edf0ed]">
               {estoqueBaixo.map((p) => (
                 <Link
                   key={p.id}
@@ -163,7 +163,7 @@ const DashboardPage = () => {
                     <p className="truncate font-medium">{p.nome}</p>
                     <p className="text-[10px] text-muted-light tabular-nums">{p.sku}</p>
                   </div>
-                  <span className="shrink-0 rounded-full bg-[#ded7d4] px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.08em] text-[#716562] tabular-nums">
+                  <span className="shrink-0 rounded-full bg-[#eceeed] px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.08em] text-[#5f6762] tabular-nums">
                     {p.quantidadeTotal}/{p.estoqueMinimo}
                   </span>
                 </Link>
@@ -178,7 +178,7 @@ const DashboardPage = () => {
           ) : vencendo.length === 0 ? (
             <p className="py-8 text-center text-[12px] text-muted-light">Nenhum lote vencendo em breve.</p>
           ) : (
-            <div className="divide-y divide-[#eee7df]">
+            <div className="divide-y divide-[#edf0ed]">
               {vencendo.map((p) => (
                 <Link
                   key={p.id}
@@ -189,7 +189,7 @@ const DashboardPage = () => {
                     <p className="truncate font-medium">{p.nome}</p>
                     <p className="text-[10px] text-muted-light tabular-nums">{p.sku}</p>
                   </div>
-                  <span className="shrink-0 rounded-full bg-[#f0d6c5] px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.08em] text-[#94634d] tabular-nums">
+                  <span className="shrink-0 rounded-full bg-[#fdf0d9] px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.08em] text-[#8a5a12] tabular-nums">
                     {p.quantidadeVencendoProximos30Dias} un.
                   </span>
                 </Link>
@@ -207,7 +207,7 @@ const StatCard = ({ label, value, detail, icon, tone = 'light', loading }) => {
     tone === 'dark'
       ? 'bg-primary text-primary-50'
       : tone === 'rose'
-        ? 'bg-[#ead8d1] text-[#5c4540]'
+        ? 'bg-[#fbeef2] text-[#ba4566]'
         : 'bg-surface text-ink border border-border';
   return (
     <div className={`rounded-xl p-5 ${styles}`}>
@@ -222,7 +222,7 @@ const StatCard = ({ label, value, detail, icon, tone = 'light', loading }) => {
 };
 
 const Panel = ({ title, subtitle, children }) => (
-  <section className="overflow-hidden rounded-xl border border-border bg-surface shadow-[0_12px_35px_rgba(63,47,35,0.04)]">
+  <section className="overflow-hidden rounded-xl border border-border bg-surface shadow-[0_12px_35px_rgba(32,61,43,0.04)]">
     <div className="border-b border-border p-5">
       <h3 className="font-display text-[22px]">{title}</h3>
       <p className="mt-1 text-[12px] text-muted-light">{subtitle}</p>

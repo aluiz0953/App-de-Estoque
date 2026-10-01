@@ -5,6 +5,7 @@ import {
   TextInput,
   TouchableOpacity,
   ActivityIndicator,
+  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -18,6 +19,8 @@ import LoginBackground from '../components/LoginBackground';
 import Toggle from '../components/Toggle';
 import { fonts } from '../theme/colors';
 import { useThemedStyles } from '../theme/ThemeContext';
+
+const LOGO = require('../assets/logo-tico-e-tica.png');
 
 const emptyRegisterForm = { fullName: '', username: '', email: '', password: '' };
 
@@ -103,10 +106,8 @@ const LoginScreen = () => {
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <View style={styles.card}>
             <View style={styles.header}>
-              <View style={styles.logoDot}>
-                <View style={styles.logoDotInner} />
-              </View>
-              <Text style={styles.eyebrow}>PERFUMARIA</Text>
+              <Image source={LOGO} style={styles.logo} resizeMode="contain" accessibilityLabel="Tico e Tica" />
+              <Text style={styles.eyebrow}>TICO E TICA · PERFUMARIA</Text>
               <Text style={styles.title} accessibilityRole="header">Sistema de Estoque</Text>
             </View>
 
@@ -247,25 +248,15 @@ const createStyles = (colors) => StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     padding: 28,
-    // Same soft lift as the web card (0 18px 55px rgba(63,47,35,0.09)).
-    shadowColor: '#3f2f23',
+    // Same soft lift as the web card.
+    shadowColor: '#203d2b',
     shadowOffset: { width: 0, height: 18 },
     shadowOpacity: 0.09,
     shadowRadius: 28,
     elevation: 6,
   },
   header: { alignItems: 'center', marginBottom: 28 },
-  logoDot: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    borderWidth: 1,
-    borderColor: colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 14,
-  },
-  logoDotInner: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.secondary },
+  logo: { width: 132, height: 90, marginBottom: 14 },
   eyebrow: { fontFamily: fonts.mono, fontSize: 11, letterSpacing: 2, color: colors.textMutedLight, marginBottom: 8 },
   title: { fontFamily: fonts.display, fontSize: 28, color: colors.text },
   label: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 1, color: colors.textMutedLight, marginBottom: 6 },
