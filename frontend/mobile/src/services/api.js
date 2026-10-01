@@ -230,6 +230,12 @@ export const apiService = {
 
   getEstoqueResumo: () => apiFetch('/estoque/resumo'),
 
+  // Entradas or saídas of the last `dias` days (dashboard chart): { dias, tipo: 'ENTRADA' | 'SAIDA' }
+  getMovimentacoes: (params = {}) => {
+    const query = new URLSearchParams(params).toString();
+    return apiFetch(`/estoque/movimentacoes${query ? `?${query}` : ''}`);
+  },
+
   // Notifications
   getNotifications: (params = {}) => {
     const query = new URLSearchParams(params).toString();
