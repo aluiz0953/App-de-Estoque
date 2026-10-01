@@ -205,7 +205,7 @@ const HomeScreen = () => {
 };
 
 const createStyles = (colors) => StyleSheet.create({
-  header: { backgroundColor: colors.headerBg, paddingVertical: 20, paddingHorizontal: 16, elevation: 4 },
+  header: { backgroundColor: colors.headerBg, paddingVertical: 14, paddingHorizontal: 16, elevation: 4 },
   eyebrow: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 2, color: colors.headerInk, opacity: 0.65, marginBottom: 4 },
   headerText: { fontFamily: fonts.display, color: colors.headerInk, fontSize: 22 },
   eyebrowGreen: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 1.7, color: colors.primary, marginTop: 4 },

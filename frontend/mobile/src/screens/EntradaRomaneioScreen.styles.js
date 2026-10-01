@@ -3,7 +3,7 @@ import { StyleSheet } from 'react-native';
 export const createStyles = (colors) => StyleSheet.create({
   header: {
     backgroundColor: colors.headerBg,
-    paddingVertical: 20,
+    paddingVertical: 14,
     paddingHorizontal: 16,
     elevation: 4,
     flexDirection: 'row',
