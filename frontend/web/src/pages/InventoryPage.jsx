@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { fetchProducts } from '../store/slices/inventorySlice';
+import { matches } from '../utils/search';
 
 const money = (value) => `R$ ${(value ?? 0).toFixed(2).replace('.', ',')}`;
 
@@ -29,15 +30,13 @@ const InventoryPage = () => {
   const [stockFilter, setStockFilter] = useState('Todos');
   const [brands, setBrands] = useState([]);
 
+  // The whole active catalogue is loaded once and filtered here: results update as you type, with no
+  // request per keystroke. (The API only understands `search`, so the brand tabs and the Tipo / Linha /
+  // Fragrância fields could never filter on the server.)
+  // ponytail: fine for a few hundred products; move the filters to the API if the catalogue reaches the thousands.
   useEffect(() => {
-    const params = {};
-    if (activeTab !== 'Todas') params.marcaNome = activeTab;
-    if (filters.tipoProduto) params.tipoProduto = filters.tipoProduto;
-    if (filters.linha) params.linhaNome = filters.linha;
-    if (filters.fragrancia) params.fragrancia = filters.fragrancia;
-    if (filters.searchTerm) params.search = filters.searchTerm;
-    dispatch(fetchProducts(params));
-  }, [dispatch, activeTab, filters.tipoProduto, filters.linha, filters.fragrancia, filters.searchTerm]);
+    dispatch(fetchProducts());
+  }, [dispatch]);
 
   useEffect(() => {
     const known = Array.from(new Set(products.map((p) => p.linha?.marca?.nome).filter(Boolean)));
@@ -53,8 +52,13 @@ const InventoryPage = () => {
   };
 
   const visible = products.filter((p) => {
-    if (stockFilter === 'Todos') return true;
-    return getStockState(p.quantidadeTotal, p.estoqueMinimo) === stockFilter;
+    const marca = p.linha?.marca?.nome;
+    if (activeTab !== 'Todas' && marca !== activeTab) return false;
+    if (!matches(p.tipoProduto, filters.tipoProduto)) return false;
+    if (!matches(p.linha?.nome, filters.linha)) return false;
+    if (!matches(p.fragrancia, filters.fragrancia)) return false;
+    if (!matches([p.nome, p.sku, p.descricao, p.linha?.nome, marca].join(' '), filters.searchTerm)) return false;
+    return stockFilter === 'Todos' || getStockState(p.quantidadeTotal, p.estoqueMinimo) === stockFilter;
   });
 
   const handleExport = () => {
