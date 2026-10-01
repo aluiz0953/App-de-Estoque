@@ -23,4 +23,6 @@ Na pasta `backend/db/postgres`, com `npm install` feito e `.env.example` copiado
    - `DDL_AUTO=validate`
 6. **No painel do Supabase**: ligar *Enforce SSL*, desligar a Data API se ela não for usada, restringir IPs quando o plano permitir, conferir *Advisors → Security* (sem alertas) e lembrar que o plano gratuito não faz backup pontual.
 
+**Migrações novas** (`002_revistas.sql` = revistas das marcas): com o banco já criado, rode `node --env-file=.env.supabase apply-schema.mjs 002_revistas.sql` e depois `harden.mjs` de novo (liga RLS e permissões nas tabelas novas). O backend com `DDL_AUTO=validate` só sobe depois disso.
+
 `001_schema.sql` foi gerado pelo Hibernate (Postgres 17) e mostra as 12 tabelas atuais; mudanças de esquema entram aqui de forma deliberada.

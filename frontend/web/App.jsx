@@ -27,6 +27,8 @@ const UsersPage = lazy(() => import('./src/pages/UsersPage'));
 const PedidosPage = lazy(() => import('./src/pages/PedidosPage'));
 const PedidoFormPage = lazy(() => import('./src/pages/PedidoFormPage'));
 const PedidoDetailPage = lazy(() => import('./src/pages/PedidoDetailPage'));
+const RevistasPage = lazy(() => import('./src/pages/RevistasPage'));
+const RevistaViewerPage = lazy(() => import('./src/pages/RevistaViewerPage'));
 const ReportsPage = lazy(() => import('./src/pages/ReportsPage.jsx'));
 const NotFoundPage = lazy(() => import('./src/pages/NotFoundPage'));
 
@@ -77,6 +79,8 @@ function App() {
                         <Route path="/pedidos" element={<PedidosPage />} />
                         <Route path="/pedidos/novo" element={<PedidoFormPage />} />
                         <Route path="/pedidos/:id" element={<PedidoDetailPage />} />
+                        <Route path="/revistas" element={<RevistasPage />} />
+                        <Route path="/revistas/:id" element={<RevistaViewerPage />} />
                         <Route path="*" element={<NotFoundPage />} />
                       </Routes>
                       </Suspense>

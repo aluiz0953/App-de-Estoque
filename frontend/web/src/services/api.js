@@ -1,7 +1,9 @@
-import { get, post, put, del } from './request';
+import { get, post, put, del, postForm, getBlob } from './request';
 
 // URL base da API - em produção, isso viria de variáveis de ambiente
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
+
+const imageCache = new Map();
 
 const apiService = {
   // Métodos auxiliares para requisições
@@ -146,6 +148,31 @@ const apiService = {
 
   getMovimentacoesHistorico: (params = {}) =>
     apiService.request.get('/estoque/movimentacoes/historico', params),
+
+  // Revistas (PDF de cada marca, guardada como uma imagem por página)
+  getRevistas: () =>
+    apiService.request.get('/revistas'),
+
+  uploadRevista: ({ marcaId, titulo, arquivo }) => {
+    const form = new FormData();
+    form.append('marcaId', marcaId);
+    form.append('titulo', titulo);
+    form.append('arquivo', arquivo);
+    return postForm(`${API_BASE_URL}/revistas`, form);
+  },
+
+  deleteRevista: (id) =>
+    apiService.request.delete(`/revistas/${id}`),
+
+  // Same image, same URL, forever: keep the object URL instead of downloading it again.
+  getRevistaImagem: (path) => {
+    if (!imageCache.has(path)) {
+      const request = getBlob(`${API_BASE_URL}/revistas/${path}`).then((blob) => URL.createObjectURL(blob));
+      request.catch(() => imageCache.delete(path));
+      imageCache.set(path, request);
+    }
+    return imageCache.get(path);
+  },
 
   // Notificações
   getNotifications: (params = {}) =>

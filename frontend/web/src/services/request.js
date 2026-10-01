@@ -71,3 +71,25 @@ export const del = (url, options = {}) => {
     ...options,
   }).then(parseResponse);
 };
+
+// Multipart upload: no JSON Content-Type, the browser sets the boundary itself.
+export const postForm = (url, formData, options = {}) => {
+  return fetch(url, {
+    method: 'POST',
+    body: formData,
+    credentials: 'include',
+    ...options,
+  }).then(parseResponse);
+};
+
+// Binary GET (images behind the session cookie, which an <img src> can't be trusted to send cross-site).
+export const getBlob = async (url) => {
+  const response = await fetch(url, { credentials: 'include' });
+  if (!response.ok) {
+    if (response.status === 401) unauthorizedListeners.forEach((fn) => fn());
+    const error = new Error(`Request failed with status ${response.status}`);
+    error.status = response.status;
+    throw error;
+  }
+  return response.blob();
+};

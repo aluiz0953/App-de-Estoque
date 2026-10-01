@@ -103,6 +103,13 @@
             <artifactId>jackson-datatype-hibernate6</artifactId>
         </dependency>
 
+        <!-- Renders each page of an uploaded magazine PDF to an image (RevistaService) -->
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
+            <version>3.0.3</version>
+        </dependency>
+
         <!-- Lombok (optional, for reducing boilerplate) -->
         <dependency>
             <groupId>org.projectlombok</groupId>

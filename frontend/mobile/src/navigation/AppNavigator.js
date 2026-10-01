@@ -17,6 +17,8 @@ import MovimentacaoDetailScreen from '../screens/MovimentacaoDetailScreen';
 import EntradaRomaneioScreen from '../screens/EntradaRomaneioScreen';
 import AddEditPedidoScreen from '../screens/AddEditPedidoScreen';
 import PedidoDetailScreen from '../screens/PedidoDetailScreen';
+import RevistasScreen from '../screens/RevistasScreen';
+import RevistaViewerScreen from '../screens/RevistaViewerScreen';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -63,6 +65,8 @@ export default function AppNavigator() {
           <Stack.Screen name="MovimentacaoDetail" component={MovimentacaoDetailScreen} />
           <Stack.Screen name="EntradaRomaneio" component={EntradaRomaneioScreen} />
           <Stack.Screen name="PedidoDetail" component={PedidoDetailScreen} />
+          <Stack.Screen name="Revistas" component={RevistasScreen} />
+          <Stack.Screen name="RevistaViewer" component={RevistaViewerScreen} />
           <Stack.Screen
             name="AddEditPedido"
             component={AddEditPedidoScreen}

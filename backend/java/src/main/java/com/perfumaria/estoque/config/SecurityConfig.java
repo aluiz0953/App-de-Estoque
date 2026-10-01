@@ -8,6 +8,7 @@ import org.springframework.boot.web.server.Cookie.SameSite;
 import org.springframework.boot.web.servlet.server.CookieSameSiteSupplier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
@@ -98,6 +99,9 @@ public class SecurityConfig {
                 // Protected endpoints - Role-based access
                 .requestMatchers("/api/estoque/**").hasAnyRole(Role.ADMIN.name(), Role.OPERATOR.name(), Role.MANAGER.name())
                 .requestMatchers("/api/produtos/**", "/api/marcas/**", "/api/linhas/**").hasAnyRole(Role.ADMIN.name(), Role.MANAGER.name())
+                // Magazines: anyone signed in can read them (salespeople show them to customers); only ADMIN/MANAGER upload/delete.
+                .requestMatchers(HttpMethod.GET, "/api/revistas/**").authenticated()
+                .requestMatchers("/api/revistas/**").hasAnyRole(Role.ADMIN.name(), Role.MANAGER.name())
                 .requestMatchers("/api/notificacoes/**").hasAnyRole(Role.ADMIN.name(), Role.AUDITOR.name(), Role.MANAGER.name())
                 // Confirming a pedido withdraws stock, same as /api/estoque/** - same roles.
                 .requestMatchers("/api/pedidos/**", "/api/clientes/**").hasAnyRole(Role.ADMIN.name(), Role.OPERATOR.name(), Role.MANAGER.name())

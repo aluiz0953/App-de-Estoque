@@ -38,6 +38,7 @@ const Sidebar = () => {
     { name: 'Dashboard', icon: 'home', to: '/', auth: true },
     { name: 'Estoque', icon: 'package-variant', to: '/estoque', auth: true },
     { name: 'Pedidos', icon: 'format-list-bulleted', to: '/pedidos', auth: ['ADMIN', 'MANAGER', 'OPERATOR'] },
+    { name: 'Revistas', icon: 'book-open-page-variant-outline', to: '/revistas', auth: true },
     { name: 'Produtos', icon: 'package', to: '/produtos', auth: ['ADMIN', 'MANAGER'] },
     { name: 'Notificações', icon: 'bell', to: '/notificacoes', auth: ['ADMIN', 'MANAGER', 'AUDITOR'] },
     { name: 'Relatórios', icon: 'chart-bar', to: '/relatorios', auth: ['ADMIN', 'MANAGER'] },
