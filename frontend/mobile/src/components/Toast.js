@@ -141,7 +141,7 @@ export const ToastProvider = ({ children }) => {
       if (badgeFor(message, colors).icon === 'check') haptic.success();
       else haptic.error();
       if (systemIsland.current) {
-        showFocusIsland('Perfumaria Estoque', String(message)).then((handled) => {
+        showFocusIsland('Tico e Tica', String(message)).then((handled) => {
           if (!handled) showInApp(message);
         });
         return;
@@ -185,11 +185,11 @@ const styles = StyleSheet.create({
   capsule: {
     height: ISLAND_H,
     borderRadius: ISLAND_H / 2,
-    backgroundColor: '#0b0908',
+    backgroundColor: '#0a0f0c',
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 6,
   },
   badge: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  message: { flex: 1, color: '#f4efe8', fontSize: 13, marginLeft: 10, marginRight: 10 },
+  message: { flex: 1, color: '#f7f9f7', fontSize: 13, marginLeft: 10, marginRight: 10 },
 });

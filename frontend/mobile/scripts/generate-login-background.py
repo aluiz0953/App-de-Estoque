@@ -7,7 +7,7 @@ No circles: only the shader look.
 
     python scripts/generate-login-background.py
 
-Requires numpy and pillow. Output: src/assets/login-bg-{a,b,c}.webp
+Requires numpy and pillow. Output: src/assets/login-bg-{a,b,c}.webp (light) and login-bg-dark-{a,b,c}.webp
 """
 import os
 
@@ -15,8 +15,8 @@ import numpy as np
 from PIL import Image
 
 W, H = 720, 1560  # portrait phone; RN scales it to the screen with resizeMode="cover"
-COLOR1 = "#d5a0a2"  # colors.secondary  (dusty rose)
-COLOR2 = "#f4efe8"  # colors.background (cream)
+# (deep, pale) per theme: soft brand pink fading to the page color.
+THEMES = {"": ("#e79ab0", "#f7f9f7"), "dark-": ("#ba4566", "#0f1411")}
 # Noise offsets (the shader moves them with uTime * (0.05, 0.03)); far apart so the
 # three frames look clearly different and the crossfade reads as flowing.
 OFFSETS = {"a": (0.0, 0.0), "b": (0.55, 0.33), "c": (1.15, 0.69)}
@@ -66,14 +66,14 @@ def smoothstep(e0, e1, x):
     return t * t * (3.0 - 2.0 * t)
 
 
-def render(dx, dy):
+def render(dx, dy, color1, color2):
     ys, xs = np.mgrid[0:H, 0:W]
     u = (xs + 0.5) / W
     v = 1.0 - (ys + 0.5) / H  # GLSL uv origin is bottom-left
     noise = snoise(u * 1.5 + dx, v * 1.5 + dy) * 0.25
     gradient = (u + v) * 0.5 * 1.2 + noise
 
-    deep, pale = hex_to_rgb(COLOR1), hex_to_rgb(COLOR2)
+    deep, pale = hex_to_rgb(color1), hex_to_rgb(color2)
     soft = deep + (pale - deep) * 0.33
     light = deep + (pale - deep) * 0.66
     tones = [deep, soft, light, pale]
@@ -97,8 +97,9 @@ def render(dx, dy):
 
 if __name__ == "__main__":
     os.makedirs(OUT, exist_ok=True)
-    for name, (dx, dy) in OFFSETS.items():
-        path = os.path.join(OUT, f"login-bg-{name}.webp")
-        # Lossless keeps the dither crisp; the image is only a few dozen KB either way.
-        render(dx, dy).save(path, "WEBP", lossless=True, quality=100, method=6)
-        print(path, os.path.getsize(path) // 1024, "KB")
+    for prefix, (color1, color2) in THEMES.items():
+        for name, (dx, dy) in OFFSETS.items():
+            path = os.path.join(OUT, f"login-bg-{prefix}{name}.webp")
+            # Lossless keeps the dither crisp; the image is only a few dozen KB either way.
+            render(dx, dy, color1, color2).save(path, "WEBP", lossless=True, quality=100, method=6)
+            print(path, os.path.getsize(path) // 1024, "KB")

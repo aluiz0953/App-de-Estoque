@@ -6,11 +6,11 @@ import { fetchPedidos } from '../store/slices/pedidosSlice';
 const money = (value) => `R$ ${(value ?? 0).toFixed(2).replace('.', ',')}`;
 
 const STATUS_BADGE = {
-  PENDENTE: 'bg-[#f0d6c5] text-[#94634d]',
-  CONFIRMADO: 'bg-[#dce6d8] text-[#5f7658]',
-  ENVIADO: 'bg-[#d8e3ec] text-[#4d6d94]',
-  ENTREGUE: 'bg-[#dce6d8] text-[#5f7658]',
-  CANCELADO: 'bg-[#ded7d4] text-[#716562]',
+  PENDENTE: 'bg-[#fdf0d9] text-[#8a5a12]',
+  CONFIRMADO: 'bg-[#eaf7ee] text-[#147a37]',
+  ENVIADO: 'bg-[#e3ecf7] text-[#3d6199]',
+  ENTREGUE: 'bg-[#eaf7ee] text-[#147a37]',
+  CANCELADO: 'bg-[#eceeed] text-[#5f6762]',
 };
 
 const STATUS_LABEL = {
@@ -70,7 +70,7 @@ const PedidosPage = () => {
 
       {error && <p className="mb-4 text-[13px] text-danger">Erro ao carregar pedidos: {error.message || String(error)}</p>}
 
-      <section className="overflow-hidden rounded-xl border border-border bg-surface shadow-[0_12px_35px_rgba(63,47,35,0.04)]">
+      <section className="overflow-hidden rounded-xl border border-border bg-surface shadow-[0_12px_35px_rgba(32,61,43,0.04)]">
         <div className="border-b border-border p-5">
           <h3 className="font-display text-[24px]">Pedidos ({pedidosMeta.totalElements})</h3>
         </div>
@@ -100,7 +100,7 @@ const PedidosPage = () => {
                 <div
                   key={pedido.id}
                   onClick={() => navigate(`/pedidos/${pedido.id}`)}
-                  className="grid cursor-pointer grid-cols-2 gap-3 border-b border-[#eee7df] px-5 py-4 last:border-0 hover:bg-brand-bg/60 lg:grid-cols-[1.2fr_0.8fr_0.7fr_0.9fr_0.6fr] lg:items-center lg:gap-4"
+                  className="grid cursor-pointer grid-cols-2 gap-3 border-b border-[#edf0ed] px-5 py-4 last:border-0 hover:bg-brand-bg/60 lg:grid-cols-[1.2fr_0.8fr_0.7fr_0.9fr_0.6fr] lg:items-center lg:gap-4"
                 >
                   <div className="col-span-2 lg:col-span-1">
                     <p className="text-[13px] font-medium">{pedido.cliente?.nome}</p>

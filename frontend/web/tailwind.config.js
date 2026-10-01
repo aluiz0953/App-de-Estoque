@@ -10,13 +10,13 @@ module.exports = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: '#2d2724', // Ink quase-preto (botões e elementos sólidos) - fixo em ambos os temas
-          dark: '#5b4842',
-          50: '#efe9e2',
+          DEFAULT: '#239e4b', // Verde Tico (botões e elementos sólidos) - fixo em ambos os temas
+          dark: '#147a37',
+          50: '#eaf7ee',
         },
         secondary: {
-          DEFAULT: '#d5a0a2', // Rosa empoeirado (acento da boutique) - fixo em ambos os temas
-          dark: '#a96d6e',
+          DEFAULT: '#dd6383', // Rosa Tica (acento) - fixo em ambos os temas
+          dark: '#ba4566',
         },
         // Estes seguem variáveis CSS (ver src/App.css) para responder ao tema claro/escuro
         surface: 'var(--color-surface)', // Cartões e painéis
@@ -25,9 +25,9 @@ module.exports = {
         'muted-light': 'var(--color-muted-light)', // Texto terciário / labels
         border: 'var(--color-border)',
         'brand-bg': 'var(--color-brand-bg)', // Fundo
-        danger: '#c1666b',
-        success: '#7a966e',
-        warning: '#c98a52',
+        danger: '#c95b55',
+        success: '#1b8a40',
+        warning: '#c2841f',
       },
       fontFamily: {
         sans: ['DM Sans Variable', 'ui-sans-serif', 'system-ui', 'sans-serif'],

@@ -103,7 +103,7 @@ const PedidoDetailPage = () => {
         </span>
       </div>
 
-      {actionError && <p className="mb-4 rounded-lg bg-[#f0d6c5] px-4 py-2 text-[12px] text-[#94634d]">{actionError}</p>}
+      {actionError && <p className="mb-4 rounded-lg bg-[#fdf0d9] px-4 py-2 text-[12px] text-[#8a5a12]">{actionError}</p>}
 
       <div className="rounded-xl border border-border bg-surface p-6 md:p-8">
         <p className="eyebrow mb-3">Itens</p>

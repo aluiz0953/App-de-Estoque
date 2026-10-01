@@ -6,14 +6,13 @@ import apiService from '../services/api';
 import { useTheme } from '../contexts/ThemeContext';
 import { prefersReducedMotion, whenIdle } from '../utils/performance';
 import Toggle from '../components/Toggle';
-import FluidOrb from '../components/FluidOrb';
 
 const HeroGeometric = lazy(() => import('../components/HeroGeometric'));
 
 // Rose accent (secondary / secondary-dark) blending into the page background (brand-bg).
 const BACKGROUND = {
-  light: { color1: '#d5a0a2', color2: '#f4efe8' },
-  dark: { color1: '#a96d6e', color2: '#1c1815' },
+  light: { color1: '#e79ab0', color2: '#f7f9f7' },
+  dark: { color1: '#ba4566', color2: '#0f1411' },
 };
 
 const emptyRegisterForm = { username: '', email: '', fullName: '', password: '' };
@@ -88,12 +87,10 @@ const LoginPage = () => {
           <HeroGeometric {...BACKGROUND[theme]} speed={prefersReducedMotion() ? 0 : 4} />
         </Suspense>
       )}
-      <div className="relative z-10 w-full max-w-[400px] animate-rise rounded-2xl border border-border bg-surface p-8 shadow-[0_18px_55px_rgba(63,47,35,0.09)] md:p-10">
+      <div className="relative z-10 w-full max-w-[400px] animate-rise rounded-2xl border border-border bg-surface p-8 shadow-[0_18px_55px_rgba(32,61,43,0.09)] md:p-10">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 w-fit" aria-hidden="true">
-            <FluidOrb size={56} color="#d5a0a2" />
-          </div>
-          <p className="eyebrow">Perfumaria</p>
+          <img src="/logo-tico-e-tica.png" alt="Tico e Tica" className="mx-auto mb-4 h-16 w-auto" />
+          <p className="eyebrow">Tico e Tica · Perfumaria</p>
           <h1 className="font-display mt-2 text-[30px] tracking-[-0.02em]">Sistema de Estoque</h1>
         </div>
 

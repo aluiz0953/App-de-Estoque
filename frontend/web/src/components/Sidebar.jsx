@@ -54,11 +54,14 @@ const Sidebar = () => {
 
   const nav = (
     <>
-      <div className="flex h-[86px] items-center gap-3 border-b border-white/10 px-7">
-        <span className="grid h-9 w-9 place-items-center rounded-full border border-white/20">
-          <span className="h-2.5 w-2.5 rounded-full bg-secondary" />
-        </span>
-        <span className="font-display text-[21px] text-primary-50">Perfumaria</span>
+      <div className="flex h-[86px] items-center gap-3 border-b border-border px-5">
+        <img src="/logo-tico-e-tica.png" alt="Tico e Tica" className="h-10 w-auto" />
+        <div className="leading-none">
+          <p className="font-display text-[19px] text-ink">
+            Tico <span className="italic text-secondary-dark">e</span> Tica
+          </p>
+          <p className="mt-1.5 font-mono text-[9px] uppercase tracking-[0.16em] text-muted-light">Perfumaria</p>
+        </div>
       </div>
       <div className="flex-1 overflow-y-auto px-4 py-8">
         <p className="px-3 font-mono text-[9px] uppercase tracking-[0.16em] text-muted-light">Menu</p>
@@ -71,7 +74,7 @@ const Sidebar = () => {
                 to={item.to}
                 onClick={() => setMobileOpen(false)}
                 className={`flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-[13px] transition ${
-                  active ? 'bg-primary-dark text-primary-50' : 'text-[#bcaea2] hover:bg-white/5 hover:text-primary-50'
+                  active ? 'bg-primary/10 font-medium text-primary-dark dark:text-primary' : 'text-muted hover:bg-brand-bg hover:text-ink'
                 }`}
               >
                 <span className={`mdi mdi-${ICONS[item.icon] || item.icon} text-[17px]`} />
@@ -81,19 +84,19 @@ const Sidebar = () => {
           })}
         </nav>
       </div>
-      <div className="mt-auto border-t border-white/10 p-5">
-        <div className="flex items-center gap-3 rounded-lg bg-white/5 p-3">
-          <div className="grid h-8 w-8 place-items-center rounded-full bg-secondary font-display text-[14px] text-[#2d2724]">
+      <div className="mt-auto border-t border-border p-5">
+        <div className="flex items-center gap-3 rounded-lg bg-brand-bg p-3">
+          <div className="grid h-8 w-8 place-items-center rounded-full bg-secondary font-display text-[14px] text-white">
             {(user.user || user.username || user.nome || 'U').slice(0, 2).toUpperCase()}
           </div>
           <div className="min-w-0">
-            <p className="truncate text-[12px] font-medium text-primary-50">{user.user || user.username || user.nome}</p>
+            <p className="truncate text-[12px] font-medium text-ink">{user.user || user.username || user.nome}</p>
             <p className="truncate text-[10px] text-muted-light">{user.role}</p>
           </div>
         </div>
         <button
           onClick={handleLogout}
-          className="pressable mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-white/10 py-2.5 text-[12px] text-[#bcaea2] transition hover:bg-white/5 hover:text-primary-50"
+          className="pressable mt-3 flex w-full items-center justify-center gap-2 rounded-lg border border-border py-2.5 text-[12px] text-muted transition hover:bg-brand-bg hover:text-ink"
         >
           <span className="mdi mdi-logout text-[14px]" />
           Sair da conta
@@ -106,10 +109,10 @@ const Sidebar = () => {
     <>
       <header className="sticky top-0 z-20 flex items-center justify-between gap-3 border-b border-border bg-surface px-4 py-3 lg:hidden">
         <div className="flex items-center gap-2">
-          <span className="grid h-8 w-8 place-items-center rounded-full border border-border">
-            <span className="h-2 w-2 rounded-full bg-secondary" />
+          <img src="/logo-tico-e-tica.png" alt="Tico e Tica" className="h-8 w-auto" />
+          <span className="font-display text-[17px] text-ink">
+            Tico <span className="italic text-secondary-dark">e</span> Tica
           </span>
-          <span className="font-display text-[17px] text-ink">Perfumaria</span>
         </div>
         <button
           onClick={() => setMobileOpen(true)}
@@ -120,17 +123,17 @@ const Sidebar = () => {
         </button>
       </header>
 
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[238px] flex-col border-r border-border bg-[#2d2724] lg:flex">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-[238px] flex-col border-r border-border bg-surface lg:flex">
         {nav}
       </aside>
 
       {mobileOpen && (
         <div className="fixed inset-0 z-40 flex lg:hidden">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setMobileOpen(false)} />
-          <aside className="relative flex w-[238px] flex-col bg-[#2d2724]">
+          <aside className="relative flex w-[238px] flex-col bg-surface">
             <button
               onClick={() => setMobileOpen(false)}
-              className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full text-primary-50/70 hover:text-primary-50"
+              className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-full text-muted hover:text-ink"
               aria-label="Fechar menu"
             >
               <span className="mdi mdi-close text-[16px]" />

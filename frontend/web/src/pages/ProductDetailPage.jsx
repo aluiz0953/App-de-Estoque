@@ -49,7 +49,7 @@ const ProductDetailPage = () => {
   const statusEstoque =
     product.quantidadeTotal < product.estoqueMinimo ? 'Crítico' : product.quantidadeTotal > product.estoqueMaximo ? 'Excedente' : 'Normal';
   const statusBadge =
-    statusEstoque === 'Crítico' ? 'bg-[#ded7d4] text-[#716562]' : statusEstoque === 'Excedente' ? 'bg-[#f0d6c5] text-[#94634d]' : 'bg-[#dce6d8] text-[#5f7658]';
+    statusEstoque === 'Crítico' ? 'bg-[#eceeed] text-[#5f6762]' : statusEstoque === 'Excedente' ? 'bg-[#fdf0d9] text-[#8a5a12]' : 'bg-[#eaf7ee] text-[#147a37]';
 
   return (
     <main className="p-5 md:p-9">
@@ -121,20 +121,20 @@ const ProductDetailPage = () => {
         </div>
       </div>
 
-      <section className="mt-6 overflow-hidden rounded-xl border border-border bg-surface shadow-[0_12px_35px_rgba(63,47,35,0.04)]">
+      <section className="mt-6 overflow-hidden rounded-xl border border-border bg-surface shadow-[0_12px_35px_rgba(32,61,43,0.04)]">
         <div className="flex items-center justify-between border-b border-border p-5">
           <h3 className="font-display text-[22px]">Lotes em estoque</h3>
           <span className="text-[11px] text-muted-light">Total: {lotes?.length || 0}</span>
         </div>
 
         {lotes && lotes.length > 0 ? (
-          <div className="divide-y divide-[#eee7df]">
+          <div className="divide-y divide-[#edf0ed]">
             {lotes.map((lote) => {
               const badge = lote.vencido
-                ? 'bg-[#ded7d4] text-[#716562]'
+                ? 'bg-[#eceeed] text-[#5f6762]'
                 : lote.expirandoEmBreve
-                  ? 'bg-[#f0d6c5] text-[#94634d]'
-                  : 'bg-[#dce6d8] text-[#5f7658]';
+                  ? 'bg-[#fdf0d9] text-[#8a5a12]'
+                  : 'bg-[#eaf7ee] text-[#147a37]';
               const diasParaValidade = lote.dataValidade
                 ? Math.ceil((new Date(lote.dataValidade) - new Date()) / (1000 * 60 * 60 * 24))
                 : null;

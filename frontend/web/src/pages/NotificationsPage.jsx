@@ -10,9 +10,9 @@ const TIPO_LABEL = {
   VENCIDO: 'Vencido',
 };
 const TIPO_BADGE = {
-  ESTOQUE_CRITICO: 'bg-[#ded7d4] text-[#716562]',
-  VENCIMENTO_PROXIMO: 'bg-[#f0d6c5] text-[#94634d]',
-  VENCIDO: 'bg-[#e5b5b2] text-[#7a3c3a]',
+  ESTOQUE_CRITICO: 'bg-[#eceeed] text-[#5f6762]',
+  VENCIMENTO_PROXIMO: 'bg-[#fdf0d9] text-[#8a5a12]',
+  VENCIDO: 'bg-[#fbe3e1] text-[#a13f3f]',
 };
 
 const NotificationsPage = () => {
@@ -96,7 +96,7 @@ const NotificationsPage = () => {
                       <span>{new Date(n.dataCriacao).toLocaleString('pt-BR')}</span>
                       <span
                         className={`rounded-full px-2 py-0.5 font-mono uppercase tracking-[0.06em] ${
-                          n.status === 'PENDENTE' ? 'bg-[#f0d6c5] text-[#94634d]' : 'bg-[#dce6d8] text-[#5f7658]'
+                          n.status === 'PENDENTE' ? 'bg-[#fdf0d9] text-[#8a5a12]' : 'bg-[#eaf7ee] text-[#147a37]'
                         }`}
                       >
                         {n.status === 'PENDENTE' ? 'Pendente' : 'Processada'}

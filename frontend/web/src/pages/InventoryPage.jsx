@@ -12,9 +12,9 @@ const getStockState = (quantidade, minimo) => {
 };
 
 const STATE_BADGE = {
-  Disponível: 'bg-[#dce6d8] text-[#5f7658]',
-  'Estoque baixo': 'bg-[#f0d6c5] text-[#94634d]',
-  'Sem estoque': 'bg-[#ded7d4] text-[#716562]',
+  Disponível: 'bg-[#eaf7ee] text-[#147a37]',
+  'Estoque baixo': 'bg-[#fdf0d9] text-[#8a5a12]',
+  'Sem estoque': 'bg-[#eceeed] text-[#5f6762]',
 };
 
 const InventoryPage = () => {
@@ -145,7 +145,7 @@ const InventoryPage = () => {
 
       {error && <p className="mb-4 text-[13px] text-danger">Erro ao carregar produtos: {error.message || String(error)}</p>}
 
-      <section className="overflow-hidden rounded-xl border border-border bg-surface shadow-[0_12px_35px_rgba(63,47,35,0.04)]">
+      <section className="overflow-hidden rounded-xl border border-border bg-surface shadow-[0_12px_35px_rgba(32,61,43,0.04)]">
         <div className="flex flex-col gap-4 border-b border-border p-5 md:flex-row md:items-center md:justify-between">
           <div>
             <h3 className="font-display text-[24px]">Produtos encontrados ({visible.length})</h3>
@@ -201,7 +201,7 @@ const InventoryPage = () => {
                 return (
                   <div
                     key={product.id}
-                    className="grid grid-cols-2 gap-3 border-b border-[#eee7df] px-5 py-4 last:border-0 hover:bg-brand-bg/60 lg:grid-cols-[1.4fr_0.8fr_0.75fr_0.8fr_0.65fr_0.6fr] lg:items-center lg:gap-4"
+                    className="grid grid-cols-2 gap-3 border-b border-[#edf0ed] px-5 py-4 last:border-0 hover:bg-brand-bg/60 lg:grid-cols-[1.4fr_0.8fr_0.75fr_0.8fr_0.65fr_0.6fr] lg:items-center lg:gap-4"
                   >
                     <div className="col-span-2 lg:col-span-1">
                       <p className="text-[13px] font-medium">{product.nome}</p>
@@ -221,14 +221,14 @@ const InventoryPage = () => {
                       <button
                         onClick={() => navigate(`/produtos/${product.id}`)}
                         aria-label={`Ver ${product.nome}`}
-                        className="grid h-8 w-8 place-items-center rounded-full text-muted-light hover:bg-[#eee7df] hover:text-ink"
+                        className="grid h-8 w-8 place-items-center rounded-full text-muted-light hover:bg-[#edf0ed] hover:text-ink"
                       >
                         <span className="mdi mdi-eye-outline text-[15px]" />
                       </button>
                       <button
                         onClick={() => navigate(`/produtos/${product.id}/editar`)}
                         aria-label={`Editar ${product.nome}`}
-                        className="grid h-8 w-8 place-items-center rounded-full text-muted-light hover:bg-[#eee7df] hover:text-ink"
+                        className="grid h-8 w-8 place-items-center rounded-full text-muted-light hover:bg-[#edf0ed] hover:text-ink"
                       >
                         <span className="mdi mdi-pencil-outline text-[14px]" />
                       </button>

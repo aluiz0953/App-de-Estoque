@@ -1,18 +1,20 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, Animated, Easing, StyleSheet, View } from 'react-native';
+import { useTheme } from '../theme/ThemeContext';
 
 // Mobile counterpart of the web login's shader (HeroGeometric): the same noise-driven,
 // dithered rose/cream gradient, without any circles. React Native cannot run the WebGL
 // shader without a native library, so three frames of the shader are pre-rendered
 // (scripts/generate-login-background.py) and cross-faded slowly with a gentle zoom
 // drift. Only opacity/transform are animated, both on the native driver.
-const FRAME_A = require('../assets/login-bg-a.webp');
-const FRAME_B = require('../assets/login-bg-b.webp');
-const FRAME_C = require('../assets/login-bg-c.webp');
+const LIGHT = [require('../assets/login-bg-a.webp'), require('../assets/login-bg-b.webp'), require('../assets/login-bg-c.webp')];
+const DARK = [require('../assets/login-bg-dark-a.webp'), require('../assets/login-bg-dark-b.webp'), require('../assets/login-bg-dark-c.webp')];
 
 const fill = StyleSheet.absoluteFillObject;
 
 const LoginBackground = () => {
+  const { isDark } = useTheme();
+  const [FRAME_A, FRAME_B, FRAME_C] = isDark ? DARK : LIGHT;
   const frameB = useRef(new Animated.Value(0)).current;
   const frameC = useRef(new Animated.Value(0)).current;
   const drift = useRef(new Animated.Value(0)).current;
