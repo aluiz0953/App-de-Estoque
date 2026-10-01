@@ -165,7 +165,7 @@ const PedidoDetailScreen = () => {
 const createStyles = (colors) => StyleSheet.create({
   header: {
     backgroundColor: colors.headerBg,
-    paddingVertical: 20,
+    paddingVertical: 14,
     paddingHorizontal: 16,
   },
   headerEyebrow: {

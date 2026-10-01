@@ -133,7 +133,7 @@ const RevistasScreen = () => {
 const createStyles = (colors) => StyleSheet.create({
   topHeader: {
     backgroundColor: colors.headerBg,
-    paddingVertical: 16,
+    paddingVertical: 10,
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',

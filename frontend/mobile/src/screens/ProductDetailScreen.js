@@ -114,7 +114,7 @@ const ProductDetailScreen = () => {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <View style={{ backgroundColor: colors.headerBg, paddingVertical: 20, paddingHorizontal: 16, elevation: 4 }}>
+      <View style={{ backgroundColor: colors.headerBg, paddingVertical: 14, paddingHorizontal: 16, elevation: 4 }}>
         <Text style={{ color: colors.headerInk, fontSize: 20, fontFamily: fonts.display }}>
           {produto.nome}
         </Text>

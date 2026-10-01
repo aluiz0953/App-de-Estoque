@@ -243,7 +243,7 @@ const createStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   header: {
     backgroundColor: colors.headerBg,
-    paddingVertical: 20,
+    paddingVertical: 14,
     paddingHorizontal: 16,
   },
   eyebrow: {

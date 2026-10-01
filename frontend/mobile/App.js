@@ -3,7 +3,7 @@ import { StatusBar, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
-import { Provider } from 'react-redux';
+import { Provider, useSelector } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { PaperProvider, MD3LightTheme, MD3DarkTheme, configureFonts } from 'react-native-paper';
 import { store, persistor } from './src/store';
@@ -56,10 +56,15 @@ function Shell({ children }) {
   const { colors, isDark } = useTheme();
   const statusInset = useStatusInset();
   const hasNotch = statusInset > NOTCH_MIN_TOP_INSET;
+  // Signed in, every screen starts with the coloured header band: the strip above it (the status bar
+  // area, which the content is pushed below on phones with a cutout) takes the header colour and the
+  // icons go light, so it reads as one band instead of a pale bar over the header.
+  const signedIn = useSelector((state) => state.auth.isAuthenticated);
+  const lightIcons = isDark || signedIn;
   return (
     <>
-      <StatusBar translucent={hasNotch} backgroundColor="transparent" barStyle={hasNotch && !isDark ? 'dark-content' : 'light-content'} />
-      <View style={{ flex: 1, backgroundColor: colors.background }}>{children}</View>
+      <StatusBar translucent={hasNotch} backgroundColor="transparent" barStyle={hasNotch && !lightIcons ? 'dark-content' : 'light-content'} />
+      <View style={{ flex: 1, backgroundColor: signedIn ? colors.headerBg : colors.background }}>{children}</View>
     </>
   );
 }
