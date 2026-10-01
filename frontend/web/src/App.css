@@ -106,3 +106,11 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .t-toggle-thumb { animation: none !important; }
 }
+
+/* Figma dashboard: perfume bottle placeholder in the product rows (color = text color of the tile). */
+.bottle { position: relative; width: 16px; height: 22px; border-radius: 4px 4px 6px 6px; border: 1.5px solid currentColor; background: color-mix(in srgb, currentColor 12%, white); }
+.bottle::before { content: ''; position: absolute; top: -5px; left: 4px; width: 6px; height: 5px; border-radius: 1px 1px 0 0; background: currentColor; }
+.bottle::after { content: ''; position: absolute; inset: 6px 3px 4px; border: 1px solid currentColor; border-radius: 50%; opacity: 0.6; }
+.bottle.tall { width: 13px; height: 24px; border-radius: 3px; }
+.bottle.wide { width: 21px; height: 18px; border-radius: 7px 7px 4px 4px; }
+.bottle.wide::before { left: 7px; }

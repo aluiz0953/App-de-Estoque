@@ -7,29 +7,32 @@ const GREEN = '#239e4b';
 const PINK = '#dd6383';
 const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
 
-const inicioSemana = (date) => {
+const DIA = 86400000;
+const meia_noite = (date) => {
   const d = new Date(date);
-  d.setDate(d.getDate() - d.getDay());
   d.setHours(0, 0, 0, 0);
   return d;
 };
 
-// One row per week across the whole period (weeks without movement count 0, so the lines don't skip them).
-export function agruparPorSemana(entradas, saidas, dias) {
-  const rows = new Map();
-  const fim = new Date();
-  for (let d = inicioSemana(new Date(fim.getTime() - dias * 86400000)); d <= fim; d = new Date(d.getTime() + 7 * 86400000)) {
-    rows.set(d.getTime(), { data: d, label: `${d.getDate()} ${MESES[d.getMonth()]}`, entradas: 0, saidas: 0 });
+// One point per bucket across the whole period (buckets without movement count 0, so the lines
+// don't skip them): daily up to 2 weeks, weekly up to 3 months, monthly beyond.
+export function agrupar(entradas, saidas, dias) {
+  const passo = dias <= 14 ? 1 : dias <= 90 ? 7 : 30;
+  const inicio = meia_noite(Date.now() - dias * DIA).getTime();
+  const rows = [];
+  for (let t = inicio; t <= Date.now(); t += passo * DIA) {
+    const d = new Date(t);
+    rows.push({ label: `${d.getDate()} ${MESES[d.getMonth()]}`, entradas: 0, saidas: 0 });
   }
   const somar = (lista, campo) => {
     for (const m of lista || []) {
-      const row = rows.get(inicioSemana(m.dataMovimentacao).getTime());
-      if (row) row[campo] += m.quantidade;
+      const i = Math.floor((meia_noite(m.dataMovimentacao).getTime() - inicio) / (passo * DIA));
+      if (rows[i]) rows[i][campo] += m.quantidade;
     }
   };
   somar(entradas, 'entradas');
   somar(saidas, 'saidas');
-  return Array.from(rows.values());
+  return rows;
 }
 
 const Dot = ({ color, children }) => (
@@ -40,7 +43,7 @@ const Dot = ({ color, children }) => (
 );
 
 const MovimentacoesChart = ({ entradas, saidas, dias = 45 }) => {
-  const rows = useMemo(() => agruparPorSemana(entradas, saidas, dias), [entradas, saidas, dias]);
+  const rows = useMemo(() => agrupar(entradas, saidas, dias), [entradas, saidas, dias]);
 
   return (
     <div>
@@ -62,7 +65,7 @@ const MovimentacoesChart = ({ entradas, saidas, dias = 45 }) => {
             <YAxis tick={{ fontSize: 10, fill: 'var(--color-muted-light)' }} axisLine={false} tickLine={false} allowDecimals={false} />
             <Tooltip
               contentStyle={{ background: 'var(--color-surface)', border: '1px solid var(--color-border)', borderRadius: 8, fontSize: 12 }}
-              labelFormatter={(label) => `Semana de ${label}`}
+              labelFormatter={(label) => `A partir de ${label}`}
             />
             <Area type="monotone" dataKey="entradas" name="Entradas" stroke={GREEN} strokeWidth={2} fill="url(#entradasFill)" dot={false} activeDot={{ r: 4 }} />
             <Line type="monotone" dataKey="saidas" name="Saídas" stroke={PINK} strokeWidth={2} strokeDasharray="5 5" dot={false} activeDot={{ r: 4 }} />
