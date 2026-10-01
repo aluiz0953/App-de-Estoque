@@ -7,6 +7,7 @@ import useFetchProducts from '../hooks/useFetchProducts';
 import { useRoute } from '@react-navigation/native';
 import { useNavigate } from '../hooks/useNavigate';
 import SkeletonList from '../components/SkeletonList';
+import SortChips from '../components/SortChips';
 import { fonts, tabularNums } from '../theme/colors';
 import { useThemedStyles } from '../theme/ThemeContext';
 import { useDockClearance } from '../components/BottomTabBar';
@@ -31,6 +32,7 @@ const InventoryScreen = () => {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedMarca, setSelectedMarca] = useState(null);
   const [statusFilter, setStatusFilter] = useState('Todos');
+  const [sort, setSort] = useState(null); // null = default order (products with stock first)
 
   // The cards on Hoje open this tab already filtered ({ status } param, a new object per tap).
   const { params } = useRoute();
@@ -76,8 +78,8 @@ const InventoryScreen = () => {
   }, [ativos]);
 
   const produtosFiltrados = useMemo(
-    () => filterStock(ativos, { marca: selectedMarca, status: statusFilter }),
-    [ativos, selectedMarca, statusFilter]
+    () => filterStock(ativos, { marca: selectedMarca, status: statusFilter, sort }),
+    [ativos, selectedMarca, statusFilter, sort]
   );
 
   const handleRefresh = () => {
@@ -192,6 +194,8 @@ const InventoryScreen = () => {
           </TouchableOpacity>
         ))}
       </View>
+
+      <SortChips value={sort} onChange={setSort} />
 
       {selectedMarca && (
         <View style={styles.activeFilterRow}>

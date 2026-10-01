@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { fetchProducts } from '../store/slices/inventorySlice';
 import { matches } from '../utils/search';
+import { SORT_OPTIONS, sortProducts } from '../utils/sort';
 
 const money = (value) => `R$ ${(value ?? 0).toFixed(2).replace('.', ',')}`;
 
@@ -28,6 +29,7 @@ const InventoryPage = () => {
   const [filters, setFilters] = useState({ tipoProduto: '', linha: '', fragrancia: '', searchTerm: searchParams.get('busca') || '' });
   const [activeTab, setActiveTab] = useState('Todas');
   const [stockFilter, setStockFilter] = useState('Todos');
+  const [sort, setSort] = useState('az');
   const [brands, setBrands] = useState([]);
 
   // The whole active catalogue is loaded once and filtered here: results update as you type, with no
@@ -49,9 +51,10 @@ const InventoryPage = () => {
     setFilters({ tipoProduto: '', linha: '', fragrancia: '', searchTerm: '' });
     setActiveTab('Todas');
     setStockFilter('Todos');
+    setSort('az');
   };
 
-  const visible = products.filter((p) => {
+  const visible = sortProducts(products, sort).filter((p) => {
     const marca = p.linha?.marca?.nome;
     if (activeTab !== 'Todas' && marca !== activeTab) return false;
     if (!matches(p.tipoProduto, filters.tipoProduto)) return false;
@@ -157,6 +160,20 @@ const InventoryPage = () => {
             <p className="mt-1 text-[12px] text-muted-light">Todo produto, contabilizado.</p>
           </div>
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <label className="flex items-center gap-2 text-[11px] text-muted-light">
+              Ordenar
+              <select
+                value={sort}
+                onChange={(e) => setSort(e.target.value)}
+                className="rounded-lg border border-border bg-brand-bg px-2.5 py-2 text-[12px] font-medium text-ink outline-none focus:border-secondary-dark"
+              >
+                {SORT_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
             <div className="flex gap-1 rounded-lg border border-border bg-brand-bg p-1">
               {['Todos', 'Disponível', 'Estoque baixo', 'Sem estoque'].map((option) => (
                 <button
