@@ -118,14 +118,14 @@ const UsersPage = () => {
                   </div>
                   <div className="flex items-center gap-2">
                     {u.username === sessionUser?.user ? (
-                      <span className="rounded-full bg-[#f1f5f2] px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.08em] text-[#3f4a43]">
+                      <span className="rounded-full bg-[#f1f5f2] px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.08em] text-[#3f4a43] dark:bg-white/10 dark:text-muted">
                         {ROLE_LABEL[u.role] || u.role}
                       </span>
                     ) : (
                       <select
                         value={u.role}
                         onChange={(e) => handleRoleChange(u.id, e.target.value)}
-                        className="rounded-full border border-border bg-[#f1f5f2] px-2 py-1 font-mono text-[9px] uppercase tracking-[0.08em] text-[#3f4a43] outline-none"
+                        className="rounded-full border border-border bg-[#f1f5f2] px-2 py-1 font-mono text-[9px] uppercase tracking-[0.08em] text-[#3f4a43] outline-none dark:bg-white/10 dark:text-muted"
                       >
                         {Object.entries(ROLE_LABEL).map(([value, label]) => (
                           <option key={value} value={value}>{label}</option>
@@ -134,7 +134,7 @@ const UsersPage = () => {
                     )}
                     <span
                       className={`rounded-full px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.08em] ${
-                        u.active ? 'bg-[#eaf7ee] text-[#147a37]' : 'bg-[#fdf0d9] text-[#8a5a12]'
+                        u.active ? 'bg-[#eaf7ee] text-[#147a37] dark:bg-primary/20 dark:text-primary' : 'bg-[#fdf0d9] text-[#8a5a12] dark:bg-warning/20 dark:text-warning'
                       }`}
                     >
                       {u.active ? 'Ativo' : 'Pendente'}
@@ -179,7 +179,7 @@ const ThemeOption = ({ label, icon, active, onClick }) => (
   <button
     onClick={onClick}
     className={`pressable flex flex-1 flex-col items-center gap-2 rounded-lg border px-4 py-5 transition ${
-      active ? 'border-secondary-dark bg-[#f1f5f2] text-ink' : 'border-border text-muted hover:bg-brand-bg'
+      active ? 'border-secondary bg-secondary/10 text-ink' : 'border-border text-muted hover:bg-brand-bg'
     }`}
   >
     <span className={`mdi mdi-${icon} text-[22px]`} />
