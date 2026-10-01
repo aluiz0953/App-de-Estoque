@@ -19,6 +19,16 @@ export const lightColors = {
   warning: '#a8691a',
   disabled: '#c5cdc8',
 
+  // Icon/product tiles of the dashboard (Figma): bg + ink per tone.
+  tileGreenBg: '#eaf7ee',
+  tileGreenInk: '#147a37',
+  tilePinkBg: '#fbeef2',
+  tilePinkInk: '#ba4566',
+  tileRoseBg: '#fff0ee',
+  tileRoseInk: '#bc5b58',
+  tilePurpleBg: '#f4eff8',
+  tilePurpleInk: '#765394',
+
   // StatusPill badge pairs (bg/ink) - same tones the web pages use.
   successBg: '#eaf7ee',
   successInk: '#147a37',
@@ -67,6 +77,15 @@ export const darkColors = {
   success: '#6fcf8c',
   warning: '#e0a44a',
   disabled: '#3a453e',
+
+  tileGreenBg: '#17301f',
+  tileGreenInk: '#8fd9a6',
+  tilePinkBg: '#33202a',
+  tilePinkInk: '#f08aa3',
+  tileRoseBg: '#35201e',
+  tileRoseInk: '#e8908a',
+  tilePurpleBg: '#2a2236',
+  tilePurpleInk: '#c4a8de',
 
   successBg: '#17301f',
   successInk: '#8fd9a6',
