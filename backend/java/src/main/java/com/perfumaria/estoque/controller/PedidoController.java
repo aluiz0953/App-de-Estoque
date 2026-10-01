@@ -8,7 +8,6 @@ import com.perfumaria.estoque.repository.UsuarioRepository;
 import com.perfumaria.estoque.service.PedidoService;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
@@ -42,7 +41,7 @@ public class PedidoController {
     }
 
     @GetMapping
-    public Page<Pedido> getPedidos(
+    public PageResponse<Pedido> getPedidos(
             @RequestParam(required = false) Long clienteId,
             @RequestParam(required = false) StatusPedido status,
             @RequestParam(defaultValue = "0") int page,
@@ -61,7 +60,7 @@ public class PedidoController {
 
         int safeSize = Math.min(Math.max(size, 1), 100);
         PageRequest pageRequest = PageRequest.of(Math.max(page, 0), safeSize, Sort.by(Sort.Direction.DESC, "dataCriacao"));
-        return pedidoRepository.findAll(spec, pageRequest);
+        return PageResponse.of(pedidoRepository.findAll(spec, pageRequest));
     }
 
     @GetMapping("/{id}")

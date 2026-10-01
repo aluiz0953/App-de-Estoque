@@ -10,7 +10,6 @@ import com.perfumaria.estoque.repository.ProdutoRepository;
 import com.perfumaria.estoque.repository.UsuarioRepository;
 import com.perfumaria.estoque.service.InventoryService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
@@ -253,7 +252,7 @@ public class InventoryController {
      * @param size Page size (default 20, max 100)
      */
     @GetMapping("/movimentacoes/historico")
-    public ResponseEntity<Page<MovimentacaoEstoque>> getHistoricoMovimentacoes(
+    public ResponseEntity<PageResponse<MovimentacaoEstoque>> getHistoricoMovimentacoes(
             @RequestParam(required = false) Long produtoId,
             @RequestParam(required = false) Long usuarioId,
             @RequestParam(required = false) MovimentacaoEstoque.TipoMovimentacao tipo,
@@ -288,6 +287,6 @@ public class InventoryController {
 
         int safeSize = Math.min(Math.max(size, 1), 100);
         PageRequest pageRequest = PageRequest.of(Math.max(page, 0), safeSize, Sort.by(Sort.Direction.DESC, "dataMovimentacao"));
-        return ResponseEntity.ok(movimentacaoEstoqueRepository.findAll(spec, pageRequest));
+        return ResponseEntity.ok(PageResponse.of(movimentacaoEstoqueRepository.findAll(spec, pageRequest)));
     }
 }
