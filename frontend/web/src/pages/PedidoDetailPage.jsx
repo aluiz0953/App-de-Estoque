@@ -1,25 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchPedidoById, confirmPedido, cancelPedido, clearPedidoDetail } from '../store/slices/pedidosSlice';
 import apiService from '../services/api';
-
-const money = (value) => `R$ ${(value ?? 0).toFixed(2).replace('.', ',')}`;
-
-const STATUS_LABEL = {
-  PENDENTE: 'Pendente',
-  CONFIRMADO: 'Confirmado',
-  ENVIADO: 'Enviado',
-  ENTREGUE: 'Entregue',
-  CANCELADO: 'Cancelado',
-};
+import PageHead from '../components/PageHead';
+import { STATUS_LABEL, STATUS_STAMP } from './PedidosPage';
+import { money } from '../utils/money';
 
 const NEXT_STATUS = { CONFIRMADO: 'ENVIADO', ENVIADO: 'ENTREGUE' };
 const NEXT_LABEL = { ENVIADO: 'Marcar como enviado', ENTREGUE: 'Marcar como entregue' };
+const COLUMNS = 'grid-cols-[minmax(0,1fr)_110px_100px] sm:grid-cols-[minmax(0,1fr)_140px_110px]';
+
+const BackLink = () => (
+  <Link to="/pedidos" className="mb-3 inline-flex items-center gap-1 text-[13px] font-medium text-muted hover:text-ink">
+    <span className="mdi mdi-arrow-left" aria-hidden="true" /> Pedidos
+  </Link>
+);
 
 const PedidoDetailPage = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
   const dispatch = useDispatch();
   const { pedidoDetail: pedido, isLoading, error } = useSelector((state) => state.pedidos);
   const [actionError, setActionError] = useState(null);
@@ -71,94 +70,86 @@ const PedidoDetailPage = () => {
 
   if (isLoading || !pedido) {
     return (
-      <main className="p-5 md:p-9">
-        <div className="flex flex-col items-center justify-center py-16">
-          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-secondary-dark" />
-          <p className="mt-4 text-[12px] text-muted-light">Carregando pedido...</p>
-        </div>
+      <main className="mx-auto max-w-[860px] px-5 py-6 md:px-9 md:py-8">
+        <BackLink />
+        <p className="text-[13px] text-muted" aria-busy="true">Carregando pedido…</p>
       </main>
     );
   }
 
   if (error) {
     return (
-      <main className="p-5 md:p-9">
-        <p className="text-danger">Erro ao carregar pedido: {error.message || error}</p>
+      <main className="mx-auto max-w-[860px] px-5 py-6 md:px-9 md:py-8">
+        <BackLink />
+        <p className="text-[13px] text-danger">Erro ao carregar pedido: {error.message || error}</p>
       </main>
     );
   }
 
   return (
-    <main className="p-5 md:p-9">
-      <button onClick={() => navigate('/pedidos')} className="eyebrow mb-3 flex items-center gap-1 hover:text-secondary-dark">
-        <span className="mdi mdi-arrow-left" /> Voltar
-      </button>
-      <div className="mb-8 flex flex-col justify-between gap-3 md:flex-row md:items-end">
-        <div>
-          <h2 className="font-display text-[34px] tracking-[-0.03em] md:text-[40px]">Pedido #{pedido.id}</h2>
-          <p className="mt-2 text-[13px] text-muted">{pedido.cliente?.nome}</p>
+    <main className="mx-auto max-w-[860px] px-5 py-6 md:px-9 md:py-8">
+      <BackLink />
+      <PageHead title={`Pedido #${pedido.id}`} meta={pedido.cliente?.nome}>
+        <span className={`stamp ${STATUS_STAMP[pedido.status]}`}>{STATUS_LABEL[pedido.status]}</span>
+      </PageHead>
+
+      {actionError && (
+        <p className="mb-4 rounded-md border border-border px-4 py-2.5 text-[13px] text-danger" role="alert">
+          {actionError}
+        </p>
+      )}
+
+      <h2 className="mb-3 text-[15px] font-semibold">Itens</h2>
+      <div className="listing">
+        <div className={`listing-head grid ${COLUMNS}`}>
+          <span>Produto</span>
+          <span className="text-right">Qtd × preço</span>
+          <span className="text-right">Subtotal</span>
         </div>
-        <span className="w-fit rounded-full bg-brand-bg px-4 py-2 font-mono text-[10px] uppercase tracking-[0.1em] text-muted">
-          {STATUS_LABEL[pedido.status]}
-        </span>
-      </div>
-
-      {actionError && <p className="mb-4 rounded-lg bg-[#fdf0d9] px-4 py-2 text-[12px] text-[#8a5a12]">{actionError}</p>}
-
-      <div className="rounded-xl border border-border bg-surface p-6 md:p-8">
-        <p className="eyebrow mb-3">Itens</p>
-        <div className="overflow-hidden rounded-lg border border-border">
+        <div className="listing-body">
           {pedido.itens?.map((item) => (
-            <div key={item.id} className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 text-[12px] last:border-0">
-              <div className="min-w-0 flex-1">
+            <div key={item.id} className={`listing-row ${COLUMNS}`}>
+              <div className="min-w-0">
                 <p className="truncate font-medium">{item.produto?.nome}</p>
-                <p className="text-[10px] text-muted-light">{item.produto?.sku}</p>
+                <p className="font-mono text-[12px] text-muted">{item.produto?.sku}</p>
               </div>
-              <span className="tabular-nums text-muted">{item.quantidade} × {money(item.precoUnitario)}</span>
-              <span className="w-20 text-right tabular-nums font-medium">{money(item.precoUnitario * item.quantidade)}</span>
+              <span className="text-right font-mono tabular-nums text-muted">
+                {item.quantidade} × {money(item.precoUnitario)}
+              </span>
+              <span className="text-right font-mono font-medium tabular-nums">{money(item.precoUnitario * item.quantidade)}</span>
             </div>
           ))}
-          <div className="flex justify-end bg-brand-bg px-4 py-3 text-[13px] font-medium">
-            Total: <span className="ml-2 tabular-nums">{money(pedido.valorTotal)}</span>
-          </div>
         </div>
+        <div className="flex items-baseline justify-end gap-3 border-t border-border px-5 py-3 text-[13px]">
+          <span className="text-muted">Total</span>
+          <span className="font-mono text-[16px] font-semibold tabular-nums">{money(pedido.valorTotal)}</span>
+        </div>
+      </div>
 
-        {pedido.observacoes && (
-          <div className="mt-4">
-            <p className="eyebrow mb-1">Observações</p>
-            <p className="text-[13px] text-muted">{pedido.observacoes}</p>
-          </div>
-        )}
+      {pedido.observacoes && (
+        <div className="mt-6">
+          <h2 className="mb-1 text-[15px] font-semibold">Observações</h2>
+          <p className="max-w-[65ch] text-[13px] text-muted">{pedido.observacoes}</p>
+        </div>
+      )}
 
-        <div className="mt-6 flex flex-wrap gap-3 border-t border-border pt-5">
-          {pedido.status === 'PENDENTE' && (
-            <>
-              <button
-                onClick={handleConfirm}
-                disabled={busy}
-                className="pressable rounded-full bg-primary px-5 py-2.5 text-[12px] text-primary-50 transition hover:bg-primary-dark disabled:opacity-50"
-              >
-                Confirmar pedido
-              </button>
-              <button
-                onClick={handleCancel}
-                disabled={busy}
-                className="rounded-full border border-border px-5 py-2.5 text-[12px] text-danger hover:bg-brand-bg disabled:opacity-50"
-              >
-                Cancelar pedido
-              </button>
-            </>
-          )}
-          {NEXT_STATUS[pedido.status] && (
-            <button
-              onClick={handleAdvance}
-              disabled={busy}
-              className="pressable rounded-full bg-primary px-5 py-2.5 text-[12px] text-primary-50 transition hover:bg-primary-dark disabled:opacity-50"
-            >
-              {NEXT_LABEL[NEXT_STATUS[pedido.status]]}
+      {/* Confirming and cancelling sit at opposite ends: a stray tap never lands on the wrong one. */}
+      <div className="mt-8 flex flex-wrap items-center gap-3 border-t border-border pt-5">
+        {pedido.status === 'PENDENTE' && (
+          <>
+            <button onClick={handleConfirm} disabled={busy} className="btn btn-primary">
+              Confirmar pedido
             </button>
-          )}
-        </div>
+            <button onClick={handleCancel} disabled={busy} className="btn btn-danger ml-auto">
+              Cancelar pedido
+            </button>
+          </>
+        )}
+        {NEXT_STATUS[pedido.status] && (
+          <button onClick={handleAdvance} disabled={busy} className="btn btn-primary">
+            {NEXT_LABEL[NEXT_STATUS[pedido.status]]}
+          </button>
+        )}
       </div>
     </main>
   );

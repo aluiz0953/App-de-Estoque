@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { createPedido } from '../store/slices/pedidosSlice';
 import apiService from '../services/api';
-
-const money = (value) => `R$ ${(value ?? 0).toFixed(2).replace('.', ',')}`;
+import PageHead from '../components/PageHead';
+import { money } from '../utils/money';
 
 const PedidoFormPage = () => {
   const dispatch = useDispatch();
@@ -101,155 +101,147 @@ const PedidoFormPage = () => {
     }
   };
 
-  return (
-    <main className="p-5 md:p-9">
-      <button onClick={() => navigate(-1)} className="eyebrow mb-3 flex items-center gap-1 hover:text-secondary-dark">
-        <span className="mdi mdi-arrow-left" /> Voltar
-      </button>
-      <h2 className="font-display mb-8 text-[34px] tracking-[-0.03em] md:text-[40px]">Novo pedido.</h2>
+  const dropdown = 'absolute z-10 mt-1 w-full overflow-hidden rounded-md border border-border bg-surface shadow-[0_8px_24px_-8px_rgba(23,32,27,0.25)]';
+  const dropdownItem = 'flex w-full items-center justify-between gap-3 border-b border-border px-3 py-2.5 text-left text-[13px] last:border-0 hover:bg-brand-bg';
 
-      <form onSubmit={handleSubmit} className="max-w-3xl rounded-xl border border-border bg-surface p-6 md:p-8">
-        <h3 className="font-display mb-4 text-[20px]">Cliente</h3>
+  return (
+    <main className="mx-auto max-w-[860px] px-5 py-6 md:px-9 md:py-8">
+      <Link to="/pedidos" className="mb-3 inline-flex items-center gap-1 text-[13px] font-medium text-muted hover:text-ink">
+        <span className="mdi mdi-arrow-left" aria-hidden="true" /> Pedidos
+      </Link>
+      <PageHead title="Novo pedido" meta="O pedido só mexe no estoque quando for confirmado." />
+
+      <form onSubmit={handleSubmit}>
+        <h2 className="mb-3 text-[15px] font-semibold">Cliente</h2>
         {selectedCliente ? (
-          <div className="mb-6 flex items-center justify-between rounded-lg border border-secondary-dark bg-brand-bg px-4 py-3">
+          <div className="sheet mb-8 flex items-center justify-between px-4 py-3">
             <div>
               <p className="text-[13px] font-medium">{selectedCliente.nome}</p>
-              <p className="text-[11px] text-muted-light">{selectedCliente.telefone || selectedCliente.email}</p>
+              <p className="text-[12px] text-muted">{selectedCliente.telefone || selectedCliente.email}</p>
             </div>
-            <button type="button" onClick={() => setSelectedCliente(null)} className="text-muted hover:text-danger">
-              <span className="mdi mdi-close-circle" />
+            <button type="button" onClick={() => setSelectedCliente(null)} aria-label="Trocar cliente" className="text-muted hover:text-danger">
+              <span className="mdi mdi-close-circle text-[18px]" aria-hidden="true" />
             </button>
           </div>
         ) : showNewCliente ? (
-          <div className="mb-6 grid gap-3 rounded-lg border border-border bg-brand-bg p-4 sm:grid-cols-3">
-            <input
-              value={newCliente.nome}
-              onChange={(e) => setNewCliente({ ...newCliente, nome: e.target.value })}
-              placeholder="Nome"
-              className="h-10 rounded-lg border border-border bg-surface px-3 text-[12px] outline-none focus:border-secondary-dark"
-            />
-            <input
-              value={newCliente.telefone}
-              onChange={(e) => setNewCliente({ ...newCliente, telefone: e.target.value })}
-              placeholder="Telefone"
-              className="h-10 rounded-lg border border-border bg-surface px-3 text-[12px] outline-none focus:border-secondary-dark"
-            />
-            <input
-              value={newCliente.email}
-              onChange={(e) => setNewCliente({ ...newCliente, email: e.target.value })}
-              placeholder="E-mail"
-              className="h-10 rounded-lg border border-border bg-surface px-3 text-[12px] outline-none focus:border-secondary-dark"
-            />
-            <button
-              type="button"
-              onClick={() => setShowNewCliente(false)}
-              className="text-[11px] text-muted underline decoration-border underline-offset-4 sm:col-span-3 sm:w-fit"
-            >
+          <div className="mb-8">
+            <div className="grid gap-3 sm:grid-cols-3">
+              <input value={newCliente.nome} onChange={(e) => setNewCliente({ ...newCliente, nome: e.target.value })} placeholder="Nome" aria-label="Nome do cliente" className="input" />
+              <input value={newCliente.telefone} onChange={(e) => setNewCliente({ ...newCliente, telefone: e.target.value })} placeholder="Telefone" aria-label="Telefone" className="input" />
+              <input value={newCliente.email} onChange={(e) => setNewCliente({ ...newCliente, email: e.target.value })} placeholder="E-mail" aria-label="E-mail" className="input" />
+            </div>
+            <button type="button" onClick={() => setShowNewCliente(false)} className="mt-2 text-[13px] font-medium text-primary-dark hover:underline dark:text-primary">
               Buscar cliente existente
             </button>
           </div>
         ) : (
-          <div className="relative mb-6">
-            <input
-              value={clienteSearch}
-              onChange={(e) => setClienteSearch(e.target.value)}
-              placeholder="Buscar cliente por nome..."
-              className="h-10 w-full max-w-sm rounded-lg border border-border bg-brand-bg px-3 text-[12px] outline-none focus:border-secondary-dark"
-            />
-            <button
-              type="button"
-              onClick={() => setShowNewCliente(true)}
-              className="ml-3 text-[11px] text-secondary-dark hover:text-primary"
-            >
+          <div className="relative mb-8 flex flex-wrap items-center gap-3">
+            <div className="relative w-full max-w-sm">
+              <input
+                value={clienteSearch}
+                onChange={(e) => setClienteSearch(e.target.value)}
+                placeholder="Buscar cliente por nome..."
+                aria-label="Buscar cliente"
+                className="input"
+              />
+              {clienteResults.length > 0 && (
+                <div className={dropdown}>
+                  {clienteResults.map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedCliente(c);
+                        setClienteResults([]);
+                        setClienteSearch('');
+                      }}
+                      className={dropdownItem}
+                    >
+                      <span className="truncate">
+                        {c.nome} {c.telefone ? `· ${c.telefone}` : ''}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <button type="button" onClick={() => setShowNewCliente(true)} className="text-[13px] font-medium text-primary-dark hover:underline dark:text-primary">
               + Novo cliente
             </button>
-            {clienteResults.length > 0 && (
-              <div className="absolute z-10 mt-1 w-full max-w-sm rounded-lg border border-border bg-surface shadow-lg">
-                {clienteResults.map((c) => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => { setSelectedCliente(c); setClienteResults([]); setClienteSearch(''); }}
-                    className="block w-full truncate border-b border-border px-3 py-2 text-left text-[12px] last:border-0 hover:bg-brand-bg"
-                  >
-                    {c.nome} {c.telefone ? `· ${c.telefone}` : ''}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
         )}
 
-        <h3 className="font-display mb-4 text-[20px]">Itens</h3>
+        <h2 className="mb-3 text-[15px] font-semibold">Itens</h2>
         <div className="relative mb-4">
           <input
             value={produtoSearch}
             onChange={(e) => setProdutoSearch(e.target.value)}
             placeholder="Buscar produto por nome ou SKU..."
-            className="h-10 w-full rounded-lg border border-border bg-brand-bg px-3 text-[12px] outline-none focus:border-secondary-dark"
+            aria-label="Buscar produto"
+            className="input"
           />
           {produtoResults.length > 0 && (
-            <div className="absolute z-10 mt-1 w-full rounded-lg border border-border bg-surface shadow-lg">
+            <div className={dropdown}>
               {produtoResults.map((p) => (
-                <button
-                  key={p.id}
-                  type="button"
-                  onClick={() => addItem(p)}
-                  className="flex w-full items-center justify-between border-b border-border px-3 py-2 text-left text-[12px] last:border-0 hover:bg-brand-bg"
-                >
-                  <span className="truncate">{p.nome} · {p.sku}</span>
-                  <span className="tabular-nums text-muted-light">{money(p.precoVenda)}</span>
+                <button key={p.id} type="button" onClick={() => addItem(p)} className={dropdownItem}>
+                  <span className="truncate">
+                    {p.nome} · <span className="font-mono text-[12px] text-muted">{p.sku}</span>
+                  </span>
+                  <span className="font-mono tabular-nums text-muted">{money(p.precoVenda)}</span>
                 </button>
               ))}
             </div>
           )}
         </div>
 
-        {itens.length > 0 && (
-          <div className="mb-6 overflow-hidden rounded-lg border border-border">
-            {itens.map((item) => (
-              <div key={item.produtoId} className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 text-[12px] last:border-0">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-medium">{item.nome}</p>
-                  <p className="text-[10px] text-muted-light">{item.sku} · {money(item.precoVenda)}/un.</p>
+        {itens.length > 0 ? (
+          <div className="listing mb-8">
+            <div className="listing-body">
+              {itens.map((item) => (
+                <div key={item.produtoId} className="listing-row grid-cols-[minmax(0,1fr)_72px_100px_28px]">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{item.nome}</p>
+                    <p className="font-mono text-[12px] text-muted">
+                      {item.sku} · {money(item.precoVenda)}/un.
+                    </p>
+                  </div>
+                  <input
+                    type="number"
+                    min="1"
+                    value={item.quantidade}
+                    onChange={(e) => updateQuantidade(item.produtoId, e.target.value)}
+                    aria-label={`Quantidade de ${item.nome}`}
+                    className="input h-9 px-2 text-center font-mono"
+                  />
+                  <span className="text-right font-mono tabular-nums">{money(item.precoVenda * item.quantidade)}</span>
+                  <button type="button" onClick={() => removeItem(item.produtoId)} aria-label={`Remover ${item.nome}`} className="text-muted hover:text-danger">
+                    <span className="mdi mdi-close-circle text-[18px]" aria-hidden="true" />
+                  </button>
                 </div>
-                <input
-                  type="number"
-                  min="1"
-                  value={item.quantidade}
-                  onChange={(e) => updateQuantidade(item.produtoId, e.target.value)}
-                  className="h-9 w-16 rounded-lg border border-border bg-brand-bg px-2 text-center outline-none focus:border-secondary-dark"
-                />
-                <span className="w-20 text-right tabular-nums">{money(item.precoVenda * item.quantidade)}</span>
-                <button type="button" onClick={() => removeItem(item.produtoId)} className="text-muted hover:text-danger">
-                  <span className="mdi mdi-close-circle" />
-                </button>
-              </div>
-            ))}
-            <div className="flex justify-end bg-brand-bg px-4 py-3 text-[13px] font-medium">
-              Total: <span className="ml-2 tabular-nums">{money(total)}</span>
+              ))}
+            </div>
+            <div className="flex items-baseline justify-end gap-3 border-t border-border px-5 py-3 text-[13px]">
+              <span className="text-muted">Total</span>
+              <span className="font-mono text-[16px] font-semibold tabular-nums">{money(total)}</span>
             </div>
           </div>
+        ) : (
+          <p className="mb-8 text-[13px] text-muted">Busque um produto acima para adicionar o primeiro item.</p>
         )}
 
-        <label className="mb-6 grid gap-2">
-          <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted-light">Observações (opcional)</span>
-          <textarea
-            value={observacoes}
-            onChange={(e) => setObservacoes(e.target.value)}
-            rows={2}
-            className="rounded-lg border border-border bg-brand-bg px-3 py-2 text-[12px] outline-none focus:border-secondary-dark"
-          />
+        <label className="mb-8 block">
+          <span className="field-label">Observações (opcional)</span>
+          <textarea value={observacoes} onChange={(e) => setObservacoes(e.target.value)} rows={2} className="input h-auto py-2" />
         </label>
 
-        {saveError && <p className="mb-4 text-[12px] text-danger">{saveError}</p>}
+        {saveError && (
+          <p className="mb-4 text-[13px] text-danger" role="alert">
+            {saveError}
+          </p>
+        )}
 
         <div className="flex justify-end border-t border-border pt-5">
-          <button
-            type="submit"
-            disabled={!isValid || isSaving}
-            className="pressable rounded-full bg-primary px-6 py-3 text-[12px] text-primary-50 transition hover:bg-primary-dark disabled:opacity-50"
-          >
+          <button type="submit" disabled={!isValid || isSaving} className="btn btn-primary">
             {isSaving ? 'Salvando...' : 'Criar pedido'}
           </button>
         </div>
