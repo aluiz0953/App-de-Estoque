@@ -4,20 +4,19 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { fetchProducts } from '../store/slices/inventorySlice';
 import { matches } from '../utils/search';
 import { SORT_OPTIONS, sortProducts } from '../utils/sort';
+import PageHead from '../components/PageHead';
+import StockMark, { stockState } from '../components/StockMark';
+import { money } from '../utils/money';
 
-const money = (value) => `R$ ${(value ?? 0).toFixed(2).replace('.', ',')}`;
-
+// Same three buckets the page has always filtered on.
 const getStockState = (quantidade, minimo) => {
   if (quantidade <= 0) return 'Sem estoque';
   if (quantidade <= minimo) return 'Estoque baixo';
   return 'Disponível';
 };
 
-const STATE_BADGE = {
-  Disponível: 'bg-[#eaf7ee] text-[#147a37]',
-  'Estoque baixo': 'bg-[#fdf0d9] text-[#8a5a12]',
-  'Sem estoque': 'bg-[#eceeed] text-[#5f6762]',
-};
+const STOCK_FILTERS = ['Todos', 'Disponível', 'Estoque baixo', 'Sem estoque'];
+const COLUMNS = 'lg:grid-cols-[minmax(0,1.6fr)_minmax(0,0.9fr)_96px_96px_150px_64px]';
 
 const InventoryPage = () => {
   const dispatch = useDispatch();
@@ -26,6 +25,7 @@ const InventoryPage = () => {
   const { products, isLoading, error } = useSelector((state) => state.inventory);
 
   const [searchParams] = useSearchParams(); // the top bar search lands here as ?busca=
+  const role = useSelector((state) => state.auth.user?.role);
   const [filters, setFilters] = useState({ tipoProduto: '', linha: '', fragrancia: '', searchTerm: searchParams.get('busca') || '' });
   const [activeTab, setActiveTab] = useState('Todas');
   const [stockFilter, setStockFilter] = useState('Todos');
@@ -39,6 +39,12 @@ const InventoryPage = () => {
   useEffect(() => {
     dispatch(fetchProducts());
   }, [dispatch]);
+
+  // Searching from the top bar while already on this page changes only the URL: follow it.
+  const busca = searchParams.get('busca') || '';
+  useEffect(() => {
+    setFilters((prev) => (prev.searchTerm === busca ? prev : { ...prev, searchTerm: busca }));
+  }, [busca]);
 
   useEffect(() => {
     const known = Array.from(new Set(products.map((p) => p.linha?.marca?.nome).filter(Boolean)));
@@ -86,192 +92,166 @@ const InventoryPage = () => {
   };
 
   return (
-    <main className="p-5 md:p-9">
-      <div className="mb-8 flex flex-col justify-between gap-5 md:flex-row md:items-end">
-        <div>
-          <p className="eyebrow">Estoque / 01</p>
-          <h2 className="font-display mt-3 text-[34px] tracking-[-0.03em] md:text-[40px]">Produtos em estoque.</h2>
-        </div>
-        <div className="flex gap-3">
-          <button
-            onClick={handleClearFilters}
-            className="rounded-full border border-border px-4 py-2.5 text-[12px] text-muted hover:bg-brand-bg"
-          >
-            Limpar filtros
-          </button>
-          <Link
-            to="/produtos/novo"
-            className="pressable flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-[12px] text-primary-50 transition hover:bg-primary-dark"
-          >
-            <span className="mdi mdi-plus text-[15px]" /> Novo produto
+    <main className="mx-auto max-w-[1180px] px-5 py-6 md:px-9 md:py-8">
+      <PageHead title="Estoque" meta={isLoading ? 'Carregando produtos…' : `${visible.length} ${visible.length === 1 ? 'produto encontrado' : 'produtos encontrados'}`}>
+        <button onClick={handleClearFilters} className="btn btn-quiet">
+          Limpar filtros
+        </button>
+        {(role === 'ADMIN' || role === 'MANAGER') && (
+          <Link to="/produtos/novo" className="btn btn-primary lg:hidden">
+            <span className="mdi mdi-plus text-[16px]" aria-hidden="true" /> Novo produto
           </Link>
-        </div>
-      </div>
+        )}
+      </PageHead>
 
-      {/* Brand tabs */}
-      <div className="mb-6 flex flex-wrap gap-2">
+      <div className="mb-5 flex flex-wrap gap-x-5 border-b border-border" role="tablist" aria-label="Marca">
         {['Todas', ...brands].map((option) => (
           <button
             key={option}
+            role="tab"
+            aria-selected={activeTab === option}
             onClick={() => setActiveTab(option)}
-            className={`rounded-full px-4 py-2 text-[12px] font-medium transition ${
-              activeTab === option ? 'bg-primary text-primary-50' : 'bg-surface text-muted border border-border hover:bg-brand-bg'
-            }`}
+            className={`tab-link ${activeTab === option ? 'tab-link-active' : ''}`}
           >
             {option}
           </button>
         ))}
       </div>
 
-      {/* Filters */}
-      <div className="mb-6 grid gap-4 rounded-xl border border-border bg-surface p-5 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Field label="Tipo de produto">
-          <input
-            value={filters.tipoProduto}
-            onChange={(e) => handleFilterChange('tipoProduto', e.target.value)}
-            placeholder="Perfumaria, Cuidados..."
-          />
+          <input className="input" value={filters.tipoProduto} onChange={(e) => handleFilterChange('tipoProduto', e.target.value)} placeholder="Perfumaria, Cuidados..." />
         </Field>
         <Field label="Linha">
-          <input value={filters.linha} onChange={(e) => handleFilterChange('linha', e.target.value)} placeholder="Kaiak, Ekos..." />
+          <input className="input" value={filters.linha} onChange={(e) => handleFilterChange('linha', e.target.value)} placeholder="Kaiak, Ekos..." />
         </Field>
         <Field label="Fragrância">
-          <input
-            value={filters.fragrancia}
-            onChange={(e) => handleFilterChange('fragrancia', e.target.value)}
-            placeholder="Kaiak Tradicional..."
-          />
+          <input className="input" value={filters.fragrancia} onChange={(e) => handleFilterChange('fragrancia', e.target.value)} placeholder="Kaiak Tradicional..." />
         </Field>
         <Field label="Buscar (nome, SKU, descrição)">
-          <input
-            value={filters.searchTerm}
-            onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
-            placeholder="Digite para buscar"
-          />
+          <input className="input" value={filters.searchTerm} onChange={(e) => handleFilterChange('searchTerm', e.target.value)} placeholder="Digite para buscar" />
         </Field>
       </div>
 
       {error && <p className="mb-4 text-[13px] text-danger">Erro ao carregar produtos: {error.message || String(error)}</p>}
 
-      <section className="overflow-hidden rounded-xl border border-border bg-surface shadow-[0_12px_35px_rgba(32,61,43,0.04)]">
-        <div className="flex flex-col gap-4 border-b border-border p-5 md:flex-row md:items-center md:justify-between">
-          <div>
-            <h3 className="font-display text-[24px]">Produtos encontrados ({visible.length})</h3>
-            <p className="mt-1 text-[12px] text-muted-light">Todo produto, contabilizado.</p>
-          </div>
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-            <label className="flex items-center gap-2 text-[11px] text-muted-light">
-              Ordenar
-              <select
-                value={sort}
-                onChange={(e) => setSort(e.target.value)}
-                className="rounded-lg border border-border bg-brand-bg px-2.5 py-2 text-[12px] font-medium text-ink outline-none focus:border-secondary-dark"
-              >
-                {SORT_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <div className="flex gap-1 rounded-lg border border-border bg-brand-bg p-1">
-              {['Todos', 'Disponível', 'Estoque baixo', 'Sem estoque'].map((option) => (
-                <button
-                  key={option}
-                  onClick={() => setStockFilter(option)}
-                  className={`rounded-md px-3 py-1.5 text-[10px] font-medium ${
-                    stockFilter === option ? 'bg-primary text-primary-50' : 'text-muted'
-                  }`}
-                >
-                  {option}
-                </button>
+      <div className="mb-3 flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+        <div className="flex flex-wrap gap-x-5 border-b border-border" role="tablist" aria-label="Estado do estoque">
+          {STOCK_FILTERS.map((option) => (
+            <button
+              key={option}
+              role="tab"
+              aria-selected={stockFilter === option}
+              onClick={() => setStockFilter(option)}
+              className={`tab-link ${stockFilter === option ? 'tab-link-active' : ''}`}
+            >
+              {option}
+            </button>
+          ))}
+        </div>
+        <div className="flex flex-wrap items-center gap-4">
+          <label className="flex items-center gap-2 text-[12px] text-muted">
+            Ordenar
+            <select
+              value={sort}
+              onChange={(e) => setSort(e.target.value)}
+              className="h-9 rounded-md border border-border bg-surface px-2.5 text-[13px] font-medium text-ink outline-none focus:border-primary"
+            >
+              {SORT_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
               ))}
-            </div>
-            {visible.length > 0 && (
-              <button onClick={handleExport} className="text-[12px] font-medium text-secondary-dark hover:text-primary">
-                <span className="mdi mdi-download mr-1" />
-                Exportar CSV
-              </button>
-            )}
+            </select>
+          </label>
+          {visible.length > 0 && (
+            <button onClick={handleExport} className="btn btn-quiet">
+              <span className="mdi mdi-download text-[16px]" aria-hidden="true" />
+              Exportar CSV
+            </button>
+          )}
+        </div>
+      </div>
+
+      {isLoading ? (
+        <div className="listing" aria-busy="true">
+          <div className="listing-body">
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="listing-row h-[58px]">
+                <span className="h-3 w-1/3 animate-pulse rounded bg-black/10" />
+              </div>
+            ))}
           </div>
         </div>
-
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-16">
-            <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-secondary-dark" />
-            <p className="mt-4 text-[12px] text-muted-light">Carregando produtos...</p>
+      ) : visible.length === 0 ? (
+        <div className="sheet px-5 py-12">
+          <p className="text-[14px] font-medium">Nenhum produto com esses filtros.</p>
+          <p className="mt-1 text-[13px] text-muted">Limpe os filtros para ver o catálogo inteiro, ou cadastre um produto novo.</p>
+          <button onClick={handleClearFilters} className="btn btn-quiet mt-4">
+            Limpar filtros
+          </button>
+        </div>
+      ) : (
+        <div className="listing">
+          <div className={`listing-head hidden ${COLUMNS} lg:grid`}>
+            <span>Produto</span>
+            <span>SKU</span>
+            <span className="text-right">Custo</span>
+            <span className="text-right">Venda</span>
+            <span>Estoque</span>
+            <span />
           </div>
-        ) : visible.length === 0 ? (
-          <div className="px-5 py-16 text-center">
-            <span className="mdi mdi-filter-variant mx-auto mb-3 block text-[20px] text-secondary" />
-            <p className="font-display text-[22px]">Nada por aqui.</p>
-            <p className="mt-1 text-[12px] text-muted-light">Experimente limpar os filtros ou cadastre um produto.</p>
-          </div>
-        ) : (
-          <>
-            <div className="hidden grid-cols-[1.4fr_0.8fr_0.75fr_0.8fr_0.65fr_0.6fr] gap-4 border-b border-border px-5 py-3 font-mono text-[9px] uppercase tracking-[0.14em] text-muted-light lg:grid">
-              <span>Produto</span>
-              <span>SKU</span>
-              <span className="text-right">Preço custo</span>
-              <span className="text-right">Preço venda</span>
-              <span className="text-center">Estoque</span>
-              <span />
-            </div>
-            <div>
-              {visible.map((product) => {
-                const state = getStockState(product.quantidadeTotal, product.estoqueMinimo);
-                return (
-                  <div
-                    key={product.id}
-                    className="grid grid-cols-2 gap-3 border-b border-[#edf0ed] px-5 py-4 last:border-0 hover:bg-brand-bg/60 lg:grid-cols-[1.4fr_0.8fr_0.75fr_0.8fr_0.65fr_0.6fr] lg:items-center lg:gap-4"
-                  >
-                    <div className="col-span-2 lg:col-span-1">
-                      <p className="text-[13px] font-medium">{product.nome}</p>
-                      <p className="mt-0.5 text-[10px] text-muted-light">
-                        {product.linha?.marca?.nome || 'N/A'} · {product.linha?.nome || 'N/A'}
-                      </p>
-                    </div>
-                    <span className="font-mono text-[11px] text-muted-light tabular-nums">{product.sku || 'N/A'}</span>
-                    <span className="text-[12px] text-muted tabular-nums lg:text-right">{money(product.precoCusto)}</span>
-                    <span className="text-[12px] font-medium tabular-nums lg:text-right">{money(product.precoVenda)}</span>
-                    <span
-                      className={`w-fit rounded-full px-2.5 py-1 text-center font-mono text-[9px] uppercase tracking-[0.08em] tabular-nums lg:mx-auto ${STATE_BADGE[state]}`}
-                    >
-                      {product.quantidadeTotal} · {state}
+          <div className="listing-body">
+            {visible.map((product) => {
+              const state = stockState(product.quantidadeTotal, product.estoqueMinimo, product.quantidadeVencendoProximos30Dias);
+              const precisa = state === 'low' || state === 'expiring' || (state === 'out' && product.estoqueMinimo > 0);
+              return (
+                <div key={product.id} className={`listing-row grid-cols-2 gap-y-1 ${COLUMNS} hover:shadow-[inset_0_0_0_9999px_rgba(23,32,27,0.04)]`}>
+                  <div className="col-span-2 min-w-0 lg:col-span-1">
+                    <Link to={`/produtos/${product.id}`} className="block truncate font-medium hover:underline">
+                      <span className={precisa ? 'mark' : ''}>{product.nome}</span>
+                    </Link>
+                    <span className="block truncate text-[12px] text-muted">
+                      {product.linha?.marca?.nome || 'N/A'} · {product.linha?.nome || 'N/A'}
                     </span>
-                    <div className="col-span-2 flex gap-1 lg:col-span-1 lg:justify-end">
-                      <button
-                        onClick={() => navigate(`/produtos/${product.id}`)}
-                        aria-label={`Ver ${product.nome}`}
-                        className="grid h-8 w-8 place-items-center rounded-full text-muted-light hover:bg-[#edf0ed] hover:text-ink"
-                      >
-                        <span className="mdi mdi-eye-outline text-[15px]" />
-                      </button>
-                      <button
-                        onClick={() => navigate(`/produtos/${product.id}/editar`)}
-                        aria-label={`Editar ${product.nome}`}
-                        className="grid h-8 w-8 place-items-center rounded-full text-muted-light hover:bg-[#edf0ed] hover:text-ink"
-                      >
-                        <span className="mdi mdi-pencil-outline text-[14px]" />
-                      </button>
-                    </div>
                   </div>
-                );
-              })}
-            </div>
-          </>
-        )}
-      </section>
+                  <span className="truncate font-mono text-[12px] text-muted">{product.sku || 'N/A'}</span>
+                  <span className="font-mono tabular-nums text-muted lg:text-right">{money(product.precoCusto)}</span>
+                  <span className="font-mono tabular-nums lg:text-right">{money(product.precoVenda)}</span>
+                  <span className="flex items-center gap-3">
+                    <StockMark state={state} />
+                    <span className="font-mono tabular-nums text-muted">{product.quantidadeTotal ?? 0}</span>
+                  </span>
+                  <div className="col-span-2 flex justify-end gap-1 lg:col-span-1">
+                    <button
+                      onClick={() => navigate(`/produtos/${product.id}`)}
+                      aria-label={`Ver ${product.nome}`}
+                      className="grid h-8 w-8 place-items-center rounded-md text-muted transition-colors duration-150 hover:bg-black/5 hover:text-ink"
+                    >
+                      <span className="mdi mdi-eye-outline text-[16px]" aria-hidden="true" />
+                    </button>
+                    <button
+                      onClick={() => navigate(`/produtos/${product.id}/editar`)}
+                      aria-label={`Editar ${product.nome}`}
+                      className="grid h-8 w-8 place-items-center rounded-md text-muted transition-colors duration-150 hover:bg-black/5 hover:text-ink"
+                    >
+                      <span className="mdi mdi-pencil-outline text-[16px]" aria-hidden="true" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </main>
   );
 };
 
 const Field = ({ label, children }) => (
-  <label className="grid gap-2">
-    <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted-light">{label}</span>
-    <span className="[&>input]:h-10 [&>input]:w-full [&>input]:rounded-lg [&>input]:border [&>input]:border-border [&>input]:bg-brand-bg [&>input]:px-3 [&>input]:text-[12px] [&>input]:outline-none [&>input]:placeholder:text-muted-light [&>input]:focus:border-secondary-dark">
-      {children}
-    </span>
+  <label className="block">
+    <span className="field-label">{label}</span>
+    {children}
   </label>
 );
 

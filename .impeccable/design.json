@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-04T00:00:00Z",
+  "title": "Design System: Tico e Tica Estoque (web)",
+  "extensions": {
+    "colorMeta": {
+      "tico-green": { "role": "primary", "displayName": "Tico Green", "canonical": "#239e4b", "tonalRamp": ["#0b3d1c", "#0f5a28", "#147a37", "#1b8a40", "#239e4b", "#6cc185", "#b5e0c3", "#eaf7ee"] },
+      "tico-green-deep": { "role": "primary", "displayName": "Tico Green Deep", "canonical": "#147a37", "tonalRamp": ["#082a13", "#0f6a2e", "#147a37", "#1b8a40", "#239e4b", "#5cb87a", "#a8dcb9", "#eaf7ee"] },
+      "tica-pink": { "role": "secondary", "displayName": "Tica Pink", "canonical": "#dd6383", "tonalRamp": ["#5a1d2d", "#7f2c44", "#ba4566", "#dd6383", "#e8738f", "#f08aa3", "#f6bccb", "#fbeef2"] },
+      "sheet": { "role": "neutral", "displayName": "Sheet", "canonical": "#f7f9f7", "tonalRamp": ["#0f1411", "#171e19", "#27312b", "#5f6762", "#8b938e", "#e7ebe8", "#f2f5f3", "#f7f9f7"] },
+      "band": { "role": "neutral", "displayName": "Band", "canonical": "#eaf7ee", "tonalRamp": ["#1a2a20", "#2a4a35", "#4f7d61", "#8fc3a1", "#bfe3cb", "#d6eedd", "#eaf7ee", "#f4fbf6"] }
+    },
+    "typographyMeta": {
+      "title": { "displayName": "Title", "purpose": "Page head h1, one per screen." },
+      "body": { "displayName": "Body", "purpose": "Rows, fields, buttons, tabs." },
+      "label": { "displayName": "Label", "purpose": "Field labels and meta lines." },
+      "figure": { "displayName": "Figure", "purpose": "Quantities, prices, SKUs, totals; tabular numerals." },
+      "column-head": { "displayName": "Column head", "purpose": "Listing column heads, mono caps." },
+      "stamp": { "displayName": "Stamp", "purpose": "Status text inside a bordered stamp." }
+    },
+    "shadows": [
+      { "name": "rail-open", "value": "8px 0 24px -12px rgba(23,32,27,0.22)", "purpose": "Soft side shadow only while the rail is open over the page." },
+      { "name": "row-hover", "value": "inset 0 0 0 9999px color-mix(in srgb, var(--color-ink) 5%, transparent)", "purpose": "Wash on clickable listing rows." }
+    ],
+    "motion": [
+      { "name": "ease-out-strong", "value": "cubic-bezier(0.23, 1, 0.32, 1)", "purpose": "Press, page-in (180ms), rise-in on login." },
+      { "name": "ease-board", "value": "cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Rail width (200ms), row-in (320ms), flap (260ms), toggle (350ms)." },
+      { "name": "color-fade", "value": "150ms", "purpose": "Buttons, tabs, fields, rows." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" },
+      { "name": "app-css-1080", "value": "1080px" },
+      { "name": "app-css-700", "value": "700px" },
+      { "name": "app-css-430", "value": "430px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one action per screen; deep green with white text.",
+      "html": "<button class=\"ds-btn-primary\">Novo produto</button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:36px;padding:0 14px;border:0;border-radius:6px;background:#147a37;color:#fff;font:500 13px 'DM Sans Variable',system-ui,sans-serif;transition:background-color .15s}.ds-btn-primary:hover{background:#0f6a2e}.ds-btn-primary:focus-visible{outline:2px solid #239e4b;outline-offset:2px}.ds-btn-primary:disabled{opacity:.5;cursor:not-allowed}"
+    },
+    {
+      "name": "Quiet Button",
+      "kind": "button",
+      "refersTo": "button-quiet",
+      "description": "Secondary action: paper with a hairline.",
+      "html": "<button class=\"ds-btn-quiet\">Exportar</button>",
+      "css": ".ds-btn-quiet{display:inline-flex;align-items:center;justify-content:center;height:36px;padding:0 14px;border:1px solid #e7ebe8;border-radius:6px;background:#fff;color:#17201b;font:500 13px 'DM Sans Variable',system-ui,sans-serif;transition:background-color .15s}.ds-btn-quiet:hover{background:#f7f9f7}.ds-btn-quiet:focus-visible{outline:2px solid #239e4b;outline-offset:2px}"
+    },
+    {
+      "name": "Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "40px field; border turns green on focus.",
+      "html": "<input class=\"ds-input\" placeholder=\"Buscar produto, marca ou SKU\">",
+      "css": ".ds-input{box-sizing:border-box;height:40px;width:260px;padding:0 12px;border:1px solid #e7ebe8;border-radius:6px;background:#fff;color:#17201b;font:400 13px 'DM Sans Variable',system-ui,sans-serif;outline:none;transition:border-color .15s}.ds-input::placeholder{color:#6f7872}.ds-input:focus{border-color:#239e4b}.ds-input:focus-visible{outline:2px solid #239e4b;outline-offset:2px}"
+    },
+    {
+      "name": "Rail Tabs",
+      "kind": "nav",
+      "refersTo": "rail-tab-active",
+      "description": "Index tabs; the open tab is filled deep green.",
+      "html": "<nav class=\"ds-rail\"><a class=\"ds-tab ds-tab-on\" href=\"#\">Dashboard</a><a class=\"ds-tab\" href=\"#\">Estoque</a><a class=\"ds-tab\" href=\"#\">Pedidos</a></nav>",
+      "css": ".ds-rail{width:200px;border:1px solid #e7ebe8;background:#fff;padding:12px 0}.ds-tab{display:flex;align-items:center;height:44px;padding:0 22px;color:#5f6762;font:500 13px 'DM Sans Variable',system-ui,sans-serif;text-decoration:none;transition:background-color .15s,color .15s}.ds-tab:hover{background:#f7f9f7;color:#17201b}.ds-tab-on,.ds-tab-on:hover{background:#147a37;color:#fff}.ds-tab:focus-visible{outline:2px solid #239e4b;outline-offset:-2px}"
+    },
+    {
+      "name": "Zebra Listing",
+      "kind": "custom",
+      "refersTo": "listing-row",
+      "description": "Mono column head; rows band in threes; pink highlighter behind a name that needs attention.",
+      "html": "<div class=\"ds-listing\"><div class=\"ds-head\"><span>Produto</span><span>Qtd</span></div><div class=\"ds-row\"><span><span class=\"ds-mark\">Hidratante Ekos</span></span><span class=\"ds-fig\">2</span></div><div class=\"ds-row\"><span>Sabonete Tododia</span><span class=\"ds-fig\">18</span></div><div class=\"ds-row\"><span>Colonia Luna</span><span class=\"ds-fig\">9</span></div><div class=\"ds-row ds-plain\"><span>Creme Faces</span><span class=\"ds-fig\">12</span></div></div>",
+      "css": ".ds-listing{border:1px solid #e7ebe8;border-radius:6px;background:#fff;overflow:hidden;width:320px;font:400 13px 'DM Sans Variable',system-ui,sans-serif;color:#17201b}.ds-head,.ds-row{display:grid;grid-template-columns:1fr 48px;gap:16px;align-items:center;padding:12px 20px}.ds-head{padding:10px 20px;border-bottom:1px solid #e7ebe8;font:400 11px 'DM Mono',monospace;letter-spacing:.04em;text-transform:uppercase;color:#6f7872}.ds-row{background:#eaf7ee}.ds-row.ds-plain{background:transparent}.ds-fig{text-align:right;font:400 13px 'DM Mono',monospace;font-variant-numeric:tabular-nums}.ds-mark{background-image:linear-gradient(transparent 56%,rgba(221,99,131,.38) 56%,rgba(221,99,131,.38) 94%,transparent 94%);padding:0 3px;margin:0 -3px}"
+    },
+    {
+      "name": "Stamp and Stock Mark",
+      "kind": "chip",
+      "refersTo": "stamp",
+      "description": "Status in form: solid bar ok, dashed low, struck out, double rule expiring; text label always present.",
+      "html": "<div class=\"ds-states\"><span class=\"ds-sm\"><i class=\"ds-g ds-ok\"></i>Em estoque</span><span class=\"ds-sm\"><i class=\"ds-g ds-low\"></i>Baixo</span><span class=\"ds-sm\"><i class=\"ds-g ds-out\"></i>Sem estoque</span><span class=\"ds-sm\"><i class=\"ds-g ds-exp\"></i><b class=\"ds-stamp\">Vencendo</b></span></div>",
+      "css": ".ds-states{display:flex;flex-direction:column;gap:8px;font:400 12px 'DM Sans Variable',system-ui,sans-serif;color:#17201b}.ds-sm{display:inline-flex;align-items:center;gap:8px}.ds-g{display:inline-block;width:26px;height:8px;border-radius:1px}.ds-ok{background:#239e4b}.ds-low{border:1.5px dashed #ba4566}.ds-out{background:linear-gradient(#6f7872,#6f7872) center/100% 1.5px no-repeat}.ds-exp{border-top:1.5px solid #8a5a12;border-bottom:1.5px solid #8a5a12}.ds-stamp{display:inline-flex;padding:1px 6px;border:1.5px solid currentColor;border-radius:3px;color:#8a5a12;font:500 10px/16px 'DM Mono',monospace;letter-spacing:.05em;text-transform:uppercase}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Romaneio Printout",
+    "overview": "The signed-in web app is a stock sheet, not a dashboard. The page is a pale green-grey sheet; content sits on white paper with a single hairline; lists run in bands of three rows so the eye keeps its line. Pink appears as a highlighter stroke behind the name of a row that needs the team, and nowhere else as a signal.\n\nDensity is working: 13px body, 12px row padding, 20px gutters. Everything that is data is set in DM Mono with tabular numerals. Depth is hairlines and tone; no cards inside cards, no icon tiles, no gradients, no glass.\n\nThe palette (green #239e4b, pink #dd6383, derived dark theme) and the login screens are pinned by the brand.",
+    "keyCharacteristics": [
+      "Listagem Zebrada: green band on rows 1-3, plain on 4-6, repeating.",
+      "Pink highlighter behind a name, never pink text.",
+      "State in form as well as hue: full bar, dashed, struck, doubled.",
+      "One sans family plus mono for data; no eyebrows in the interior.",
+      "Rail of index tabs that opens over the page without pushing it."
+    ],
+    "rules": [
+      { "name": "The Highlighter Rule", "body": "Pink is a stroke behind a name, on the lower 40% of the line, for a row that needs the team. It is never a text colour and never a fill for a button.", "section": "colors" },
+      { "name": "The Deep Green Rule", "body": "Solid green behind white text uses #147a37, not #239e4b.", "section": "colors" },
+      { "name": "The Two Themes Rule", "body": "Surfaces, text, hairlines, band and status inks follow --color-* variables; green and pink brand values stay fixed in both themes.", "section": "colors" },
+      { "name": "The Figure Rule", "body": "Every number a person might compare is DM Mono with tabular numerals, and money goes through utils/money.js (pt-BR).", "section": "typography" },
+      { "name": "The One Family Rule", "body": "No second sans, no serif inside the signed-in app.", "section": "typography" },
+      { "name": "The One Sheet Rule", "body": "A sheet is never nested inside a sheet.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do band lists in threes with --color-band, and put figures in DM Mono tabular.",
+      "Do show stock state as shape plus label plus ink, never hue alone.",
+      "Do use #147a37 behind white text; keep the focus ring 2px #239e4b.",
+      "Do keep copy in pt-BR and the same words as the phone app.",
+      "Do honor prefers-reduced-motion on every animation (rise, page-in, row-in, flap, toggle).",
+      "Do show empty states plainly; stock starts being entered this week."
+    ],
+    "donts": [
+      "Don't colour text pink, or fill a button with pink.",
+      "Don't nest sheets, add icon tiles, gradients (the highlighter wash and stock-out strike are the only ones), or glass.",
+      "Don't put Playfair Display or a second sans in the interior.",
+      "Don't build the generic left menu, four KPI cards and plain white table.",
+      "Don't invent data the API lacks; hide the control instead."
+    ]
+  }
+}
