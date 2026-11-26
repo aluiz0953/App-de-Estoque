@@ -4,8 +4,27 @@
     {
       "name": "estoque-web",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "frontend/web", "run", "dev", "--", "--host"],
+      "runtimeArgs": [
+        "--prefix",
+        "frontend/web",
+        "run",
+        "dev",
+        "--",
+        "--host"
+      ],
       "port": 5173
+    },
+    {
+      "name": "releases-page",
+      "runtimeExecutable": "python",
+      "runtimeArgs": [
+        "-m",
+        "http.server",
+        "4321",
+        "--directory",
+        "site"
+      ],
+      "port": 4321
     }
   ]
 }

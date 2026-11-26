@@ -72,7 +72,6 @@ const OrdersScreen = () => {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={styles.topHeader}>
-        <Text style={styles.eyebrow}>PEDIDOS</Text>
         <View style={styles.topHeaderRow}>
           <Text style={styles.title} accessibilityRole="header">Pedidos</Text>
           <TouchableOpacity
@@ -176,7 +175,7 @@ const createStyles = (colors) => StyleSheet.create({
     marginTop: 4,
   },
   title: {
-    fontFamily: fonts.display,
+    fontFamily: fonts.heading,
     color: colors.headerInk,
     fontSize: 22,
   },

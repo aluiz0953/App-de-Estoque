@@ -4,46 +4,39 @@ import { fonts } from '../theme/colors';
 import { useTheme } from '../theme/ThemeContext';
 import { STOCK_STATE_LABEL } from '../utils/stock';
 
-const TONES = {
-  available: (c) => ({ bg: c.successBg, ink: c.successInk }),
-  low: (c) => ({ bg: c.warningBg, ink: c.warningInk }),
-  out: (c) => ({ bg: c.neutralBg, ink: c.neutralInk }),
-};
-
-// state: 'available' | 'low' | 'out' — always pairs a dot with a text label
-// (per the design spec: never communicate status with color alone).
+// state: 'available' | 'low' | 'out'. A stamp, not a pill: bordered, uppercase mono, one ink. The state also shows
+// in form (full bar, dashed bar, struck line), so it never rests on colour alone.
 const StatusPill = ({ state, style }) => {
   const { colors } = useTheme();
-  const tone = (TONES[state] || TONES.available)(colors);
+  const ink = state === 'low' ? colors.secondaryDark : state === 'out' ? colors.neutralInk : colors.primaryDark;
   return (
-    <View style={[styles.pill, { backgroundColor: tone.bg }, style]}>
-      <View style={[styles.dot, { backgroundColor: tone.ink }]} />
-      <Text style={[styles.text, { color: tone.ink }]}>{STOCK_STATE_LABEL[state]}</Text>
+    <View style={[styles.stamp, { borderColor: ink }, style]}>
+      <View
+        style={[
+          styles.glyph,
+          state === 'available' && { backgroundColor: ink },
+          state === 'low' && { borderWidth: 1.5, borderStyle: 'dashed', borderColor: ink },
+          state === 'out' && { height: 1.5, backgroundColor: ink },
+        ]}
+      />
+      <Text style={[styles.text, { color: ink }]}>{STOCK_STATE_LABEL[state]}</Text>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  pill: {
+  stamp: {
     flexDirection: 'row',
     alignItems: 'center',
     alignSelf: 'flex-start',
-    borderRadius: 999,
-    paddingVertical: 4,
-    paddingHorizontal: 9,
-    gap: 5,
+    borderRadius: 3,
+    borderWidth: 1.5,
+    paddingVertical: 2,
+    paddingHorizontal: 6,
+    gap: 6,
   },
-  dot: {
-    width: 5,
-    height: 5,
-    borderRadius: 999,
-  },
-  text: {
-    fontFamily: fonts.mono,
-    fontSize: 9,
-    textTransform: 'uppercase',
-    letterSpacing: 0.8,
-  },
+  glyph: { width: 14, height: 6, borderRadius: 1 },
+  text: { fontFamily: fonts.mono, fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5 },
 });
 
 export default StatusPill;

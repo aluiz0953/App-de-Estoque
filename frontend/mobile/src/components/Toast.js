@@ -163,7 +163,7 @@ export const ToastProvider = ({ children }) => {
           visible={snack.visible}
           onDismiss={() => setSnack((s) => ({ ...s, visible: false }))}
           duration={2600}
-          style={{ backgroundColor: colors.primary, borderRadius: 10, marginBottom: 8 }}
+          style={{ backgroundColor: colors.primary, borderRadius: 6, marginBottom: 8 }}
         >
           {snack.message}
         </Snackbar>

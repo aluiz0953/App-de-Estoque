@@ -11,7 +11,7 @@ export const createStyles = (colors) => StyleSheet.create({
     justifyContent: 'space-between',
   },
   headerText: {
-    color: 'white',
+    color: colors.headerInk,
     fontSize: 18,
     fontWeight: '600',
   },

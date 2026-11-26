@@ -39,7 +39,6 @@ const RemoveStockModal = ({ visible, product, onClose, onConfirm, busy }) => {
         <View style={styles.card} accessibilityViewIsModal>
           <View style={styles.header}>
             <View style={{ flex: 1, marginRight: 12 }}>
-              <Text style={styles.eyebrow}>Remover estoque</Text>
               <Text style={styles.productName} numberOfLines={2} accessibilityRole="header">{product.nome}</Text>
             </View>
             <TouchableOpacity
@@ -134,7 +133,7 @@ const createStyles = (colors) => StyleSheet.create({
     width: '100%',
     maxWidth: 380,
     backgroundColor: colors.surface,
-    borderRadius: 18,
+    borderRadius: 6,
     padding: 20,
   },
   header: {
@@ -150,7 +149,7 @@ const createStyles = (colors) => StyleSheet.create({
     color: colors.textMutedLight,
   },
   productName: {
-    fontFamily: fonts.display,
+    fontFamily: fonts.heading,
     fontSize: 19,
     color: colors.text,
     marginTop: 4,
@@ -180,7 +179,7 @@ const createStyles = (colors) => StyleSheet.create({
   stepBtn: {
     width: 38,
     height: 38,
-    borderRadius: 10,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: colors.border,
     alignItems: 'center',
@@ -189,7 +188,7 @@ const createStyles = (colors) => StyleSheet.create({
   qtyInput: {
     flex: 1,
     height: 38,
-    borderRadius: 10,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.background,

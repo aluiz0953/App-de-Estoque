@@ -113,7 +113,6 @@ const AddEditPedidoScreen = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.eyebrow}>Novo pedido</Text>
           <Text style={styles.title} accessibilityRole="header">Registrar venda.</Text>
         </View>
         <TouchableOpacity
@@ -295,7 +294,7 @@ const createStyles = (colors) => StyleSheet.create({
     color: colors.textMutedLight,
   },
   title: {
-    fontFamily: fonts.display,
+    fontFamily: fonts.heading,
     fontSize: 22,
     color: colors.text,
     marginTop: 6,
@@ -320,7 +319,7 @@ const createStyles = (colors) => StyleSheet.create({
   },
   input: {
     minHeight: 44,
-    borderRadius: 10,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.background,
@@ -345,7 +344,7 @@ const createStyles = (colors) => StyleSheet.create({
   selectedCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: 10,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: colors.secondaryDark,
     backgroundColor: colors.background,
@@ -363,7 +362,7 @@ const createStyles = (colors) => StyleSheet.create({
     marginTop: 2,
   },
   newClienteBox: {
-    borderRadius: 10,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.background,
@@ -371,7 +370,7 @@ const createStyles = (colors) => StyleSheet.create({
   },
   itensBox: {
     marginTop: 12,
-    borderRadius: 10,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: colors.border,
     overflow: 'hidden',

@@ -271,7 +271,7 @@ const createStyles = (colors) => StyleSheet.create({
     color: colors.text,
   },
   segmentTextActive: {
-    color: colors.primary,
+    color: colors.primaryDark,
   },
   filtersBar: {
     flexDirection: 'row',

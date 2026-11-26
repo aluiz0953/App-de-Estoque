@@ -2,18 +2,13 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import Panel, { PanelEmpty } from './Panel';
-import ProductBottle from './ProductBottle';
 import StatusPill from './StatusPill';
 import { fonts, tabularNums } from '../theme/colors';
 import { useThemedStyles } from '../theme/ThemeContext';
 import { getStockState, STOCK_STATE_LABEL } from '../utils/stock';
 import { decorative, slopFor } from '../utils/a11y';
 
-const money = (value) => `R$ ${(value ?? 0).toFixed(2).replace('.', ',')}`;
-
-// Tile colours / bottle shapes cycle through the rows, like the Figma product list.
-const TONS = ['Pink', 'Green', 'Purple', 'Rose'];
-const FORMAS = ['round', 'tall', 'wide'];
+import { money } from '../utils/money';
 
 // "Produtos recentes" card of the dashboard: the latest products with bottle tile, stock badge and price.
 const RecentProductsPanel = ({ produtos, onOpen, onSeeAll }) => {
@@ -21,7 +16,7 @@ const RecentProductsPanel = ({ produtos, onOpen, onSeeAll }) => {
   return (
     <Panel
       title="Produtos recentes"
-      subtitle="Últimos cadastrados no seu catálogo"
+      subtitle="Últimos cadastrados"
       action={
         <TouchableOpacity
           onPress={onSeeAll}
@@ -39,18 +34,16 @@ const RecentProductsPanel = ({ produtos, onOpen, onSeeAll }) => {
         <PanelEmpty>Nenhum produto cadastrado ainda.</PanelEmpty>
       ) : (
         produtos.map((p, i) => {
-          const tom = TONS[i % TONS.length];
           const state = getStockState(p.quantidadeTotal, p.estoqueMinimo);
           return (
             <TouchableOpacity
               key={p.id}
-              style={styles.row}
+              style={[styles.row, i % 6 < 3 && { backgroundColor: colors.band }]}
               onPress={() => onOpen(p.id)}
               accessibilityRole="button"
               accessibilityLabel={`${p.nome}, ${p.linha?.marca?.nome || ''}, ${STOCK_STATE_LABEL[state]}, ${p.quantidadeTotal ?? 0} unidades, ${money(p.precoVenda)}`}
             >
-              <ProductBottle color={colors[`tile${tom}Ink`]} bg={colors[`tile${tom}Bg`]} shape={FORMAS[i % FORMAS.length]} />
-              <View style={{ flex: 1, marginLeft: 10 }}>
+              <View style={{ flex: 1, marginRight: 10 }}>
                 <Text style={styles.name} numberOfLines={1}>{p.nome}</Text>
                 <Text style={[styles.meta, tabularNums]} numberOfLines={1}>
                   {p.linha?.marca?.nome || 'N/A'} · {p.sku}
@@ -71,7 +64,7 @@ const RecentProductsPanel = ({ produtos, onOpen, onSeeAll }) => {
 const createStyles = (colors) => StyleSheet.create({
   seeAll: { flexDirection: 'row', alignItems: 'center' },
   seeAllText: { fontFamily: fonts.sansBold, fontSize: 11, color: colors.tileGreenInk },
-  row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, borderTopWidth: 1, borderColor: colors.border },
+  row: { flexDirection: 'row', alignItems: 'center', paddingVertical: 10, paddingHorizontal: 8, marginHorizontal: -8, borderTopWidth: 1, borderColor: colors.border },
   name: { fontFamily: fonts.sansBold, fontSize: 13, color: colors.text },
   meta: { fontFamily: fonts.mono, fontSize: 10, color: colors.textMutedLight, marginTop: 2 },
   price: { fontFamily: fonts.sansBold, fontSize: 12, color: colors.text },

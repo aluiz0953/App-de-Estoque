@@ -9,6 +9,8 @@ import { fonts, tabularNums } from '../theme/colors';
 import { useThemedStyles } from '../theme/ThemeContext';
 import { useDockClearance } from '../components/BottomTabBar';
 import MetricTile from '../components/MetricTile';
+import RowIn from '../components/RowIn';
+import UpdateBanner from '../components/UpdateBanner';
 import MovimentacoesPanel from '../components/MovimentacoesPanel';
 import RecentProductsPanel from '../components/RecentProductsPanel';
 import QuickActionCard from '../components/QuickActionCard';
@@ -19,7 +21,7 @@ import { decorative } from '../utils/a11y';
 import { useNetworkStatus } from '../hooks/useNetworkStatus';
 import { useSyncQueue } from '../hooks/useSyncQueue';
 
-const money = (value) => `R$ ${(value ?? 0).toFixed(2).replace('.', ',')}`;
+import { money } from '../utils/money';
 
 // Tela 01 — Hoje, in the Figma dashboard layout: greeting, four metrics, Movimentações, recent products
 // and the attention card. The floating dock stays at the bottom (see useDockClearance).
@@ -49,30 +51,21 @@ const HomeScreen = () => {
 
   const nome = String(user?.user || user?.username || '').split(' ')[0];
   const nomeCapitalizado = nome ? nome.charAt(0).toUpperCase() + nome.slice(1) : '';
-  const alertaTitulo =
-    atencao.length === 0
-      ? 'Nenhum produto precisa de atenção'
-      : `${atencao.length} ${atencao.length === 1 ? 'produto precisa' : 'produtos precisam'} de atenção`;
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={styles.header}>
-        <Text style={styles.eyebrow}>ESTOQUE</Text>
-        <Text style={styles.headerText} accessibilityRole="header">Dashboard</Text>
+        <Text style={styles.headerText} accessibilityRole="header">Painel</Text>
       </View>
 
       <FlatList
-        contentContainerStyle={{ padding: 16, paddingBottom: dockClearance }}
+        contentContainerStyle={{ paddingVertical: 16, paddingBottom: dockClearance }}
         ListHeaderComponent={
-          <View>
-            <Text style={styles.eyebrowGreen}>PAINEL DE CONTROLE</Text>
+          <View style={{ paddingHorizontal: 16 }}>
             <Text style={styles.greeting}>
               Olá{nomeCapitalizado ? `, ${nomeCapitalizado}` : ''}.{' '}
-              <Text style={styles.greetingAccent}>
-                {atencao.length > 0 ? 'Alguns itens pedem atenção.' : 'Seu estoque está sob controle.'}
-              </Text>
+              {atencao.length > 0 ? 'Alguns itens pedem atenção.' : 'Seu estoque está sob controle.'}
             </Text>
-            <Text style={styles.subtitle}>Acompanhe produtos, vendas e alertas em um só lugar.</Text>
 
             <SyncIndicator
               status={
@@ -98,6 +91,7 @@ const HomeScreen = () => {
               onRetry={refetch}
               style={{ marginTop: 12 }}
             />
+            <UpdateBanner />
 
             {isLoading ? (
               <ActivityIndicator style={{ marginTop: 40 }} color={colors.primary} />
@@ -148,22 +142,6 @@ const HomeScreen = () => {
                   onSeeAll={() => navigate('Estoque', { status: 'Todos' })}
                 />
 
-                <TouchableOpacity
-                  style={styles.alertCard}
-                  onPress={() => navigate('Estoque', { status: 'low' })}
-                  accessibilityRole="button"
-                  accessibilityLabel={alertaTitulo}
-                >
-                  <View style={styles.alertIcon} {...decorative}>
-                    <MaterialCommunityIcons name="alert-outline" size={20} color={colors.tilePinkInk} />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.alertTitle}>{alertaTitulo}</Text>
-                    <Text style={styles.alertText}>Itens abaixo do estoque mínimo podem afetar suas próximas vendas.</Text>
-                  </View>
-                  <MaterialCommunityIcons name="chevron-right" size={20} color={colors.textMutedLight} {...decorative} />
-                </TouchableOpacity>
-
                 <Text style={styles.sectionTitle} accessibilityRole="header">Itens que exigem atenção</Text>
               </>
             )}
@@ -171,9 +149,10 @@ const HomeScreen = () => {
         }
         data={isLoading || error ? [] : atencao}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => {
+        renderItem={({ item, index }) => {
           const state = getStockState(item.quantidadeTotal, item.estoqueMinimo);
           return (
+            <RowIn index={index} style={index % 6 < 3 ? { backgroundColor: colors.band } : null}>
             <TouchableOpacity
               style={styles.attentionRow}
               onPress={() => navigate('ProductDetail', { productId: item.id })}
@@ -182,13 +161,16 @@ const HomeScreen = () => {
               accessibilityHint="Toque duas vezes para abrir os detalhes do produto"
             >
               <View style={{ flex: 1 }}>
-                <Text style={styles.itemName}>{item.nome}</Text>
+                <Text style={styles.itemName}>
+                  <Text style={{ backgroundColor: colors.mark }}>{item.nome}</Text>
+                </Text>
                 <Text style={[styles.itemMeta, tabularNums]}>
                   {item.sku} · <Text style={tabularNums}>{item.quantidadeTotal ?? 0}</Text> un.
                 </Text>
               </View>
               <StatusPill state={state} />
             </TouchableOpacity>
+            </RowIn>
           );
         }}
         ListEmptyComponent={
@@ -206,39 +188,22 @@ const HomeScreen = () => {
 
 const createStyles = (colors) => StyleSheet.create({
   header: { backgroundColor: colors.headerBg, paddingVertical: 14, paddingHorizontal: 16, elevation: 4 },
-  eyebrow: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 2, color: colors.headerInk, opacity: 0.65, marginBottom: 4 },
-  headerText: { fontFamily: fonts.display, color: colors.headerInk, fontSize: 22 },
-  eyebrowGreen: { fontFamily: fonts.mono, fontSize: 10, letterSpacing: 1.7, color: colors.primary, marginTop: 4 },
-  greeting: { fontFamily: fonts.display, fontSize: 25, lineHeight: 31, color: colors.text, marginTop: 8 },
-  greetingAccent: { color: colors.secondaryDark, fontStyle: 'italic' },
-  subtitle: { fontFamily: fonts.sans, fontSize: 12, color: colors.textMuted, marginTop: 6 },
-  metricsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginTop: 18 },
+  headerText: { fontFamily: fonts.heading, color: colors.headerInk, fontSize: 22 },
+  greeting: { fontFamily: fonts.heading, fontSize: 22, lineHeight: 28, color: colors.text, marginTop: 8 },
+  metricsGrid: { flexDirection: 'row', flexWrap: 'wrap', columnGap: 16, rowGap: 14, marginTop: 18 },
   actionsRow: { flexDirection: 'row', gap: 10, marginTop: 14 },
-  alertCard: {
-    marginTop: 14,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    padding: 16,
-    borderRadius: 14,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.roseBg,
-  },
-  alertIcon: { width: 38, height: 38, borderRadius: 11, backgroundColor: colors.tilePinkBg, alignItems: 'center', justifyContent: 'center' },
-  alertTitle: { fontFamily: fonts.sansBold, fontSize: 13, color: colors.roseInk },
-  alertText: { fontFamily: fonts.sans, fontSize: 11, color: colors.roseSoft, marginTop: 2 },
-  sectionTitle: { fontFamily: fonts.display, fontSize: 19, color: colors.text, marginTop: 26, marginBottom: 4 },
+  sectionTitle: { fontFamily: fonts.heading, fontSize: 19, color: colors.text, marginTop: 26, marginBottom: 4 },
   attentionRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderColor: colors.border,
   },
-  itemName: { fontFamily: fonts.sansMedium, fontSize: 13, color: colors.text },
-  itemMeta: { fontFamily: fonts.mono, fontSize: 10, color: colors.textMutedLight, marginTop: 2 },
+  itemName: { fontFamily: fonts.sansMedium, fontSize: 14, color: colors.text },
+  itemMeta: { fontFamily: fonts.mono, fontSize: 11, color: colors.textMuted, marginTop: 2 },
   empty: { alignItems: 'center', paddingVertical: 28, gap: 10 },
   emptyText: { fontFamily: fonts.sans, fontSize: 12, color: colors.textMutedLight, textAlign: 'center', maxWidth: 240 },
   errorText: { fontFamily: fonts.sans, color: colors.error, marginTop: 20, textAlign: 'center' },

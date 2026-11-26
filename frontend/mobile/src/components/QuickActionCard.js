@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
 import { fonts } from '../theme/colors';
 import { useThemedStyles } from '../theme/ThemeContext';
@@ -16,9 +16,7 @@ const QuickActionCard = ({ icon, title, description, onPress, style }) => {
       accessibilityRole="button"
       accessibilityLabel={`${title}. ${description}`}
     >
-      <View style={styles.iconWrap} {...decorative}>
-        <MaterialCommunityIcons name={icon} size={20} color={colors.secondaryDark} />
-      </View>
+      <MaterialCommunityIcons name={icon} size={20} color={colors.primaryDark} {...decorative} />
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.description}>{description}</Text>
     </TouchableOpacity>
@@ -28,30 +26,22 @@ const QuickActionCard = ({ icon, title, description, onPress, style }) => {
 const createStyles = (colors) => StyleSheet.create({
   card: {
     flex: 1,
-    borderRadius: 12,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
     padding: 14,
   },
-  iconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: 999,
-    backgroundColor: colors.primaryLight,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 10,
-  },
   title: {
     fontFamily: fonts.sansMedium,
     fontSize: 13,
     color: colors.text,
+    marginTop: 8,
   },
   description: {
     fontFamily: fonts.sans,
     fontSize: 11,
-    color: colors.textMutedLight,
+    color: colors.textMuted,
     marginTop: 3,
   },
 });

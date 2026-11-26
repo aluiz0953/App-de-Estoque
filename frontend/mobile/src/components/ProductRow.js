@@ -15,7 +15,7 @@ import { decorative, slopFor } from '../utils/a11y';
 // pre-filled for this product instead of pretending to be a one-tap action.
 // Memoized: a screen re-render (typing, modal state) must not re-render every row.
 // Callbacks receive the item, so the parent can pass stable handlers.
-const ProductRow = ({ item, onPress, onReceive, onRequestRemove }) => {
+const ProductRow = ({ item, index = 0, onPress, onReceive, onRequestRemove }) => {
   const { colors, styles } = useThemedStyles(createStyles);
   const quantidade = item.quantidadeTotal ?? 0;
   const state = getStockState(quantidade, item.estoqueMinimo);
@@ -26,7 +26,7 @@ const ProductRow = ({ item, onPress, onReceive, onRequestRemove }) => {
   // The info area is one focus stop for screen readers; the two step buttons stay separate stops
   // (nesting buttons inside a button would hide them from TalkBack/VoiceOver).
   return (
-    <View style={styles.row}>
+    <View style={[styles.row, index % 6 < 3 && { backgroundColor: colors.band }]}>
       <TouchableOpacity
         onPress={() => onPress?.(item)}
         style={styles.info}
@@ -35,12 +35,10 @@ const ProductRow = ({ item, onPress, onReceive, onRequestRemove }) => {
         accessibilityLabel={summary}
         accessibilityHint="Toque duas vezes para abrir os detalhes do produto"
       >
-      <View style={styles.thumb} {...decorative}>
-        <MaterialCommunityIcons name="bottle-tonic-outline" size={20} color={colors.textMutedLight} />
-      </View>
-
       <View style={{ flex: 1, marginRight: 8 }}>
-        <Text style={styles.name} numberOfLines={2}>{item.nome}</Text>
+        <Text style={styles.name} numberOfLines={2}>
+          <Text style={state !== 'available' ? { backgroundColor: colors.mark } : null}>{item.nome}</Text>
+        </Text>
         <Text style={[styles.meta, tabularNums]} numberOfLines={1}>
           {item.linha?.marca?.nome ? `${item.linha.marca.nome} · ` : ''}{item.sku}
         </Text>
@@ -53,7 +51,7 @@ const ProductRow = ({ item, onPress, onReceive, onRequestRemove }) => {
           onPress={() => onRequestRemove?.(item)}
           disabled={quantidade <= 0}
           style={[styles.stepBtn, quantidade <= 0 && styles.stepBtnDisabled]}
-          hitSlop={slopFor(36)}
+          hitSlop={slopFor(40)}
           accessibilityRole="button"
           accessibilityLabel={`Remover estoque de ${item.nome}`}
           accessibilityHint="Abre a escolha da quantidade e do motivo"
@@ -65,7 +63,7 @@ const ProductRow = ({ item, onPress, onReceive, onRequestRemove }) => {
         <TouchableOpacity
           onPress={() => onReceive?.(item)}
           style={styles.stepBtn}
-          hitSlop={slopFor(36)}
+          hitSlop={slopFor(40)}
           accessibilityRole="button"
           accessibilityLabel={`Receber estoque de ${item.nome}`}
           accessibilityHint="Abre a entrada de romaneio para este produto"
@@ -81,7 +79,8 @@ const createStyles = (colors) => StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.surface,
@@ -91,24 +90,15 @@ const createStyles = (colors) => StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
   },
-  thumb: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
-    backgroundColor: colors.background,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
   name: {
     fontFamily: fonts.sansMedium,
-    fontSize: 13,
+    fontSize: 14,
     color: colors.text,
   },
   meta: {
     fontFamily: fonts.mono,
-    fontSize: 10,
-    color: colors.textMutedLight,
+    fontSize: 11,
+    color: colors.textMuted,
     marginTop: 2,
   },
   stepper: {
@@ -117,9 +107,9 @@ const createStyles = (colors) => StyleSheet.create({
     gap: 12,
   },
   stepBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
+    width: 40,
+    height: 40,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: colors.border,
     alignItems: 'center',

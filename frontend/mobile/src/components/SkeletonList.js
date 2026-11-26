@@ -52,7 +52,7 @@ const createStyles = (colors) => StyleSheet.create({
   lines: { flex: 1, marginHorizontal: 12 },
   line: { height: 12, borderRadius: 6, backgroundColor: colors.border },
   lineShort: { width: '40%', height: 10, marginTop: 8 },
-  pill: { width: 56, height: 24, borderRadius: 12, backgroundColor: colors.border },
+  pill: { width: 56, height: 24, borderRadius: 3, backgroundColor: colors.border },
 });
 
 export default React.memo(SkeletonList);

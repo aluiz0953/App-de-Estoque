@@ -64,8 +64,8 @@ const InventoryScreen = () => {
   const openProduct = useCallback((p) => navigate('ProductDetail', { productId: p.id }), [navigate]);
   const receiveProduct = useCallback((p) => navigate('EntradaRomaneio', { produtoId: p.id }), [navigate]);
   const renderItem = useCallback(
-    ({ item }) => (
-      <ProductRow item={item} onPress={openProduct} onReceive={receiveProduct} onRequestRemove={setRemovingProduct} />
+    ({ item, index }) => (
+      <ProductRow item={item} index={index} onPress={openProduct} onReceive={receiveProduct} onRequestRemove={setRemovingProduct} />
     ),
     [openProduct, receiveProduct]
   );
@@ -139,7 +139,6 @@ const InventoryScreen = () => {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={styles.topHeader}>
-        <Text style={styles.eyebrow}>ESTOQUE</Text>
         <View style={styles.topHeaderRow}>
           <Text style={styles.title} accessibilityRole="header">Estoque</Text>
           <TouchableOpacity
@@ -263,7 +262,7 @@ const createStyles = (colors) => StyleSheet.create({
     marginTop: 4,
   },
   title: {
-    fontFamily: fonts.display,
+    fontFamily: fonts.heading,
     color: colors.headerInk,
     fontSize: 22,
   },

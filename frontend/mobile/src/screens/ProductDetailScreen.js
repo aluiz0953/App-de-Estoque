@@ -14,7 +14,7 @@ import { useToast } from '../components/Toast';
 import apiService from '../services/api';
 import { submitStockWithdrawal } from '../services/stockMutations';
 
-const STATUS_COLORS = { ATIVO: 'success', VENCIDO: 'error', RESERVADO: 'warning', BLOQUEADO: 'disabled' };
+const STATUS_COLORS = { ATIVO: 'success', VENCIDO: 'error', RESERVADO: 'warning', BLOQUEADO: 'textMuted' };
 
 const ProductDetailScreen = () => {
   const { colors, styles } = useThemedStyles(createStyles);
@@ -115,7 +115,7 @@ const ProductDetailScreen = () => {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={{ backgroundColor: colors.headerBg, paddingVertical: 14, paddingHorizontal: 16, elevation: 4 }}>
-        <Text style={{ color: colors.headerInk, fontSize: 20, fontFamily: fonts.display }}>
+        <Text style={{ color: colors.headerInk, fontSize: 20, fontFamily: fonts.heading }}>
           {produto.nome}
         </Text>
       </View>
@@ -193,12 +193,15 @@ const ProductDetailScreen = () => {
                 <View style={{ alignItems: 'flex-end' }}>
                   <Text
                     style={{
-                      backgroundColor: colors[STATUS_COLORS[item.status] || 'disabled'],
-                      color: 'white',
-                      paddingHorizontal: 8,
-                      paddingVertical: 4,
-                      borderRadius: 12,
-                      fontSize: 12,
+                      borderWidth: 1.5,
+                      borderColor: colors[STATUS_COLORS[item.status] || 'textMuted'],
+                      color: colors[STATUS_COLORS[item.status] || 'textMuted'],
+                      paddingHorizontal: 6,
+                      paddingVertical: 2,
+                      borderRadius: 3,
+                      fontFamily: fonts.mono,
+                      fontSize: 11,
+                      textTransform: 'uppercase',
                     }}
                   >
                     {item.status}
@@ -301,7 +304,7 @@ const createStyles = (colors) => StyleSheet.create({
     left: 16,
     right: 16,
     backgroundColor: colors.surface,
-    borderRadius: 14,
+    borderRadius: 6,
     padding: 12,
     borderWidth: 1,
     borderColor: colors.border,
