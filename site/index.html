@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tico e Tica Estoque · baixar o app</title>
+  <meta name="description" content="Baixe e atualize o aplicativo Android de estoque da Tico e Tica.">
+  <meta name="theme-color" content="#2eb24d">
+  <link rel="icon" href="favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main>
+    <header class="top">
+      <img class="logo" src="logo-tico-e-tica.png" width="240" height="164" alt="Tico e Tica">
+      <div class="lead">
+        <h1>Estoque da loja, no seu celular.</h1>
+        <p>O aplicativo Android da Tico e Tica: entrada de romaneio, estoque por lote, pedidos e revistas das marcas.</p>
+        <a id="download" class="download" href="https://github.com/aluiz0953/App-de-Estoque/releases/latest" aria-describedby="release-meta">
+          <svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 19h16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span id="download-label">Baixar o app</span>
+        </a>
+        <p id="release-meta" class="meta" aria-live="polite">Procurando a versão mais recente…</p>
+      </div>
+    </header>
+
+    <section class="steps" aria-labelledby="como-instalar">
+      <h2 id="como-instalar">Como instalar</h2>
+      <ol>
+        <li><span><strong>Baixe o arquivo</strong> no botão acima, pelo celular.</span></li>
+        <li><span><strong>Abra o arquivo</strong> baixado. Na primeira vez, o Android pede para permitir instalar apps desta fonte: toque em Configurações e permita.</span></li>
+        <li><span><strong>Toque em Instalar.</strong> Pronto. Quando sair versão nova, o próprio app avisa no Painel e em Configurações.</span></li>
+      </ol>
+      <p class="note">Quem tinha a versão de teste (1.0) precisa desinstalá-la uma vez antes, porque a assinatura do app mudou.</p>
+    </section>
+
+    <section aria-labelledby="versoes">
+      <h2 id="versoes">Versões</h2>
+      <div class="listing" role="table" aria-label="Histórico de versões">
+        <div class="listing-head" role="row">
+          <span role="columnheader">Versão</span>
+          <span role="columnheader">Data</span>
+          <span role="columnheader">O que mudou</span>
+          <span role="columnheader" class="right">Arquivo</span>
+        </div>
+        <div id="releases" class="listing-body" role="rowgroup">
+          <p class="empty">Carregando…</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Tico e Tica · Perfumaria, brinquedos e papelaria</p>
+    <p>Rua Quinze de Fevereiro, 1557F · <a href="https://wa.me/5532988574049">(32) 98857-4049</a></p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

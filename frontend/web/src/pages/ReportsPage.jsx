@@ -1,7 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useFetchEstoqueResumo } from '../hooks/useFetchEstoqueResumo';
 import apiService from '../services/api';
+import PageHead from '../components/PageHead';
+import { money } from '../utils/money';
 
 const MOTIVO_LABEL = {
   COMPRA_RECEBIDA: 'Compra recebida',
@@ -15,8 +17,6 @@ const MOTIVO_LABEL = {
   OUTRO: 'Outro',
 };
 
-const money = (value) => `R$ ${(value ?? 0).toFixed(2).replace('.', ',')}`;
-
 const REPORT_TYPES = [
   { key: 'resumo', label: 'Resumo' },
   { key: 'movimentacao', label: 'Movimentação' },
@@ -25,122 +25,81 @@ const REPORT_TYPES = [
 ];
 
 const ReportsPage = () => {
-  const navigate = useNavigate();
   const [reportType, setReportType] = useState('resumo');
-  const [dateRange, setDateRange] = useState('month');
-
   const { data: resumo, isLoading: isLoadingResumo, error: errorResumo } = useFetchEstoqueResumo();
 
-  const vencimentosData = [];
-  const lucroData = [];
-
-  const handleGenerateReport = () => {
-    alert(`Gerando relatório de ${reportType} para o período ${dateRange}`);
-  };
-
   return (
-    <main className="p-5 md:p-9">
-      <button onClick={() => navigate(-1)} className="eyebrow mb-3 flex items-center gap-1 hover:text-secondary-dark">
-        <span className="mdi mdi-arrow-left" /> Voltar
-      </button>
-      <h2 className="font-display mb-8 text-[34px] tracking-[-0.03em] md:text-[40px]">Relatórios.</h2>
+    <main className="mx-auto max-w-[1180px] px-5 py-6 md:px-9 md:py-8">
+      <PageHead title="Relatórios" />
 
-      <div className="mb-6 rounded-xl border border-border bg-surface p-6">
-        <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
-          <div className="flex flex-wrap gap-2">
-            {REPORT_TYPES.map(({ key, label }) => (
-              <button
-                key={key}
-                onClick={() => setReportType(key)}
-                className={`rounded-full px-4 py-2 text-[12px] font-medium transition ${
-                  reportType === key ? 'bg-primary text-primary-50' : 'bg-brand-bg text-muted border border-border hover:bg-white'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          <select
-            value={dateRange}
-            onChange={(e) => setDateRange(e.target.value)}
-            className="h-10 rounded-lg border border-border bg-brand-bg px-3 text-[12px] outline-none focus:border-secondary-dark"
-          >
-            <option value="week">Esta semana</option>
-            <option value="month">Este mês</option>
-            <option value="quarter">Este trimestre</option>
-            <option value="year">Este ano</option>
-          </select>
-        </div>
-
-        <div className="mt-4 flex justify-end gap-3 border-t border-border pt-4">
+      <div className="mb-6 flex flex-wrap gap-x-5 border-b border-border" role="tablist" aria-label="Tipo de relatório">
+        {REPORT_TYPES.map(({ key, label }) => (
           <button
-            onClick={handleGenerateReport}
-            className="pressable rounded-full bg-primary px-5 py-2.5 text-[12px] text-primary-50 transition hover:bg-primary-dark"
+            key={key}
+            role="tab"
+            aria-selected={reportType === key}
+            onClick={() => setReportType(key)}
+            className={`tab-link ${reportType === key ? 'tab-link-active' : ''}`}
           >
-            Gerar relatório
+            {label}
           </button>
-        </div>
+        ))}
       </div>
 
-      <div className="rounded-xl border border-border bg-surface p-6">
-        {reportType === 'resumo' ? (
-          <ResumoReport isLoading={isLoadingResumo} error={errorResumo} data={resumo} />
-        ) : reportType === 'movimentacao' ? (
-          <MovimentacaoReport />
-        ) : reportType === 'vencimentos' ? (
-          <VencimentosReport data={vencimentosData} />
-        ) : (
-          <LucroReport data={lucroData} />
-        )}
-      </div>
+      {reportType === 'resumo' ? (
+        <ResumoReport isLoading={isLoadingResumo} error={errorResumo} data={resumo} />
+      ) : reportType === 'movimentacao' ? (
+        <MovimentacaoReport />
+      ) : reportType === 'vencimentos' ? (
+        <NotAvailable
+          title="Vencimentos"
+          text="Este relatório ainda não está disponível. Enquanto isso, o que está perto de vencer aparece no Painel e em Notificações."
+        />
+      ) : (
+        <NotAvailable
+          title="Lucro"
+          text="Este relatório ainda não está disponível. A margem e o lucro unitário de cada produto estão na página do produto."
+        />
+      )}
     </main>
   );
 };
 
+const NotAvailable = ({ title, text }) => (
+  <div className="sheet px-5 py-10">
+    <h2 className="text-[15px] font-semibold">{title}</h2>
+    <p className="mt-1 max-w-[62ch] text-[13px] text-muted">{text}</p>
+    <Link to="/" className="btn btn-quiet mt-4">
+      Ir para o Painel
+    </Link>
+  </div>
+);
+
 const ResumoReport = ({ isLoading, error, data }) => {
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-16">
-        <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-secondary-dark" />
-        <p className="mt-4 text-[12px] text-muted-light">Carregando resumo...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return <p className="py-12 text-center text-danger">Erro ao carregar resumo: {error.message}</p>;
-  }
-
-  if (!data) {
-    return <p className="py-12 text-center text-muted-light">Nenhum dado disponível</p>;
-  }
+  if (isLoading) return <p className="text-[13px] text-muted" aria-busy="true">Carregando resumo…</p>;
+  if (error) return <p className="text-[13px] text-danger">Erro ao carregar resumo: {error.message}</p>;
+  if (!data) return <p className="text-[13px] text-muted">Nenhum dado disponível.</p>;
 
   return (
-    <div className="space-y-6">
-      <h3 className="font-display text-[22px]">Resumo do estoque</h3>
-
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-        <Metric label="Valor total em estoque" value={money(data.valorTotalEstoque)} />
-        <Metric label="Lucro potencial" value={money(data.lucroPotencial)} />
-        <Metric label="Número de produtos" value={data.totalProdutos ?? 0} />
-        <Metric label="Lotes ativos" value={data.totalLotesAtivos ?? 0} />
-      </div>
-
-      <div className="rounded-lg bg-brand-bg p-6">
-        <p className="eyebrow mb-2">Em desenvolvimento</p>
-        <h4 className="font-display text-[18px]">Distribuição por categoria</h4>
-        <p className="mt-2 text-[13px] text-muted">
-          Em uma implementação completa, aqui seriam exibidos gráficos mostrando a distribuição do estoque por categoria, marca e linha.
-        </p>
-      </div>
-    </div>
+    <section aria-labelledby="resumo-estoque">
+      <h2 id="resumo-estoque" className="mb-3 text-[15px] font-semibold">
+        Resumo do estoque
+      </h2>
+      <dl className="sheet px-5 text-[13px]">
+        <Row label="Valor total em estoque" value={money(data.valorTotalEstoque)} />
+        <Row label="Lucro potencial" value={money(data.lucroPotencial)} />
+        <Row label="Número de produtos" value={data.totalProdutos ?? 0} />
+        <Row label="Lotes ativos" value={data.totalLotesAtivos ?? 0} />
+        <Row label="Lotes vencidos" value={data.totalLotesVencidos ?? 0} />
+      </dl>
+    </section>
   );
 };
 
-const Metric = ({ label, value }) => (
-  <div className="rounded-lg border border-border bg-brand-bg p-4">
-    <p className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted-light">{label}</p>
-    <p className="font-display mt-2 text-[26px] tabular-nums">{value}</p>
+const Row = ({ label, value }) => (
+  <div className="flex items-baseline justify-between gap-3 border-b border-border py-3 last:border-0">
+    <dt className="text-muted">{label}</dt>
+    <dd className="font-mono text-[15px] font-semibold tabular-nums">{value}</dd>
   </div>
 );
 
@@ -151,7 +110,14 @@ const PERIODOS = [
   { value: '90', label: '90 dias' },
 ];
 
+const TIPOS = [
+  { value: '', label: 'Todas' },
+  { value: 'ENTRADA', label: 'Entradas' },
+  { value: 'SAIDA', label: 'Saídas' },
+];
+
 const toIsoDate = (date) => date.toISOString().slice(0, 10);
+const COLUMNS = 'md:grid-cols-[minmax(0,1.4fr)_90px_70px_minmax(0,0.9fr)_150px_minmax(0,0.7fr)]';
 
 const MovimentacaoReport = () => {
   const [tipo, setTipo] = useState('');
@@ -205,42 +171,42 @@ const MovimentacaoReport = () => {
       .finally(() => setIsLoading(false));
   }, [tipo, periodoDias, selectedProduto, usuarioId, page]);
 
+  const tabs = (items, current, set, label) => (
+    <div className="flex gap-x-5 border-b border-border" role="tablist" aria-label={label}>
+      {items.map((t) => (
+        <button
+          key={t.label}
+          role="tab"
+          aria-selected={current === t.value}
+          onClick={() => set(t.value)}
+          className={`tab-link ${current === t.value ? 'tab-link-active' : ''}`}
+        >
+          {t.label}
+        </button>
+      ))}
+    </div>
+  );
+
   return (
-    <div>
-      <h3 className="font-display text-[22px]">Relatório de movimentação</h3>
+    <section aria-labelledby="mov-report">
+      <h2 id="mov-report" className="mb-3 text-[15px] font-semibold">
+        Relatório de movimentação
+      </h2>
 
-      <div className="mt-4 flex flex-wrap items-end gap-3">
-        <div className="flex gap-1 rounded-lg border border-border bg-brand-bg p-1">
-          {[{ value: '', label: 'Todas' }, { value: 'ENTRADA', label: 'Entradas' }, { value: 'SAIDA', label: 'Saídas' }].map((t) => (
-            <button
-              key={t.label}
-              onClick={() => setTipo(t.value)}
-              className={`rounded-md px-3 py-1.5 text-[11px] ${tipo === t.value ? 'bg-primary text-primary-50' : 'text-muted'}`}
-            >
-              {t.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="flex gap-1 rounded-lg border border-border bg-brand-bg p-1">
-          {PERIODOS.map((p) => (
-            <button
-              key={p.label}
-              onClick={() => setPeriodoDias(p.value)}
-              className={`rounded-md px-3 py-1.5 text-[11px] ${periodoDias === p.value ? 'bg-primary text-primary-50' : 'text-muted'}`}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
+      <div className="mb-4 flex flex-wrap items-end gap-x-8 gap-y-3">
+        {tabs(TIPOS, tipo, setTipo, 'Tipo')}
+        {tabs(PERIODOS, periodoDias, setPeriodoDias, 'Período')}
 
         <div className="relative">
           {selectedProduto ? (
             <button
-              onClick={() => { setSelectedProduto(null); setProdutoSearch(''); }}
-              className="flex h-9 items-center gap-2 rounded-lg border border-secondary-dark bg-brand-bg px-3 text-[11px]"
+              onClick={() => {
+                setSelectedProduto(null);
+                setProdutoSearch('');
+              }}
+              className="btn btn-quiet h-9 border-primary-dark text-[12px]"
             >
-              {selectedProduto.nome} <span className="mdi mdi-close-circle text-muted" />
+              {selectedProduto.nome} <span className="mdi mdi-close-circle text-muted" aria-hidden="true" />
             </button>
           ) : (
             <>
@@ -248,15 +214,19 @@ const MovimentacaoReport = () => {
                 value={produtoSearch}
                 onChange={(e) => setProdutoSearch(e.target.value)}
                 placeholder="Filtrar por produto..."
-                className="h-9 w-52 rounded-lg border border-border bg-brand-bg px-3 text-[11px] outline-none focus:border-secondary-dark"
+                aria-label="Filtrar por produto"
+                className="input h-9 w-52 text-[12px]"
               />
               {produtoResults.length > 0 && (
-                <div className="absolute z-10 mt-1 w-64 rounded-lg border border-border bg-surface shadow-lg">
+                <div className="absolute z-10 mt-1 w-64 overflow-hidden rounded-md border border-border bg-surface shadow-[0_8px_24px_-8px_rgba(23,32,27,0.25)]">
                   {produtoResults.map((p) => (
                     <button
                       key={p.id}
-                      onClick={() => { setSelectedProduto(p); setProdutoResults([]); }}
-                      className="block w-full truncate border-b border-border px-3 py-2 text-left text-[11px] last:border-0 hover:bg-brand-bg"
+                      onClick={() => {
+                        setSelectedProduto(p);
+                        setProdutoResults([]);
+                      }}
+                      className="block w-full truncate border-b border-border px-3 py-2 text-left text-[12px] last:border-0 hover:bg-brand-bg"
                     >
                       {p.nome} · {p.sku}
                     </button>
@@ -271,83 +241,72 @@ const MovimentacaoReport = () => {
           <select
             value={usuarioId}
             onChange={(e) => setUsuarioId(e.target.value)}
-            className="h-9 rounded-lg border border-border bg-brand-bg px-3 text-[11px] outline-none focus:border-secondary-dark"
+            aria-label="Operador"
+            className="h-9 rounded-md border border-border bg-surface px-3 text-[12px] text-ink outline-none focus:border-primary"
           >
             <option value="">Todos operadores</option>
             {usuarios.map((u) => (
-              <option key={u.id} value={u.id}>{u.username}</option>
+              <option key={u.id} value={u.id}>
+                {u.username}
+              </option>
             ))}
           </select>
         )}
       </div>
 
       {isLoading ? (
-        <div className="flex justify-center py-12">
-          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-secondary-dark" />
-        </div>
+        <p className="py-6 text-[13px] text-muted" aria-busy="true">Carregando…</p>
       ) : error ? (
-        <p className="py-8 text-danger">{error.message}</p>
+        <p className="py-6 text-[13px] text-danger">{error.message}</p>
       ) : !result?.content?.length ? (
-        <p className="mt-6 text-[13px] text-muted-light">Nenhuma movimentação encontrada para os filtros selecionados.</p>
+        <div className="sheet px-5 py-10">
+          <p className="text-[14px] font-medium">Nenhuma movimentação para esses filtros.</p>
+          <p className="mt-1 max-w-[60ch] text-[13px] text-muted">Cada entrada de romaneio e cada saída com motivo aparecem aqui.</p>
+        </div>
       ) : (
         <>
-          <div className="mt-5 overflow-hidden rounded-lg border border-border">
-            <div className="hidden grid-cols-[1.4fr_0.6fr_0.6fr_0.8fr_0.9fr_0.8fr] gap-3 border-b border-border bg-brand-bg px-4 py-2 font-mono text-[9px] uppercase tracking-[0.1em] text-muted-light md:grid">
-              <span>Produto</span><span>Tipo</span><span>Qtd</span><span>Motivo</span><span>Data</span><span>Operador</span>
+          <div className="listing">
+            <div className={`listing-head hidden ${COLUMNS} md:grid`}>
+              <span>Produto</span>
+              <span>Tipo</span>
+              <span className="text-right">Qtd</span>
+              <span>Motivo</span>
+              <span>Data</span>
+              <span>Operador</span>
             </div>
-            {result.content.map((m) => (
-              <div key={m.id} className="grid grid-cols-2 gap-3 border-b border-border px-4 py-3 text-[12px] last:border-0 md:grid-cols-[1.4fr_0.6fr_0.6fr_0.9fr_0.9fr_0.8fr]">
-                <span className="truncate">{m.produto?.nome}</span>
-                <span className={m.tipo === 'ENTRADA' ? 'text-success' : 'text-danger'}>{m.tipo === 'ENTRADA' ? 'Entrada' : 'Saída'}</span>
-                <span className="tabular-nums">{m.quantidade}</span>
-                <span className="text-muted">{MOTIVO_LABEL[m.motivo] || m.motivo || '—'}</span>
-                <span className="text-muted">{m.dataMovimentacao ? new Date(m.dataMovimentacao).toLocaleString('pt-BR') : ''}</span>
-                <span className="text-muted">{m.usuario?.username || '—'}</span>
-              </div>
-            ))}
+            <div className="listing-body">
+              {result.content.map((m) => (
+                <div key={m.id} className={`listing-row grid-cols-2 gap-y-1 ${COLUMNS}`}>
+                  <span className="col-span-2 truncate font-medium md:col-span-1">{m.produto?.nome}</span>
+                  <span>
+                    <span className={`stamp ${m.tipo === 'ENTRADA' ? 'stamp-ok' : 'stamp-low'}`}>{m.tipo === 'ENTRADA' ? 'Entrada' : 'Saída'}</span>
+                  </span>
+                  <span className="font-mono tabular-nums md:text-right">{m.quantidade}</span>
+                  <span className="text-muted">{MOTIVO_LABEL[m.motivo] || m.motivo || '—'}</span>
+                  <span className="font-mono text-[12px] text-muted">{m.dataMovimentacao ? new Date(m.dataMovimentacao).toLocaleString('pt-BR') : ''}</span>
+                  <span className="truncate text-muted">{m.usuario?.username || '—'}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
-          <div className="mt-4 flex items-center justify-between text-[11px] text-muted-light">
-            <span>Página {result.number + 1} de {result.totalPages} · {result.totalElements} movimentações</span>
+          <div className="mt-3 flex items-center justify-between text-[12px] text-muted">
+            <span>
+              Página {result.number + 1} de {result.totalPages} · {result.totalElements} movimentações
+            </span>
             <div className="flex gap-2">
-              <button
-                disabled={page <= 0}
-                onClick={() => setPage((p) => p - 1)}
-                className="rounded-full border border-border px-3 py-1.5 disabled:opacity-40"
-              >
+              <button disabled={page <= 0} onClick={() => setPage((p) => p - 1)} className="btn btn-quiet">
                 Anterior
               </button>
-              <button
-                disabled={page + 1 >= result.totalPages}
-                onClick={() => setPage((p) => p + 1)}
-                className="rounded-full border border-border px-3 py-1.5 disabled:opacity-40"
-              >
+              <button disabled={page + 1 >= result.totalPages} onClick={() => setPage((p) => p + 1)} className="btn btn-quiet">
                 Próxima
               </button>
             </div>
           </div>
         </>
       )}
-    </div>
+    </section>
   );
 };
-
-const VencimentosReport = ({ data }) => (
-  <div>
-    <h3 className="font-display text-[22px]">Relatório de vencimentos</h3>
-    <p className="mt-2 text-[13px] text-muted">Produtos vencidos ou prestes a vencer, para apoiar decisões de promoção e descarte.</p>
-    <p className="mt-4 text-[13px] text-muted-light">
-      {data.length > 0 ? `${data.length} produtos com vencimento iminente` : 'Nenhum produto vencendo no período selecionado'}
-    </p>
-  </div>
-);
-
-const LucroReport = ({ data }) => (
-  <div>
-    <h3 className="font-display text-[22px]">Relatório de lucro</h3>
-    <p className="mt-2 text-[13px] text-muted">Rentabilidade dos produtos: margem de lucro, giro de estoque e reajustes sugeridos.</p>
-    <p className="mt-4 text-[13px] text-muted-light">{data.length > 0 ? `${data.length} produtos analisados` : 'Nenhum dado de lucro disponível'}</p>
-  </div>
-);
 
 export default ReportsPage;

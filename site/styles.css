@@ -1,0 +1,148 @@
+:root {
+  --green: #2eb24d;      /* logo */
+  --green-deep: #147a37; /* text on light, links */
+  --on-green: #0b2614;   /* ink on the logo green (white has no contrast there) */
+  --pink: #e86c88;       /* logo */
+  --pink-deep: #ba4566;
+  --canvas: #f4fbf5;
+  --paper: #ffffff;
+  --ink: #17201b;
+  --muted: #5f6762;
+  --line: #dfe8e1;
+  --band: #e6f6ea;
+  --mark: rgba(232, 108, 136, 0.32);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --green-deep: #7fd49a;
+    --canvas: #0f1411;
+    --paper: #171e19;
+    --ink: #eef3ef;
+    --muted: #a3aea7;
+    --line: #27312b;
+    --band: #1a2a20;
+    --pink-deep: #f08aa3;
+  }
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--ink);
+  font: 400 16px/1.55 'DM Sans', system-ui, sans-serif;
+}
+::selection { background: var(--mark); color: inherit; }
+a { color: var(--green-deep); text-underline-offset: 3px; }
+:focus-visible { outline: 2px solid var(--green); outline-offset: 3px; border-radius: 4px; }
+
+main { max-width: 920px; margin: 0 auto; padding: 32px 16px 24px; }
+
+/* Top: the store's own logo, the promise, one button. The pink rule under it echoes the logo's second oval. */
+.top {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 36px;
+  align-items: center;
+  padding-bottom: 36px;
+  border-bottom: 3px solid var(--pink);
+}
+.logo { width: 100%; height: auto; display: block; }
+h1 { margin: 0; font-size: clamp(28px, 4.6vw, 40px); line-height: 1.1; letter-spacing: -0.02em; text-wrap: balance; }
+.lead > p:first-of-type { margin: 12px 0 0; color: var(--muted); max-width: 46ch; }
+
+.download {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 24px;
+  min-height: 52px;
+  padding: 0 26px;
+  border-radius: 6px;
+  background: var(--green);
+  color: var(--on-green);
+  font-weight: 700;
+  font-size: 17px;
+  text-decoration: none;
+  box-shadow: 0 6px 16px -8px rgba(20, 122, 55, 0.6);
+  transition: background-color 150ms ease, transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.download:hover { background: #27a044; }
+.download:active { transform: translateY(1px); }
+.meta { margin: 10px 0 0; font: 500 13px/1.4 'DM Mono', ui-monospace, monospace; color: var(--muted); }
+
+h2 { font-size: 20px; letter-spacing: -0.01em; margin: 44px 0 14px; }
+
+.steps ol { margin: 0; padding: 0; list-style: none; counter-reset: step; display: grid; gap: 12px; }
+.steps li { counter-increment: step; display: grid; grid-template-columns: 32px 1fr; gap: 12px; align-items: baseline; max-width: 70ch; }
+.steps li::before {
+  content: counter(step);
+  font: 500 13px/24px 'DM Mono', monospace;
+  text-align: center;
+  border: 1.5px solid var(--ink);
+  border-radius: 3px;
+  width: 26px;
+}
+.note { margin: 16px 0 0; padding-left: 44px; color: var(--muted); font-size: 14px; max-width: 70ch; }
+
+/* Release history: the same zebra listing as the stock screens, banded in threes. */
+.listing { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.listing-head, .release {
+  display: grid;
+  grid-template-columns: 96px 110px minmax(0, 1fr) 120px;
+  gap: 16px;
+  align-items: baseline;
+  padding: 12px 18px;
+}
+.listing-head {
+  font: 500 11px/1 'DM Mono', monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  border-bottom: 1px solid var(--line);
+}
+.release { border-bottom: 1px solid var(--line); }
+.release:last-child { border-bottom: 0; }
+.release:nth-child(6n + 1), .release:nth-child(6n + 2), .release:nth-child(6n + 3) { background: var(--band); }
+.release .version { font: 500 14px/1.4 'DM Mono', monospace; }
+.release .date, .release .size { font: 400 13px/1.4 'DM Mono', monospace; color: var(--muted); }
+.release .notes { font-size: 14px; min-width: 0; }
+.release .notes p { margin: 0; }
+.release .notes ul { margin: 4px 0 0; padding-left: 18px; color: var(--muted); }
+.right { text-align: right; }
+.release .file { text-align: right; }
+.release .file a { font-weight: 500; font-size: 14px; display: inline-block; min-height: 44px; line-height: 44px; margin: -12px 0; }
+.stamp {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 0 5px;
+  border: 1.5px solid currentColor;
+  border-radius: 3px;
+  font: 500 10px/16px 'DM Mono', monospace;
+  text-transform: uppercase;
+  color: var(--pink-deep);
+  vertical-align: 1px;
+}
+.empty { margin: 0; padding: 22px 18px; color: var(--muted); font-size: 14px; }
+
+footer { max-width: 920px; margin: 0 auto; padding: 24px 16px 40px; border-top: 1px solid var(--line); color: var(--muted); font-size: 14px; }
+footer p { margin: 2px 0; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .top { animation: rise 420ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .release { animation: rise 320ms cubic-bezier(0.16, 1, 0.3, 1) both; animation-delay: calc(var(--i, 0) * 40ms); }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+}
+
+@media (max-width: 640px) {
+  main { padding-top: 20px; }
+  .top { grid-template-columns: 1fr; gap: 18px; padding-bottom: 28px; }
+  .logo { width: 168px; }
+  .download { width: 100%; justify-content: center; }
+  .listing-head { display: none; }
+  .release { grid-template-columns: 1fr auto; gap: 4px 12px; padding: 14px 16px; }
+  .release .notes { grid-column: 1 / -1; order: 3; }
+  .release .file { grid-column: 1 / -1; order: 4; text-align: left; }
+  .release .file a { margin: 0; }
+}

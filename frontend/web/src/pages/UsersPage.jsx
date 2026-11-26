@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useTheme } from '../contexts/ThemeContext';
 import apiService from '../services/api';
+import PageHead from '../components/PageHead';
 
 const ROLE_LABEL = {
   ADMIN: 'Administrador',
@@ -45,128 +46,111 @@ const UsersPage = () => {
   };
 
   return (
-    <main className="p-5 md:p-9">
-      <p className="eyebrow">Conta</p>
-      <h2 className="font-display mb-8 mt-3 text-[34px] tracking-[-0.03em] md:text-[40px]">Sua conta.</h2>
+    <main className="mx-auto max-w-[1180px] px-5 py-6 md:px-9 md:py-8">
+      <PageHead title="Sua conta" />
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <section className="rounded-xl border border-border bg-surface p-6">
-          <h3 className="font-display mb-4 text-[22px]">Perfil</h3>
+      <div className="grid gap-x-12 gap-y-8 lg:grid-cols-2">
+        <section aria-labelledby="perfil">
+          <h2 id="perfil" className="mb-3 text-[15px] font-semibold">
+            Perfil
+          </h2>
           {profileError ? (
             <p className="text-[13px] text-danger">Erro ao carregar perfil: {profileError.message}</p>
           ) : !profile ? (
-            <p className="text-[13px] text-muted-light">Carregando...</p>
+            <p className="text-[13px] text-muted">Carregando…</p>
           ) : (
-            <div className="flex items-start gap-4">
-              <div className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-secondary font-display text-[20px] text-white">
+            <div className="sheet flex items-start gap-4 p-5">
+              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-secondary text-[15px] font-semibold text-white">
                 {profile.fullName?.slice(0, 2).toUpperCase() || profile.username?.slice(0, 2).toUpperCase()}
               </div>
-              <dl className="grid flex-1 gap-2 text-[13px]">
+              <dl className="flex-1 text-[13px]">
                 <Row label="Nome" value={profile.fullName} />
                 <Row label="Usuário" value={profile.username} mono />
                 <Row label="E-mail" value={profile.email} />
                 <Row label="Perfil" value={ROLE_LABEL[profile.role] || profile.role} />
-                <Row
-                  label="Último acesso"
-                  value={profile.lastLogin ? new Date(profile.lastLogin).toLocaleString('pt-BR') : 'Primeiro acesso'}
-                />
+                <Row label="Último acesso" value={profile.lastLogin ? new Date(profile.lastLogin).toLocaleString('pt-BR') : 'Primeiro acesso'} />
               </dl>
             </div>
           )}
         </section>
 
-        <section className="rounded-xl border border-border bg-surface p-6">
-          <h3 className="font-display mb-1 text-[22px]">Aparência</h3>
-          <p className="mb-5 text-[12px] text-muted-light">Escolha como o sistema aparece para você neste dispositivo.</p>
-          <div className="flex gap-3">
-            <ThemeOption
-              label="Claro"
-              icon="white-balance-sunny"
-              active={theme === 'light'}
-              onClick={() => theme !== 'light' && toggleTheme()}
-            />
-            <ThemeOption
-              label="Escuro"
-              icon="weather-night"
-              active={theme === 'dark'}
-              onClick={() => theme !== 'dark' && toggleTheme()}
-            />
+        <section aria-labelledby="aparencia">
+          <h2 id="aparencia" className="mb-1 text-[15px] font-semibold">
+            Aparência
+          </h2>
+          <p className="mb-3 text-[13px] text-muted">Como o sistema aparece para você neste dispositivo.</p>
+          <div className="flex gap-3" role="radiogroup" aria-label="Tema">
+            <ThemeOption label="Claro" icon="white-balance-sunny" active={theme === 'light'} onClick={() => theme !== 'light' && toggleTheme()} />
+            <ThemeOption label="Escuro" icon="weather-night" active={theme === 'dark'} onClick={() => theme !== 'dark' && toggleTheme()} />
           </div>
         </section>
       </div>
 
       {sessionUser?.role === 'ADMIN' && (
-        <section className="mt-6 overflow-hidden rounded-xl border border-border bg-surface shadow-[0_12px_35px_rgba(32,61,43,0.04)]">
-          <div className="border-b border-border p-5">
-            <h3 className="font-display text-[22px]">Equipe</h3>
-            <p className="mt-1 text-[12px] text-muted-light">Todos os usuários com acesso ao sistema.</p>
-          </div>
-          {roleError && <p className="border-b border-border px-5 py-3 text-[12px] text-danger">{roleError}</p>}
+        <section className="mt-10" aria-labelledby="equipe">
+          <h2 id="equipe" className="mb-1 text-[15px] font-semibold">
+            Equipe
+          </h2>
+          <p className="mb-3 text-[13px] text-muted">Todos os usuários com acesso ao sistema.</p>
+          {roleError && (
+            <p className="mb-3 text-[13px] text-danger" role="alert">
+              {roleError}
+            </p>
+          )}
           {usersError ? (
-            <p className="p-5 text-[13px] text-danger">Erro ao carregar usuários: {usersError.message}</p>
+            <p className="text-[13px] text-danger">Erro ao carregar usuários: {usersError.message}</p>
           ) : !users ? (
-            <p className="p-5 text-[13px] text-muted-light">Carregando...</p>
+            <p className="text-[13px] text-muted">Carregando…</p>
           ) : (
-            <div>
-              {users.map((u) => (
-                <div key={u.id} className="flex flex-wrap items-center justify-between gap-3 border-b border-border px-5 py-4 last:border-0">
-                  <div>
-                    <p className="text-[13px] font-medium">{u.fullName}</p>
-                    <p className="text-[11px] text-muted-light">
-                      {u.username} · {u.email}
-                    </p>
+            <div className="listing">
+              <div className="listing-body">
+                {users.map((u) => (
+                  <div key={u.id} className="listing-row grid-cols-1 gap-3 md:grid-cols-[minmax(0,1fr)_auto]">
+                    <div className="min-w-0">
+                      <p className="truncate font-medium">{u.fullName}</p>
+                      <p className="truncate text-[12px] text-muted">
+                        <span className="font-mono">{u.username}</span> · {u.email}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      {u.username === sessionUser?.user ? (
+                        <span className="stamp stamp-off">{ROLE_LABEL[u.role] || u.role}</span>
+                      ) : (
+                        <select
+                          value={u.role}
+                          onChange={(e) => handleRoleChange(u.id, e.target.value)}
+                          aria-label={`Perfil de ${u.fullName}`}
+                          className="h-8 rounded-md border border-border bg-surface px-2 text-[12px] text-ink outline-none focus:border-primary"
+                        >
+                          {Object.entries(ROLE_LABEL).map(([value, label]) => (
+                            <option key={value} value={value}>
+                              {label}
+                            </option>
+                          ))}
+                        </select>
+                      )}
+                      <span className={`stamp ${u.active ? 'stamp-ok' : 'stamp-warn'}`}>{u.active ? 'Ativo' : 'Pendente'}</span>
+                      {u.active ? (
+                        u.username !== sessionUser?.user && (
+                          <button onClick={() => handleDeactivate(u.id)} className="btn btn-quiet h-8 text-[12px]">
+                            Desativar
+                          </button>
+                        )
+                      ) : (
+                        <>
+                          <button onClick={() => handleActivate(u.id)} className="btn btn-primary h-8 text-[12px]">
+                            Aprovar
+                          </button>
+                          {/* Recusar is apart from Aprovar. */}
+                          <button onClick={() => handleReject(u.id)} className="btn btn-danger ml-3 h-8 text-[12px]">
+                            Recusar
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {u.username === sessionUser?.user ? (
-                      <span className="rounded-full bg-[#f1f5f2] px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.08em] text-[#3f4a43] dark:bg-white/10 dark:text-muted">
-                        {ROLE_LABEL[u.role] || u.role}
-                      </span>
-                    ) : (
-                      <select
-                        value={u.role}
-                        onChange={(e) => handleRoleChange(u.id, e.target.value)}
-                        className="rounded-full border border-border bg-[#f1f5f2] px-2 py-1 font-mono text-[9px] uppercase tracking-[0.08em] text-[#3f4a43] outline-none dark:bg-white/10 dark:text-muted"
-                      >
-                        {Object.entries(ROLE_LABEL).map(([value, label]) => (
-                          <option key={value} value={value}>{label}</option>
-                        ))}
-                      </select>
-                    )}
-                    <span
-                      className={`rounded-full px-2.5 py-1 font-mono text-[9px] uppercase tracking-[0.08em] ${
-                        u.active ? 'bg-[#eaf7ee] text-[#147a37] dark:bg-primary/20 dark:text-primary' : 'bg-[#fdf0d9] text-[#8a5a12] dark:bg-warning/20 dark:text-warning'
-                      }`}
-                    >
-                      {u.active ? 'Ativo' : 'Pendente'}
-                    </span>
-                    {u.active ? (
-                      u.username !== sessionUser?.user && (
-                        <button
-                          onClick={() => handleDeactivate(u.id)}
-                          className="text-[11px] font-medium text-muted hover:text-danger"
-                        >
-                          Desativar
-                        </button>
-                      )
-                    ) : (
-                      <>
-                        <button
-                          onClick={() => handleActivate(u.id)}
-                          className="text-[11px] font-medium text-secondary-dark hover:text-primary"
-                        >
-                          Aprovar
-                        </button>
-                        <button
-                          onClick={() => handleReject(u.id)}
-                          className="text-[11px] font-medium text-muted hover:text-danger"
-                        >
-                          Recusar
-                        </button>
-                      </>
-                    )}
-                  </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
         </section>
@@ -177,21 +161,21 @@ const UsersPage = () => {
 
 const ThemeOption = ({ label, icon, active, onClick }) => (
   <button
+    role="radio"
+    aria-checked={active}
     onClick={onClick}
-    className={`pressable flex flex-1 flex-col items-center gap-2 rounded-lg border px-4 py-5 transition ${
-      active ? 'border-secondary bg-secondary/10 text-ink' : 'border-border text-muted hover:bg-brand-bg'
-    }`}
+    className={`btn h-11 flex-1 justify-start gap-3 border px-4 ${active ? 'border-primary-dark bg-band text-ink' : 'border-border bg-surface text-muted hover:text-ink'}`}
   >
-    <span className={`mdi mdi-${icon} text-[22px]`} />
-    <span className="text-[12px] font-medium">{label}</span>
-    {active && <span className="mdi mdi-check-circle text-[13px] text-secondary-dark" />}
+    <span className={`mdi mdi-${icon} text-[18px]`} aria-hidden="true" />
+    <span>{label}</span>
+    {active && <span className="mdi mdi-check ml-auto text-[16px] text-primary-dark dark:text-primary" aria-hidden="true" />}
   </button>
 );
 
 const Row = ({ label, value, mono }) => (
-  <div className="flex items-center justify-between gap-3">
-    <dt className="text-muted-light">{label}</dt>
-    <dd className={mono ? 'tabular-nums' : ''}>{value}</dd>
+  <div className="flex items-start justify-between gap-3 border-b border-border py-2 last:border-0">
+    <dt className="text-muted">{label}</dt>
+    <dd className={`text-right ${mono ? 'font-mono' : ''}`}>{value}</dd>
   </div>
 );
 

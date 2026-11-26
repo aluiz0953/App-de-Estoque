@@ -31,7 +31,7 @@ const createStyles = (colors) => StyleSheet.create({
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 16,
+    borderRadius: 6,
     padding: 16,
   },
   head: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: 6 },

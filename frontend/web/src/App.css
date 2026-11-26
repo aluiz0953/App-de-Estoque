@@ -6,9 +6,15 @@
   --color-brand-bg: #f7f9f7;
   --color-surface: #ffffff;
   --color-ink: #17201b;
-  --color-muted: #6f7872;
-  --color-muted-light: #8b938e;
+  --color-muted: #5f6762;
+  --color-muted-light: #6f7872;
   --color-border: #e7ebe8;
+  /* Listagem Zebrada: green band every three rows, pink highlighter on what needs attention. */
+  --color-band: #eaf7ee;
+  --color-mark: rgba(221, 99, 131, 0.38);
+  --color-ok: #147a37;
+  --color-low: #ba4566;
+  --color-expiring: #8a5a12;
 }
 
 :root.dark {
@@ -18,6 +24,11 @@
   --color-muted: #a3aea7;
   --color-muted-light: #7d8a82;
   --color-border: #27312b;
+  --color-band: #1a2a20;
+  --color-mark: rgba(232, 115, 143, 0.34);
+  --color-ok: #7fd49a;
+  --color-low: #f08aa3;
+  --color-expiring: #e8b869;
 }
 
 body {
@@ -29,16 +40,73 @@ body {
   min-height: 100vh;
 }
 
+/* Playfair Display lives only on the login screens; the signed-in interior is one sans family. */
 .font-display {
   font-family: 'Playfair Display Variable', Georgia, serif;
 }
 
+/* Login screen only (pinned, unchanged). The signed-in interior has no eyebrows. */
 .eyebrow {
   font-family: 'DM Mono', monospace;
   text-transform: uppercase;
   letter-spacing: 0.16em;
   font-size: 0.66rem;
   color: var(--color-muted-light);
+}
+
+/* Browser surfaces that belong to the palette: selection, caret, focus ring. */
+::selection { background: color-mix(in srgb, #239e4b 28%, transparent); color: inherit; }
+input, textarea, select { caret-color: #239e4b; }
+:focus-visible { outline: 2px solid #239e4b; outline-offset: 2px; }
+.tabular { font-variant-numeric: tabular-nums; }
+
+@layer components {
+  /* One sheet, one hairline, small radius. Never nested. */
+  .sheet { @apply rounded-md border border-border bg-surface; }
+
+  .btn { @apply inline-flex h-9 items-center justify-center gap-2 rounded-md px-3.5 text-[13px] font-medium transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-50; }
+  .btn-primary { @apply bg-primary-dark text-white hover:bg-[#0f6a2e]; }
+  .btn-quiet { @apply border border-border bg-surface text-ink hover:bg-brand-bg; }
+  .btn-danger { @apply border border-danger/50 text-danger hover:bg-danger/10; }
+
+  .field-label { @apply mb-1.5 block text-[12px] font-medium text-muted; }
+  .input { @apply h-10 w-full rounded-md border border-border bg-surface px-3 text-[13px] text-ink outline-none transition-colors duration-150 placeholder:text-muted-light focus:border-primary; }
+
+  /* Listing: column head + rows. Rows band in groups of three (1-3 tinted, 4-6 plain, 7-9 tinted...). */
+  .listing { @apply sheet overflow-hidden; }
+  .listing-head { @apply grid items-center gap-4 border-b border-border px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.04em] text-muted-light; }
+  .listing-row { @apply grid items-center gap-4 px-5 py-3 text-[13px] transition-colors duration-150; }
+  .listing-body > .listing-row:nth-child(6n + 1),
+  .listing-body > .listing-row:nth-child(6n + 2),
+  .listing-body > .listing-row:nth-child(6n + 3) { background-color: var(--color-band); }
+  a.listing-row:hover, button.listing-row:hover, .listing-row[role='link']:hover { box-shadow: inset 0 0 0 9999px color-mix(in srgb, var(--color-ink) 5%, transparent); }
+
+  /* The pink highlighter: behind the name of a row that needs the team. Never a text colour. */
+  .mark { background-image: linear-gradient(transparent 56%, var(--color-mark) 56%, var(--color-mark) 94%, transparent 94%); padding: 0 3px; margin: 0 -3px; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+
+  /* Status as a stamp: bordered, uppercase, one ink. */
+  .stamp { @apply inline-flex items-center rounded-[3px] border-[1.5px] px-1.5 py-px font-mono text-[10px] font-medium uppercase leading-4 tracking-[0.05em]; border-color: currentColor; }
+  .stamp-ok { color: var(--color-ok); }
+  .stamp-warn { color: var(--color-expiring); }
+  .stamp-low { color: var(--color-low); }
+  .stamp-off { color: var(--color-muted); }
+
+  /* Stock state in form, not only hue: full bar ok, dashed low, struck out, doubled expiring. */
+  .stockmark { display: inline-block; width: 26px; height: 8px; flex-shrink: 0; vertical-align: middle; }
+  .stockmark-ok { background: #239e4b; border-radius: 1px; }
+  .stockmark-low { border: 1.5px dashed var(--color-low); border-radius: 1px; }
+  .stockmark-out { background: linear-gradient(var(--color-muted-light), var(--color-muted-light)) center / 100% 1.5px no-repeat; }
+  .stockmark-expiring { border-top: 1.5px solid var(--color-expiring); border-bottom: 1.5px solid var(--color-expiring); }
+
+  .field-control > input,
+  .field-control > select,
+  .field-control > textarea { @apply w-full rounded-md border border-border bg-surface px-3 text-[13px] text-ink outline-none transition-colors duration-150 placeholder:text-muted-light focus:border-primary disabled:opacity-50; }
+  .field-control > input,
+  .field-control > select { @apply h-10; }
+  .field-control > textarea { @apply py-2; }
+
+  .tab-link { @apply -mb-px border-b-2 border-transparent px-1 pb-2 text-[13px] font-medium text-muted transition-colors duration-150 hover:text-ink; }
+  .tab-link-active { @apply border-primary-dark text-ink; }
 }
 
 .pressable {
@@ -72,9 +140,27 @@ body {
   .animate-page { animation-duration: 1ms; }
 }
 
-::-webkit-scrollbar { width: 10px; }
-::-webkit-scrollbar-track { background: #edf0ed; }
-::-webkit-scrollbar-thumb { background: #c5cdc8; border-radius: 999px; border: 3px solid #edf0ed; }
+/* A row that changes flips once, like a departure board (used on the dashboard attention list). */
+@keyframes row-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
+}
+.row-in { animation: row-in 320ms cubic-bezier(0.16, 1, 0.3, 1) both; }
+@media (prefers-reduced-motion: reduce) {
+  .row-in { animation: none; }
+}
+@keyframes flap {
+  0% { transform: perspective(600px) rotateX(-70deg); opacity: 0; }
+  100% { transform: perspective(600px) rotateX(0); opacity: 1; }
+}
+.flap { animation: flap 260ms cubic-bezier(0.16, 1, 0.3, 1) both; transform-origin: top; }
+@media (prefers-reduced-motion: reduce) {
+  .flap { animation: none; }
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--color-muted-light) 45%, transparent); border-radius: 999px; border: 3px solid transparent; background-clip: content-box; }
 /* Transitions.dev - Toggle: the thumb slides with a double bounce (overshoot past the end,
    swing back, settle); the track colour cross-fades. Toggle `data-on`; add `.is-init` on the
    first interaction so the keyframes do not play on load. */
@@ -84,7 +170,7 @@ body {
   --toggle-ov1: 1px;
   --toggle-ov2: 0px;
   --toggle-track: 0ms;
-  --toggle-ease: cubic-bezier(0.34, 1.35, 0.64, 1);
+  --toggle-ease: cubic-bezier(0.16, 1, 0.3, 1);
 }
 .t-toggle { transition: background var(--toggle-track) var(--toggle-ease); }
 .t-toggle-thumb { translate: 0 0; will-change: translate; }
@@ -106,11 +192,3 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .t-toggle-thumb { animation: none !important; }
 }
-
-/* Figma dashboard: perfume bottle placeholder in the product rows (color = text color of the tile). */
-.bottle { position: relative; width: 16px; height: 22px; border-radius: 4px 4px 6px 6px; border: 1.5px solid currentColor; background: color-mix(in srgb, currentColor 12%, white); }
-.bottle::before { content: ''; position: absolute; top: -5px; left: 4px; width: 6px; height: 5px; border-radius: 1px 1px 0 0; background: currentColor; }
-.bottle::after { content: ''; position: absolute; inset: 6px 3px 4px; border: 1px solid currentColor; border-radius: 50%; opacity: 0.6; }
-.bottle.tall { width: 13px; height: 24px; border-radius: 3px; }
-.bottle.wide { width: 21px; height: 18px; border-radius: 7px 7px 4px 4px; }
-.bottle.wide::before { left: 7px; }

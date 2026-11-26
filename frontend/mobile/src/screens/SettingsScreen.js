@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TouchableOpacity, TextInput, ScrollView, Switch, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, TextInput, ScrollView, Switch, StyleSheet, Linking } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
@@ -17,6 +17,7 @@ import { useSyncQueue } from '../hooks/useSyncQueue';
 import { removeFromQueue, markPending } from '../services/offlineQueue';
 import { flushQueue } from '../services/syncManager';
 import { MOTIVO_LABEL } from '../utils/motivos';
+import { APP_VERSION, checkForUpdate } from '../services/updates';
 
 const ALERT_ENABLED_KEY = 'settings:lowStockAlertEnabled';
 const ALERT_THRESHOLD_KEY = 'settings:lowStockAlertThreshold';
@@ -32,6 +33,8 @@ const SettingsScreen = () => {
   const darkMode = useSelector((state) => state.settings.darkMode);
 
   const [profile, setProfile] = useState(null);
+  const [pendingUpdate, setPendingUpdate] = useState(null);
+  const [updateStatus, setUpdateStatus] = useState('Toque em Procurar para ver se há versão nova');
   const [alertsEnabled, setAlertsEnabled] = useState(true);
   const [threshold, setThreshold] = useState('5');
   const isOnline = useNetworkStatus();
@@ -79,10 +82,20 @@ const SettingsScreen = () => {
     }
   };
 
+  const handleCheckUpdate = async () => {
+    if (pendingUpdate) {
+      Linking.openURL(pendingUpdate.url);
+      return;
+    }
+    setUpdateStatus('Procurando…');
+    const found = await checkForUpdate();
+    setPendingUpdate(found);
+    setUpdateStatus(found ? `Versão ${found.version} disponível` : 'Você está na versão mais recente');
+  };
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={{ paddingBottom: dockClearance }}>
       <View style={styles.header}>
-        <Text style={styles.eyebrow}>CONTA</Text>
         <Text style={styles.title} accessibilityRole="header">Configurações</Text>
       </View>
 
@@ -226,6 +239,26 @@ const SettingsScreen = () => {
         </View>
       </View>
 
+      <View style={styles.section}>
+        <Text style={styles.sectionLabel}>Aplicativo</Text>
+        <View style={styles.card}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.profileName}>Versão {APP_VERSION}</Text>
+            <Text style={styles.profileMeta}>{updateStatus}</Text>
+          </View>
+          <TouchableOpacity
+            onPress={handleCheckUpdate}
+            style={{ minHeight: 48, justifyContent: 'center', paddingHorizontal: 8 }}
+            accessibilityRole="button"
+            accessibilityLabel={pendingUpdate ? `Baixar a versão ${pendingUpdate.version}` : 'Procurar atualização'}
+          >
+            <Text style={{ fontFamily: fonts.sansBold, fontSize: 14, color: colors.primaryDark }}>
+              {pendingUpdate ? 'Baixar' : 'Procurar'}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
       <TouchableOpacity
         onPress={handleLogout}
         style={styles.logoutBtn}
@@ -255,7 +288,7 @@ const createStyles = (colors) => StyleSheet.create({
     marginBottom: 4,
   },
   title: {
-    fontFamily: fonts.display,
+    fontFamily: fonts.heading,
     color: colors.headerInk,
     fontSize: 22,
   },
@@ -275,7 +308,7 @@ const createStyles = (colors) => StyleSheet.create({
     backgroundColor: colors.surface,
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 12,
+    borderRadius: 6,
     padding: 14,
   },
   avatar: {
@@ -288,9 +321,9 @@ const createStyles = (colors) => StyleSheet.create({
     marginRight: 12,
   },
   avatarText: {
-    fontFamily: fonts.display,
+    fontFamily: fonts.heading,
     fontSize: 15,
-    color: colors.primary,
+    color: colors.primaryDark,
   },
   profileName: {
     fontFamily: fonts.sansMedium,
@@ -344,7 +377,7 @@ const createStyles = (colors) => StyleSheet.create({
   conflictCard: {
     borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: 10,
+    borderRadius: 6,
     padding: 10,
     marginBottom: 8,
   },

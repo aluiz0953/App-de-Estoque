@@ -173,7 +173,6 @@ const AddEditProductScreen = () => {
     <View style={styles.container}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.eyebrow}>{isEditMode ? 'Editar catálogo' : 'Novo item de catálogo'}</Text>
           <Text style={styles.title} accessibilityRole="header">{isEditMode ? 'Refine os detalhes.' : 'Adicionar um novo perfume.'}</Text>
         </View>
         <TouchableOpacity
@@ -371,7 +370,7 @@ const createStyles = (colors) => StyleSheet.create({
     color: colors.textMutedLight,
   },
   title: {
-    fontFamily: fonts.display,
+    fontFamily: fonts.heading,
     fontSize: 22,
     color: colors.text,
     marginTop: 6,
@@ -398,7 +397,7 @@ const createStyles = (colors) => StyleSheet.create({
   },
   input: {
     minHeight: 44,
-    borderRadius: 10,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.background,
@@ -409,7 +408,7 @@ const createStyles = (colors) => StyleSheet.create({
   },
   select: {
     minHeight: 44,
-    borderRadius: 10,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: colors.border,
     backgroundColor: colors.background,

@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { createProduct, updateProduct } from '../store/slices/inventorySlice';
 import { useFetchProductById } from '../hooks/useFetchProductById';
 import apiService from '../services/api';
+import PageHead from '../components/PageHead';
 
 const TIPOS_PRODUTO = ['Perfumaria', 'Cuidados Diários', 'Rosto e Proteção', 'Outros'];
 
@@ -111,25 +112,20 @@ const ProductFormPage = () => {
 
   if (isEditMode && isLoadingProduct) {
     return (
-      <main className="p-5 md:p-9">
-        <div className="flex flex-col items-center justify-center py-16">
-          <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-secondary-dark" />
-          <p className="mt-4 text-[12px] text-muted-light">Carregando produto...</p>
-        </div>
+      <main className="mx-auto max-w-[860px] px-5 py-6 md:px-9 md:py-8">
+        <p className="text-[13px] text-muted" aria-busy="true">Carregando produto…</p>
       </main>
     );
   }
 
   return (
-    <main className="p-5 md:p-9">
-      <div className="mb-8">
-        <p className="eyebrow">{isEditMode ? 'Editar item do catálogo' : 'Novo item do catálogo'}</p>
-        <h2 className="font-display mt-3 text-[34px] tracking-[-0.03em] md:text-[40px]">
-          {isEditMode ? 'Refine os detalhes.' : 'Cadastre um novo produto.'}
-        </h2>
-      </div>
+    <main className="mx-auto max-w-[860px] px-5 py-6 md:px-9 md:py-8">
+      <PageHead
+        title={isEditMode ? 'Editar produto' : 'Novo produto'}
+        meta={isEditMode ? 'Ajuste os dados do item do catálogo.' : 'Cadastre um item no catálogo; o estoque entra depois, pelo romaneio.'}
+      />
 
-      <form onSubmit={handleSubmit} className="max-w-3xl rounded-xl border border-border bg-surface p-6 md:p-8">
+      <form onSubmit={handleSubmit}>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field label="Nome do produto">
             <input value={form.nome} onChange={(e) => handleChange('nome', e.target.value)} placeholder="Ex: Kaiak Tradicional" />
@@ -216,22 +212,22 @@ const ProductFormPage = () => {
             type="checkbox"
             checked={form.ativo}
             onChange={(e) => handleChange('ativo', e.target.checked)}
-            className="h-4 w-4 rounded border-border accent-secondary-dark"
+            className="h-4 w-4 rounded border-border accent-primary-dark"
           />
           <span className="text-[13px] text-ink">Produto ativo</span>
         </label>
 
-        {saveError && <p className="mt-4 text-[13px] text-danger">{String(saveError)}</p>}
+        {saveError && (
+          <p className="mt-4 text-[13px] text-danger" role="alert">
+            {String(saveError)}
+          </p>
+        )}
 
         <div className="mt-6 flex justify-end gap-3 border-t border-border pt-5">
-          <button type="button" onClick={() => navigate(-1)} className="rounded-full border border-border px-5 py-2.5 text-[12px] text-muted">
+          <button type="button" onClick={() => navigate(-1)} className="btn btn-quiet">
             Cancelar
           </button>
-          <button
-            type="submit"
-            disabled={isSaving || (!isEditMode && !isValid)}
-            className="pressable rounded-full bg-primary px-5 py-2.5 text-[12px] text-primary-50 transition hover:bg-primary-dark disabled:opacity-50"
-          >
+          <button type="submit" disabled={isSaving || (!isEditMode && !isValid)} className="btn btn-primary">
             {isSaving ? 'Salvando...' : isEditMode ? 'Salvar alterações' : 'Criar produto'}
           </button>
         </div>
@@ -241,11 +237,9 @@ const ProductFormPage = () => {
 };
 
 const Field = ({ label, children }) => (
-  <label className="grid gap-2">
-    <span className="font-mono text-[9px] uppercase tracking-[0.12em] text-muted-light">{label}</span>
-    <span className="[&>input]:h-10 [&>input]:w-full [&>input]:rounded-lg [&>input]:border [&>input]:border-border [&>input]:bg-brand-bg [&>input]:px-3 [&>input]:text-[12px] [&>input]:outline-none [&>input]:focus:border-secondary-dark [&>select]:h-10 [&>select]:w-full [&>select]:rounded-lg [&>select]:border [&>select]:border-border [&>select]:bg-brand-bg [&>select]:px-3 [&>select]:text-[12px] [&>select]:outline-none [&>select]:focus:border-secondary-dark [&>textarea]:w-full [&>textarea]:rounded-lg [&>textarea]:border [&>textarea]:border-border [&>textarea]:bg-brand-bg [&>textarea]:px-3 [&>textarea]:py-2 [&>textarea]:text-[12px] [&>textarea]:outline-none [&>textarea]:focus:border-secondary-dark">
-      {children}
-    </span>
+  <label className="block">
+    <span className="field-label">{label}</span>
+    <span className="field-control block">{children}</span>
   </label>
 );
 

@@ -176,7 +176,7 @@ const createStyles = (colors) => StyleSheet.create({
     opacity: 0.65,
   },
   headerTitle: {
-    fontFamily: fonts.display,
+    fontFamily: fonts.heading,
     color: colors.headerInk,
     fontSize: 22,
     marginTop: 4,

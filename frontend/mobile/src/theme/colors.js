@@ -3,10 +3,12 @@
 // brand green (primary) + brand pink (secondary) on a soft green-grey canvas.
 // Components read the active palette through useTheme() (see ThemeContext.js).
 export const lightColors = {
-  primary: '#239e4b', // Verde Tico (botoes e elementos solidos)
+  primary: '#2eb24d', // Verde Tico, tirado da logo (botoes e elementos solidos)
   primaryDark: '#147a37',
-  primaryLight: '#f4fbf6', // texto claro sobre o verde / sobre o cabecalho
-  secondary: '#dd6383', // Rosa Tica (acento)
+  band: '#e6f6ea', // faixa verde da listagem (a cada tres linhas)
+  mark: 'rgba(232,108,136,0.34)', // marca-texto rosa no nome do que pede atencao
+  primaryLight: '#0b2614', // tinta sobre o verde da logo (branco nao tem contraste nele)
+  secondary: '#e86c88', // Rosa Tica, tirado da logo (acento)
   secondaryDark: '#ba4566',
   background: '#f7f9f7',
   surface: '#ffffff',
@@ -38,16 +40,16 @@ export const lightColors = {
   neutralInk: '#5f6762',
 
   // Screen headers and the dark metric card, the rose card, modal scrim.
-  headerBg: '#147a37',
-  headerInk: '#ffffff',
-  headerSoft: 'rgba(255,255,255,0.78)',
-  headerLine: 'rgba(255,255,255,0.4)',
+  headerBg: '#2eb24d',
+  headerInk: '#0b2614',
+  headerSoft: 'rgba(11,38,20,0.78)',
+  headerLine: 'rgba(11,38,20,0.35)',
   roseBg: '#fbeef2',
   roseInk: '#8f2f4c',
   roseSoft: 'rgba(143,47,76,0.7)',
   overlay: 'rgba(23,32,27,0.4)',
 
-  toggleOn: '#239e4b',
+  toggleOn: '#2eb24d',
   toggleOff: '#d5dcd7',
   toggleThumb: '#ffffff',
 
@@ -56,7 +58,7 @@ export const lightColors = {
   dockLine: 'rgba(255,255,255,0)',
   dockInk: '#eaf0ec',
   dockInkSoft: 'rgba(234,240,236,0.62)',
-  dockBubble: 'rgba(221,99,131,0.3)',
+  dockBubble: 'rgba(232,108,136,0.3)',
 };
 
 // Dark counterpart. The green is lifted a step so it holds on dark surfaces, and the text on it
@@ -64,6 +66,8 @@ export const lightColors = {
 export const darkColors = {
   primary: '#3dbb67',
   primaryDark: '#7fd49a',
+  band: '#1a2a20',
+  mark: 'rgba(232,115,143,0.34)',
   primaryLight: '#06200f',
   secondary: '#e8738f',
   secondaryDark: '#f08aa3',
@@ -115,7 +119,8 @@ export const darkColors = {
 };
 
 export const fonts = {
-  display: 'PlayfairDisplay-SemiBold', // headings
+  display: 'PlayfairDisplay-SemiBold', // so na tela de login
+  heading: 'DMSans-Bold', // titulos das telas internas
   displayRegular: 'PlayfairDisplay-Medium',
   sans: 'DMSans-Regular', // body
   sansMedium: 'DMSans-Medium',

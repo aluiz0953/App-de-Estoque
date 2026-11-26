@@ -66,7 +66,6 @@ const RevistasScreen = () => {
           <MaterialCommunityIcons name="chevron-left" size={24} color={colors.headerInk} {...decorative} />
         </TouchableOpacity>
         <View>
-          <Text style={styles.eyebrow}>REVISTAS</Text>
           <Text style={styles.title} accessibilityRole="header">Revistas das marcas</Text>
         </View>
       </View>
@@ -148,7 +147,7 @@ const createStyles = (colors) => StyleSheet.create({
     opacity: 0.65,
   },
   title: {
-    fontFamily: fonts.display,
+    fontFamily: fonts.heading,
     color: colors.headerInk,
     fontSize: 22,
     marginTop: 4,
@@ -169,7 +168,7 @@ const createStyles = (colors) => StyleSheet.create({
   cover: {
     width: CARD_W,
     height: CARD_W * (4 / 3),
-    borderRadius: 10,
+    borderRadius: 6,
     borderWidth: 1,
     borderColor: colors.border,
     overflow: 'hidden',

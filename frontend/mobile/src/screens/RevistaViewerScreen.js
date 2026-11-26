@@ -58,7 +58,6 @@ const RevistaViewerScreen = ({ route }) => {
           <MaterialCommunityIcons name="chevron-left" size={24} color={colors.headerInk} {...decorative} />
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
-          <Text style={styles.eyebrow} numberOfLines={1}>{revista.marcaNome.toUpperCase()}</Text>
           <Text style={styles.title} numberOfLines={1} accessibilityRole="header">{revista.titulo}</Text>
         </View>
       </View>
@@ -123,7 +122,7 @@ const createStyles = (colors) => StyleSheet.create({
     opacity: 0.65,
   },
   title: {
-    fontFamily: fonts.display,
+    fontFamily: fonts.heading,
     color: colors.headerInk,
     fontSize: 20,
     marginTop: 4,

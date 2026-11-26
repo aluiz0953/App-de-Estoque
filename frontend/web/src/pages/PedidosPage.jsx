@@ -2,18 +2,19 @@ import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import { fetchPedidos } from '../store/slices/pedidosSlice';
+import PageHead from '../components/PageHead';
+import { money } from '../utils/money';
 
-const money = (value) => `R$ ${(value ?? 0).toFixed(2).replace('.', ',')}`;
-
-const STATUS_BADGE = {
-  PENDENTE: 'bg-[#fdf0d9] text-[#8a5a12]',
-  CONFIRMADO: 'bg-[#eaf7ee] text-[#147a37]',
-  ENVIADO: 'bg-[#e3ecf7] text-[#3d6199]',
-  ENTREGUE: 'bg-[#eaf7ee] text-[#147a37]',
-  CANCELADO: 'bg-[#eceeed] text-[#5f6762]',
+// Order status as a stamp: the word carries the state, the ink only reinforces it.
+export const STATUS_STAMP = {
+  PENDENTE: 'stamp-warn',
+  CONFIRMADO: 'stamp-ok',
+  ENVIADO: 'stamp-ok',
+  ENTREGUE: 'stamp-ok',
+  CANCELADO: 'stamp-off',
 };
 
-const STATUS_LABEL = {
+export const STATUS_LABEL = {
   PENDENTE: 'Pendente',
   CONFIRMADO: 'Confirmado',
   ENVIADO: 'Enviado',
@@ -22,6 +23,7 @@ const STATUS_LABEL = {
 };
 
 const STATUS_FILTERS = ['Todos', 'PENDENTE', 'CONFIRMADO', 'ENVIADO', 'ENTREGUE', 'CANCELADO'];
+const COLUMNS = 'lg:grid-cols-[minmax(0,1.4fr)_110px_120px_130px_24px]';
 
 const PedidosPage = () => {
   const dispatch = useDispatch();
@@ -40,28 +42,21 @@ const PedidosPage = () => {
   }, [dispatch, statusFilter, page]);
 
   return (
-    <main className="p-5 md:p-9">
-      <div className="mb-8 flex flex-col justify-between gap-5 md:flex-row md:items-end">
-        <div>
-          <p className="eyebrow">Pedidos / 01</p>
-          <h2 className="font-display mt-3 text-[34px] tracking-[-0.03em] md:text-[40px]">Pedidos de clientes.</h2>
-        </div>
-        <Link
-          to="/pedidos/novo"
-          className="pressable flex items-center gap-2 rounded-full bg-primary px-4 py-2.5 text-[12px] text-primary-50 transition hover:bg-primary-dark"
-        >
-          <span className="mdi mdi-plus text-[15px]" /> Novo pedido
+    <main className="mx-auto max-w-[1180px] px-5 py-6 md:px-9 md:py-8">
+      <PageHead title="Pedidos" meta={isLoading ? 'Carregando pedidos…' : `${pedidosMeta.totalElements} ${pedidosMeta.totalElements === 1 ? 'pedido' : 'pedidos'}`}>
+        <Link to="/pedidos/novo" className="btn btn-primary">
+          <span className="mdi mdi-plus text-[16px]" aria-hidden="true" /> Novo pedido
         </Link>
-      </div>
+      </PageHead>
 
-      <div className="mb-6 flex flex-wrap gap-2">
+      <div className="mb-3 flex flex-wrap gap-x-5 border-b border-border" role="tablist" aria-label="Status do pedido">
         {STATUS_FILTERS.map((option) => (
           <button
             key={option}
+            role="tab"
+            aria-selected={statusFilter === option}
             onClick={() => setStatusFilter(option)}
-            className={`rounded-full px-4 py-2 text-[12px] font-medium transition ${
-              statusFilter === option ? 'bg-primary text-primary-50' : 'bg-surface text-muted border border-border hover:bg-brand-bg'
-            }`}
+            className={`tab-link ${statusFilter === option ? 'tab-link-active' : ''}`}
           >
             {option === 'Todos' ? 'Todos' : STATUS_LABEL[option]}
           </button>
@@ -70,82 +65,78 @@ const PedidosPage = () => {
 
       {error && <p className="mb-4 text-[13px] text-danger">Erro ao carregar pedidos: {error.message || String(error)}</p>}
 
-      <section className="overflow-hidden rounded-xl border border-border bg-surface shadow-[0_12px_35px_rgba(32,61,43,0.04)]">
-        <div className="border-b border-border p-5">
-          <h3 className="font-display text-[24px]">Pedidos ({pedidosMeta.totalElements})</h3>
+      {isLoading ? (
+        <div className="listing" aria-busy="true">
+          <div className="listing-body">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className="listing-row h-[52px]">
+                <span className="h-3 w-1/3 animate-pulse rounded bg-black/10" />
+              </div>
+            ))}
+          </div>
         </div>
-
-        {isLoading ? (
-          <div className="flex flex-col items-center justify-center py-16">
-            <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-secondary-dark" />
-            <p className="mt-4 text-[12px] text-muted-light">Carregando pedidos...</p>
-          </div>
-        ) : pedidos.length === 0 ? (
-          <div className="px-5 py-16 text-center">
-            <span className="mdi mdi-clipboard-text-outline mx-auto mb-3 block text-[20px] text-secondary" />
-            <p className="font-display text-[22px]">Nenhum pedido por aqui.</p>
-            <p className="mt-1 text-[12px] text-muted-light">Crie um novo pedido para começar.</p>
-          </div>
-        ) : (
-          <>
-            <div className="hidden grid-cols-[1.2fr_0.8fr_0.7fr_0.9fr_0.6fr] gap-4 border-b border-border px-5 py-3 font-mono text-[9px] uppercase tracking-[0.14em] text-muted-light lg:grid">
+      ) : pedidos.length === 0 ? (
+        <div className="sheet px-5 py-12">
+          <p className="text-[14px] font-medium">{statusFilter === 'Todos' ? 'Nenhum pedido registrado.' : 'Nenhum pedido com esse status.'}</p>
+          <p className="mt-1 max-w-[60ch] text-[13px] text-muted">
+            Um pedido só mexe no estoque quando é confirmado; até lá ele fica pendente e pode ser cancelado sem efeito.
+          </p>
+          <Link to="/pedidos/novo" className="btn btn-quiet mt-4">
+            Novo pedido
+          </Link>
+        </div>
+      ) : (
+        <>
+          <div className="listing">
+            <div className={`listing-head hidden ${COLUMNS} lg:grid`}>
               <span>Cliente</span>
               <span>Data</span>
               <span className="text-right">Total</span>
-              <span className="text-center">Status</span>
+              <span>Status</span>
               <span />
             </div>
-            <div>
+            <div className="listing-body">
               {pedidos.map((pedido) => (
                 <div
                   key={pedido.id}
+                  role="link"
+                  tabIndex={0}
                   onClick={() => navigate(`/pedidos/${pedido.id}`)}
-                  className="grid cursor-pointer grid-cols-2 gap-3 border-b border-[#edf0ed] px-5 py-4 last:border-0 hover:bg-brand-bg/60 lg:grid-cols-[1.2fr_0.8fr_0.7fr_0.9fr_0.6fr] lg:items-center lg:gap-4"
+                  onKeyDown={(e) => e.key === 'Enter' && navigate(`/pedidos/${pedido.id}`)}
+                  className={`listing-row cursor-pointer grid-cols-2 gap-y-1 ${COLUMNS}`}
                 >
-                  <div className="col-span-2 lg:col-span-1">
-                    <p className="text-[13px] font-medium">{pedido.cliente?.nome}</p>
-                    <p className="mt-0.5 text-[10px] text-muted-light">{pedido.itens?.length || 0} item(ns)</p>
+                  <div className="col-span-2 min-w-0 lg:col-span-1">
+                    <span className="block truncate font-medium">{pedido.cliente?.nome}</span>
+                    <span className="block text-[12px] text-muted">{pedido.itens?.length || 0} item(ns)</span>
                   </div>
-                  <span className="text-[12px] text-muted">
+                  <span className="font-mono text-[12px] text-muted">
                     {pedido.dataCriacao ? new Date(pedido.dataCriacao).toLocaleDateString('pt-BR') : ''}
                   </span>
-                  <span className="text-[12px] font-medium tabular-nums lg:text-right">{money(pedido.valorTotal)}</span>
-                  <span
-                    className={`w-fit rounded-full px-2.5 py-1 text-center font-mono text-[9px] uppercase tracking-[0.08em] lg:mx-auto ${STATUS_BADGE[pedido.status]}`}
-                  >
-                    {STATUS_LABEL[pedido.status]}
+                  <span className="font-mono tabular-nums lg:text-right">{money(pedido.valorTotal)}</span>
+                  <span>
+                    <span className={`stamp ${STATUS_STAMP[pedido.status]}`}>{STATUS_LABEL[pedido.status]}</span>
                   </span>
-                  <div className="col-span-2 flex lg:col-span-1 lg:justify-end">
-                    <span className="mdi mdi-chevron-right text-[16px] text-muted-light" />
-                  </div>
+                  <span className="mdi mdi-chevron-right hidden text-[18px] text-muted-light lg:block" aria-hidden="true" />
                 </div>
               ))}
             </div>
+          </div>
 
-            <div className="flex items-center justify-between border-t border-border px-5 py-4 text-[11px] text-muted-light">
-              <span>
-                Página {pedidosMeta.number + 1} de {pedidosMeta.totalPages}
-              </span>
-              <div className="flex gap-2">
-                <button
-                  disabled={page <= 0}
-                  onClick={() => setPage((p) => p - 1)}
-                  className="rounded-full border border-border px-3 py-1.5 disabled:opacity-40"
-                >
-                  Anterior
-                </button>
-                <button
-                  disabled={page + 1 >= pedidosMeta.totalPages}
-                  onClick={() => setPage((p) => p + 1)}
-                  className="rounded-full border border-border px-3 py-1.5 disabled:opacity-40"
-                >
-                  Próxima
-                </button>
-              </div>
+          <div className="mt-3 flex items-center justify-between text-[12px] text-muted">
+            <span>
+              Página {pedidosMeta.number + 1} de {pedidosMeta.totalPages}
+            </span>
+            <div className="flex gap-2">
+              <button disabled={page <= 0} onClick={() => setPage((p) => p - 1)} className="btn btn-quiet">
+                Anterior
+              </button>
+              <button disabled={page + 1 >= pedidosMeta.totalPages} onClick={() => setPage((p) => p + 1)} className="btn btn-quiet">
+                Próxima
+              </button>
             </div>
-          </>
-        )}
-      </section>
+          </div>
+        </>
+      )}
     </main>
   );
 };

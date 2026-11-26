@@ -25,6 +25,7 @@ module.exports = {
         'muted-light': 'var(--color-muted-light)', // Texto terciário / labels
         border: 'var(--color-border)',
         'brand-bg': 'var(--color-brand-bg)', // Fundo
+        band: 'var(--color-band)', // faixa verde da listagem
         danger: '#c95b55',
         success: '#1b8a40',
         warning: '#c2841f',

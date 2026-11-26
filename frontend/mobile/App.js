@@ -60,7 +60,8 @@ function Shell({ children }) {
   // area, which the content is pushed below on phones with a cutout) takes the header colour and the
   // icons go light, so it reads as one band instead of a pale bar over the header.
   const signedIn = useSelector((state) => state.auth.isAuthenticated);
-  const lightIcons = isDark || signedIn;
+  // The signed-in header is the logo green, light enough to need dark status-bar icons.
+  const lightIcons = isDark;
   return (
     <>
       <StatusBar translucent={hasNotch} backgroundColor="transparent" barStyle={hasNotch && !lightIcons ? 'dark-content' : 'light-content'} />
